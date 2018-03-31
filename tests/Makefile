@@ -1,9 +1,14 @@
+ifeq ($(DEBUG),1)
+OPTIMIZE_FLAGS       = -O3 -DDO_DEBUG -g
+else
+OPTIMIZE_FLAGS       = -O3 -g0
+endif
+
 CXX                  = g++
 LINK_OPT             = 
 VERSION              = 
-OPTIMIZE_FLAGS       = -O3 -g0 -std=c++11
-CCFLAGS              = -Wall #-DTRACE_FASTFLOW 
-CFLAGS               =
+CCFLAGS              = -Wall #-DTRACE_FASTFLOW
+CFLAGS               = -std=c++11
 LDFLAGS              = 
 LIBS                 = -lpthread
 
@@ -23,7 +28,7 @@ all: $(EXECS)
 
 #objects
 %.o: %.cpp
-	$(CXX) $(INCLUDES) $(CCFLAGS) $(OPTIMIZE_FLAGS) -c -o $@ $<
+	$(CXX) $(INCLUDES) $(CCFLAGS) $(CFLAGS) $(OPTIMIZE_FLAGS) -c -o $@ $<
 
 #executables
 unit_test: $(TARGET_OBJ_UNIT) $(DRIVER_OBJ)
