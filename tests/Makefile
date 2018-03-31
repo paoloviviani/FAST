@@ -2,17 +2,17 @@ CXX                  = g++
 LINK_OPT             = 
 VERSION              = 
 OPTIMIZE_FLAGS       = -O3 -g0 -std=c++11
-CCFLAGS             = -Wall #-DTRACE_FASTFLOW 
+CCFLAGS              = -Wall #-DTRACE_FASTFLOW 
 CFLAGS               =
 LDFLAGS              = 
 LIBS                 = -lpthread
 
-PICO_ROOT                 = ..
+FAST_ROOT                 = ..
 
-INCLUDES             = -I$(PICO_ROOT) -I./include
-EXECS                = batch_tests stream_tests
-TARGET_OBJ_BATCH	 = input_output_file.o reduce_by_key.o wordcount.o flatmap_join_by_key.o iteration.o
-TARGET_OBJ_STREAM 	 = streaming_reduce_by_key.o
+INCLUDES             = -I$(FAST_ROOT) -I./include
+EXECS                = unit_test perf_test
+TARGET_OBJ_UNIT      = basic_unit_test.o
+TARGET_OBJ_PERF      = 
 DRIVER_OBJ           = test_driver.o
 
 
@@ -26,11 +26,10 @@ all: $(EXECS)
 	$(CXX) $(INCLUDES) $(CCFLAGS) $(OPTIMIZE_FLAGS) -c -o $@ $<
 
 #executables
-batch_tests: $(TARGET_OBJ_BATCH) $(DRIVER_OBJ)
+unit_test: $(TARGET_OBJ_UNIT) $(DRIVER_OBJ)
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
-stream_tests: $(TARGET_OBJ_STREAM) $(DRIVER_OBJ)
+perf_test: $(TARGET_OBJ_PERF) $(DRIVER_OBJ)
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
-
 	
 
 clean:
@@ -39,4 +38,4 @@ clean:
 cleanall: clean
 	rm -rf $(EXECS)
 	rm -fr $(TARGET_OBJ_BATCH) $(TARGET_OBJ_STREAM) *.d
-	rm -rf *.dSYM *.dot *.png
+#	rm -rf *.dSYM *.dot *.png
