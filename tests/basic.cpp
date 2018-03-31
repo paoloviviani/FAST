@@ -1,4 +1,5 @@
 #include <iostream>
+#include <../src/stub>
 using namespace std;
 
 int main() 
