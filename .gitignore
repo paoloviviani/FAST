@@ -1,0 +1,5 @@
+.cproject
+.project
+*.tmp
+*.bak
+*.swp
