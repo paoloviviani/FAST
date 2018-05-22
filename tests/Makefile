@@ -18,8 +18,8 @@ INCLUDES             = -I$(FAST_ROOT) -I./include
 EXECS                = unit_test perf_test
 TARGET_OBJ_UNIT      = basic_unit_test.o
 TARGET_OBJ_PERF      = 
-DRIVER_OBJ           = test_driver.o
-
+UNIT_DRIVER_OBJ      = unit_test_driver.o
+PERF_DRIVER_OBJ      = 
 
 .PHONY: all clean cleanall
 .SUFFIXES: .c .cpp .o
@@ -31,7 +31,7 @@ all: $(EXECS)
 	$(CXX) $(INCLUDES) $(CCFLAGS) $(CFLAGS) $(OPTIMIZE_FLAGS) -c -o $@ $<
 
 #executables
-unit_test: $(TARGET_OBJ_UNIT) $(DRIVER_OBJ)
+unit_test: $(TARGET_OBJ_UNIT) $(UNIT_DRIVER_OBJ)
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
 perf_test: $(TARGET_OBJ_PERF) $(DRIVER_OBJ)
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
@@ -42,5 +42,5 @@ clean:
 
 cleanall: clean
 	rm -rf $(EXECS)
-	rm -fr $(TARGET_OBJ_BATCH) $(TARGET_OBJ_STREAM) *.d
+	rm -rf $(TARGET_OBJ_UNIT) $(TARGET_OBJ_PERF) $(UNIT_DRIVER_OBJ) *.d
 #	rm -rf *.dSYM *.dot *.png
