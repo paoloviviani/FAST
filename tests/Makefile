@@ -15,9 +15,8 @@ LIBS                 = -lpthread
 FAST_ROOT                 = ../
 
 INCLUDES             = -I$(FAST_ROOT) -I./include
-EXECS                = unit_test perf_test
+EXECS                = unit_test
 TARGET_OBJ_UNIT      = basic_unit_test.o
-TARGET_OBJ_PERF      = basic_perf_test.o
 TEST_DRIVER_OBJ      = test_driver.o
 
 
@@ -33,14 +32,11 @@ all: $(EXECS)
 #executables
 unit_test: $(TARGET_OBJ_UNIT) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
-perf_test: $(TARGET_OBJ_PERF) $(TEST_DRIVER_OBJ)
-	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
-	
 
 clean:
 	rm -rf *.o *~
 
 cleanall: clean
 	rm -rf $(EXECS)
-	rm -rf $(TARGET_OBJ_UNIT) $(TARGET_OBJ_PERF) $(TEST_DRIVER_OBJ) *.d
+	rm -rf $(TARGET_OBJ_UNIT) $(TEST_DRIVER_OBJ) *.d
 

@@ -7,14 +7,22 @@
 
 #include <iostream>
 #include <catch.hpp>
+#include <chrono>
 
 //using namespace fast;
+using namespace std;
 
+TEST_CASE( "benchmarked", "[benchmark]" ) {
 
-TEST_CASE( "basic perf test", "basic perf test tag" ){
+	static long count = 0;
+	const long max_iter = 1e9;
+	auto start = chrono::steady_clock::now();
+	BENCHMARK( "Benchmark" ) {
+	for (int i = 0; i < max_iter; i++)
+		count++;
+	}
+	auto end = chrono::steady_clock::now();
+	auto timing = chrono::duration <double,milli>(end - start).count();
 
-	int input_lines = 1;
-	int output_lines = 1;
-	REQUIRE(input_lines == output_lines);
-
+	CHECK(count == max_iter);
 }
