@@ -12,7 +12,7 @@ CFLAGS               = -std=c++11
 LDFLAGS              = 
 LIBS                 = -lpthread
 
-FAST_ROOT                 = ../
+FAST_ROOT                 = ../include
 
 INCLUDES             = -I$(FAST_ROOT) -I./include
 EXECS                = unit_test
