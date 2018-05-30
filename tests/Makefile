@@ -14,7 +14,7 @@ CFLAGS               = -std=c++11
 LDFLAGS              = 
 LIBS                 = -lpthread
 
-INCLUDES             = -I$(FAST_ROOT)/include -I./catch2 -I$(FAST_ROOT)/3rdparty/gam/gam/include
+INCLUDES             = -I$(FAST_ROOT)/include -I$(FAST_ROOT)/tests/catch2 -I$(FAST_ROOT)/3rdparty/gam/gam/include
 EXECS                = unit_test
 TARGET_OBJ_UNIT      = basic_unit_test.o
 TEST_DRIVER_OBJ      = test_driver.o

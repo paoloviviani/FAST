@@ -1,0 +1,3 @@
+[submodule "3rdparty/gam"]
+	path = 3rdparty/gam
+	url = git@github.com:alpha-unito/gam.git
