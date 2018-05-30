@@ -1,3 +1,5 @@
+include config.mk
+
 ifeq ($(DEBUG),1)
 OPTIMIZE_FLAGS       = -O3 -DDO_DEBUG -g
 else
@@ -19,6 +21,10 @@ EXECS                = unit_test
 TARGET_OBJ_UNIT      = basic_unit_test.o
 TEST_DRIVER_OBJ      = test_driver.o
 
+ifeq ($(USE_MXNET),1)
+TARGET_OBJ_UNIT      += mxnet_unit_test.o
+endif
+
 
 .PHONY: all clean cleanall
 .SUFFIXES: .c .cpp .o
@@ -31,6 +37,8 @@ all: $(EXECS)
 
 #executables
 unit_test: $(TARGET_OBJ_UNIT) $(TEST_DRIVER_OBJ)
+	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
+mxnet_test: $(TARGET_OBJ_UNIT) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
 
 clean:

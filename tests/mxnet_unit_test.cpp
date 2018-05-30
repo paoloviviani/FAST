@@ -1,17 +1,20 @@
 /*
  * example_unit_test.cpp
  *
- *  Created on: Mar 31, 2018
+ *  Created on: May 30, 2018
  *      Author: viviani
  */
 
 #include <iostream>
 #include <catch.hpp>
+#include "mxnet-cpp/MxNetCpp.h"
 
+using namespace std;
+using namespace mxnet::cpp;
 //using namespace FAST;
 
 
-TEST_CASE( "basic unit test", "basic unit test tag" ){
+TEST_CASE( "mxnet unit test", "mxnet unit test tag" ){
 
 	int input_lines = 1;
 	int output_lines = 1;
