@@ -22,7 +22,7 @@ TARGET_OBJ_UNIT      = basic_unit_test.o
 TEST_DRIVER_OBJ      = test_driver.o
 
 ifeq ($(USE_MXNET),1)
-TARGET_OBJ_UNIT      += mxnet_unit_test.o
+TARGET_OBJ_UNIT      += mxnet_tests/mxnet_unit_test.o
 INCLUDES             += -I$(MXNET_INCLUDE_DIR)
 LIBS                 += -L$(MXNET_LIB_DIR) -lmxnet
 endif
@@ -46,7 +46,7 @@ mxnet_test: $(TARGET_OBJ_UNIT) $(TEST_DRIVER_OBJ)
 endif
 
 clean:
-	rm -rf *.o *~
+	rm -rf *.o *~ $(TARGET_OBJ_UNIT)
 
 cleanall: clean
 	rm -rf $(EXECS)
