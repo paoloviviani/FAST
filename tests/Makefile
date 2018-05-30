@@ -1,7 +1,7 @@
 include config.mk
 
 ifeq ($(DEBUG),2)
-OPTIMIZE_FLAGS       = -O0 -DLEVEL_DEBUG -g
+OPTIMIZE_FLAGS       = -O0 -DLEVEL_DEBUG -g3
 endif
 ifeq ($(DEBUG),1)
 OPTIMIZE_FLAGS       = -O3 -DLEVEL_INFO -g0

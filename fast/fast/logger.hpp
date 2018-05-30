@@ -8,8 +8,6 @@
 #ifndef INCLUDE_FAST_LOGGING_HPP_
 #define INCLUDE_FAST_LOGGING_HPP_
 
-#include "gam/include/gam.hpp"
-
 enum TLogLevel {ERROR, INFO, DEBUG}
 
 #if defined LEVEL_DEBUG
