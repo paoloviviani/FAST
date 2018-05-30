@@ -8,7 +8,8 @@ OPTIMIZE_FLAGS       = -O3 -DLEVEL_INFO -g0
 endif
 ifeq ($(DEBUG),0)
 OPTIMIZE_FLAGS       = -O3 -DLEVEL_ERROR -g0
-else
+endif
+ifeq ($(DEBUG),3)
 $(error Debug must be 0,1,2.)
 endif
 
