@@ -21,12 +21,18 @@ TLogLevel logLevel = ERROR;
 #endif
 
 namespace FAST {
-
-class Logger {
-
-};
-
+class Logger;
 }
+
+class FAST::Logger
+{
+    public:
+        static Logger* getLogger();
+    protected:
+        Logger();
+    private:
+        static Logger* instance;
+};
 
 
 #endif /* INCLUDE_FAST_LOGGING_HPP_ */
