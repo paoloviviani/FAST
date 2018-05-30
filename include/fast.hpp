@@ -8,8 +8,7 @@
 #ifndef INCLUDE_FAST_HPP_
 #define INCLUDE_FAST_HPP_
 
-
-
-
+#include "fast/tensor.hpp"
+#include "fast/logging.hpp"
 
 #endif /* INCLUDE_FAST_HPP_ */
