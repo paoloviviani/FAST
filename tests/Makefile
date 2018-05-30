@@ -9,12 +9,12 @@ endif
 CXX                  = g++
 LINK_OPT             = 
 VERSION              = 
-CCFLAGS              = -Wall #-DTRACE_FASTFLOW
+CCFLAGS              = -Wall
 CFLAGS               = -std=c++11
 LDFLAGS              = 
 LIBS                 = -lpthread
 
-#Use #include "gam/include/xx.hpp" to avoid confusion with MxNet includes
+#Use #include "gam/include/xx.hpp" to avoid potential confusion with MxNet includes
 INCLUDES             = -I$(FAST_ROOT)/fast -I$(FAST_ROOT)/tests/catch2 -I$(FAST_ROOT)/3rdparty/gam
 EXECS                = unit_test
 TARGET_OBJ_UNIT      = basic_unit_test.o
@@ -35,14 +35,9 @@ all: $(EXECS)
 %.o: %.cpp
 	$(CXX) $(INCLUDES) $(CCFLAGS) $(CFLAGS) $(OPTIMIZE_FLAGS) -c -o $@ $<
 
-#executables
+#basic unit test executable
 unit_test: $(TARGET_OBJ_UNIT) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
-	
-ifeq ($(USE_MXNET),1)
-mxnet_test: $(TARGET_OBJ_UNIT) $(TEST_DRIVER_OBJ)
-	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
-endif
 
 clean:
 	rm -rf *.o *~ $(TARGET_OBJ_UNIT)
