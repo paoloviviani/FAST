@@ -10,12 +10,14 @@
 
 #include "gam/include/gam.hpp"
 
-enum TLogLevel {INFO, DEBUG}
+enum TLogLevel {ERROR, INFO, DEBUG}
 
-#ifdef DO_DEBUG
+#if defined LEVEL_DEBUG
 TLogLevel logLevel = DEBUG;
-#else
+#elif defined LEVEL_INFO
 TLogLevel logLevel = INFO;
+#else
+TLogLevel logLevel = ERROR;
 #endif
 
 namespace FAST {
