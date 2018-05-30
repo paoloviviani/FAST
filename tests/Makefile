@@ -1,9 +1,15 @@
 include config.mk
 
+ifeq ($(DEBUG),2)
+OPTIMIZE_FLAGS       = -O0 -DLEVEL_DEBUG -g
+endif
 ifeq ($(DEBUG),1)
-OPTIMIZE_FLAGS       = -O0 -DDO_DEBUG -g
+OPTIMIZE_FLAGS       = -O3 -DLEVEL_INFO -g0
+endif
+ifeq ($(DEBUG),0)
+OPTIMIZE_FLAGS       = -O3 -DLEVEL_ERROR -g0
 else
-OPTIMIZE_FLAGS       = -O3 -g0
+$(error Debug must be 0,1,2.)
 endif
 
 CXX                  = g++

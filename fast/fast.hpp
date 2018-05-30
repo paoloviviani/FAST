@@ -9,6 +9,6 @@
 #define INCLUDE_FAST_HPP_
 
 #include "fast/tensor.hpp"
-#include "fast/logging.hpp"
+#include "fast/logger.hpp"
 
 #endif /* INCLUDE_FAST_HPP_ */
