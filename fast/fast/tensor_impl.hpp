@@ -12,39 +12,17 @@
 
 #define tensor_type_check(condition)  static_assert( (condition), "error: incorrect or unsupported tensor type" )
 
-/**
- * Statically check if type is supported
- */
-template <typename T>
-struct is_supported {
-  static const bool value = false;
-};
+namespace FAST{
 
-template <>
-struct is_supported<mxnet::cpp::NDArray> {
-  static const bool value = true;
-};
 
-/**
- * Statically check if type is MxNet NDArray
- */
-template <typename T>
-struct is_MxNDAarray {
-  static const bool value = false;
-};
-
-template <>
-struct is_MxNDAarray<mxnet::cpp::NDArray> {
-  static const bool value = true;
-};
 
 /**
  *
  * @param tensor
  */
 template <typename backendTensor>
-FAST::Tensor(backendTensor tensor) {
-	tensor_type_check(( is_supported<backendTensor>::value  ));
+Tensor<backendTensor>::Tensor(backendTensor tensor){
+	tensor_type_check(( is_supported<backendTensor>::value ));
 	backend_tensor = tensor;
 }
 
@@ -53,12 +31,14 @@ FAST::Tensor(backendTensor tensor) {
  * @return vector of unsigned integers with the shape of the tensor
  */
 template <typename backendTensor>
-vector<unsigned int> Tensor::getShape() const {
+vector<unsigned int> Tensor<backendTensor>::getShape() const {
 	tensor_type_check(( is_supported<backendTensor>::value  ));
 
 	if ( is_MxNDAarray<backendTensor>::value ){
 		return backend_tensor.GetShape();
 	}
+}
+
 }
 
 #endif /* FAST_TENSOR_IMPL_HPP_ */
