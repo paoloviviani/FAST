@@ -8,14 +8,22 @@
 #ifndef FAST_FAST_GAM_WRAPPER_HPP_
 #define FAST_FAST_GAM_WRAPPER_HPP_
 
-#include "gam/include/gam.hpp"
-
 namespace FAST{
+uint32_t rank();
+}
 
-uint32_t rank() {
+#ifdef USE_GAM
+
+#include "gam.hpp"
+
+uint32_t FAST::rank() {
 	return gam::rank();
 }
 
+#else
+uint32_t FAST::rank() {
+	return 0;
 }
+#endif
 
 #endif /* FAST_FAST_GAM_WRAPPER_HPP_ */

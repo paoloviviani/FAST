@@ -60,6 +60,16 @@ public:
 	 *
 	 * @param t
 	 */
+	Tensor() {
+		tensor_type_check(( is_supported<backendType>::value ));
+		if ( is_MxNDAarray<backendType>::value )
+			bt = mxnet::cpp::NDArray();
+	}
+
+	/**
+	 * Constructor from generic framework tensor
+	 * @param t
+	 */
 	Tensor(backendType t) {
 		tensor_type_check(( is_supported<backendType>::value ));
 		bt = t;
@@ -93,7 +103,7 @@ public:
 	 * Copy constructor from NxNet NDArray
 	 * @param t
 	 */
-	Tensor(Tensor<mxnet::cpp::NDArray> t) {
+	Tensor(Tensor<mxnet::cpp::NDArray> & t) {
 		if ( is_MxNDAarray<backendType>::value )
 			bt = t.getFrameworkObject();
 	}

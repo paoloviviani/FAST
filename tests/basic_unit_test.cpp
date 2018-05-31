@@ -7,14 +7,15 @@
 
 #include <iostream>
 #include <catch.hpp>
+#include "fast.hpp"
 
 //using namespace FAST;
 
 
-TEST_CASE( "basic unit test", "basic unit test tag" ){
+TEST_CASE( ",logger test", "logger test" ){
 
-	int input_lines = 1;
-	int output_lines = 1;
-	REQUIRE(input_lines == output_lines);
-
+	int i = 100;
+	FAST_DEBUG("Debug message with integer value, " << i)
+//	FAST_INFO("Info message with integer value, " << i)
+//	FAST_ERROR("Error message with integer value, " << i)
 }

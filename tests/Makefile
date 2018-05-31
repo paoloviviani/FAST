@@ -21,10 +21,9 @@ VERSION              =
 CCFLAGS              = -Wall
 CFLAGS               = -std=c++11
 LDFLAGS              = 
-LIBS                 = -lpthread
+LIBS                 = -lpthread `pkg-config --libs libfabric`
 
-#Use #include "gam/include/xx.hpp" to avoid potential confusion with MxNet includes
-INCLUDES             = -I$(FAST_ROOT)/fast -I$(FAST_ROOT)/tests/catch2 -I$(FAST_ROOT)/3rdparty/gam -I$(FAST_ROOT)/3rdparty/plog
+INCLUDES             = -I$(FAST_ROOT)/fast -I$(FAST_ROOT)/tests/catch2 -I$(FAST_ROOT)/3rdparty/gam/gam/include -I$(FAST_ROOT)/3rdparty/plog `pkg-config --cflags libfabric`
 EXECS                = unit_test
 TARGET_OBJ_UNIT      = basic_unit_test.o
 TEST_DRIVER_OBJ      = test_driver.o
@@ -33,6 +32,10 @@ ifeq ($(USE_MXNET),1)
 TARGET_OBJ_UNIT      += mxnet_tests/mxnet_unit_test.o
 INCLUDES             += -I$(MXNET_INCLUDE_DIR)
 LIBS                 += -L$(MXNET_LIB_DIR) -lmxnet
+endif
+
+ifeq ($(USE_GAM),1)
+CCFLAGS              += -DUSE_GAM
 endif
 
 .PHONY: all clean cleanall
