@@ -1,13 +1,13 @@
 include config.mk
 
 OPTIMIZE_FLAGS       = -O3 -DLOGLEVEL_INFO -g0
-ifeq ($(DEBUG),2)
+ifeq ($(DEBUG),debug)
 OPTIMIZE_FLAGS       = -O0 -DLOGLEVEL_DEBUG -g3
 endif
-ifeq ($(DEBUG),1)
+ifeq ($(DEBUG),info)
 OPTIMIZE_FLAGS       = -O3 -DLOGLEVEL_INFO -g0
 endif
-ifeq ($(DEBUG),0)
+ifeq ($(DEBUG),error)
 OPTIMIZE_FLAGS       = -O3 -DLOGLEVEL_ERROR -g0
 endif
 

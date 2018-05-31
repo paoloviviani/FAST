@@ -21,36 +21,36 @@ using namespace std;
 
 #if defined LOGLEVEL_DEBUG
 #define FAST_DEBUG(x) {\
-    gam::Logger::getLogger()->lock(); \
-    gam::Logger::getLogger()->log_output() << x << std::endl; \
-    gam::Logger::getLogger()->unlock();}
+    FAST::Logger::getLogger()->lock(); \
+    FAST::Logger::getLogger()->log_output() << x << std::endl; \
+    FAST::Logger::getLogger()->unlock();}
 #define FAST_INFO(x) {\
-    gam::Logger::getLogger()->lock(); \
-    gam::Logger::getLogger()->log_output() << x << std::endl; \
-    gam::Logger::getLogger()->unlock();}
+    FAST::Logger::getLogger()->lock(); \
+    FAST::Logger::getLogger()->log_output() << x << std::endl; \
+    FAST::Logger::getLogger()->unlock();}
 #define FAST_ERROR(x) {\
-    gam::Logger::getLogger()->lock(); \
-    gam::Logger::getLogger()->log_error() << x << std::endl; \
-    gam::Logger::getLogger()->unlock();}
+    FAST::Logger::getLogger()->lock(); \
+    FAST::Logger::getLogger()->log_error() << x << std::endl; \
+    FAST::Logger::getLogger()->unlock();}
 
 #elif defined LOGLEVEL_INFO
 #define FAST_DEBUG(...) {}
 #define FAST_INFO(x) {\
-    gam::Logger::getLogger()->lock(); \
-    gam::Logger::getLogger()->log_output() << x << std::endl; \
-    gam::Logger::getLogger()->unlock();}
+    FAST::Logger::getLogger()->lock(); \
+    FAST::Logger::getLogger()->log_output() << x << std::endl; \
+    FAST::Logger::getLogger()->unlock();}
 #define FAST_ERROR(x) {\
-    gam::Logger::getLogger()->lock(); \
-    gam::Logger::getLogger()->log_error() << x << std::endl; \
-    gam::Logger::getLogger()->unlock();}
+    FAST::Logger::getLogger()->lock(); \
+    FAST::Logger::getLogger()->log_error() << x << std::endl; \
+    FAST::Logger::getLogger()->unlock();}
 
 #else
 #define FAST_DEBUG(...) {}
 #define FAST_INFO(...) {}
 #define FAST_ERROR(x) {\
-    gam::Logger::getLogger()->lock(); \
-    gam::Logger::getLogger()->log_error() << x << std::endl; \
-    gam::Logger::getLogger()->unlock();}
+    FAST::Logger::getLogger()->lock(); \
+    FAST::Logger::getLogger()->log_error() << x << std::endl; \
+    FAST::Logger::getLogger()->unlock();}
 
 #endif
 
