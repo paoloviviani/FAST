@@ -46,13 +46,13 @@ struct is_MxNDAarray<mxnet::cpp::NDArray> {
 /**
  *
  */
-template <typename backendTensor>
+template <typename backendType>
 class Tensor {
 
 	/**
 	 *
 	 */
-	backendTensor backend_tensor;
+	backendType bt;
 
 public:
 
@@ -60,29 +60,42 @@ public:
 	 *
 	 * @param t
 	 */
-	Tensor(backendTensor t) {
-		tensor_type_check(( is_supported<backendTensor>::value ));
-		backend_tensor = t;
+	Tensor(backendType t) {
+		tensor_type_check(( is_supported<backendType>::value ));
+		bt = t;
 	}
 
 	/**
-	 *
+	 * Constructor from raw data and shape
 	 * @param raw_data
 	 * @param shape
 	 */
 	Tensor(float * raw_data, vector<unsigned int> shape) {
-		tensor_type_check(( is_supported<backendTensor>::value ));
+		tensor_type_check(( is_supported<backendType>::value ));
 
-		if ( is_MxNDAarray<backendTensor>::value )
-			backend_tensor = mxnet::cpp::NDArray(raw_data, mxnet::cpp::Shape(shape), mxnet::cpp::Context::cpu());
+		if ( is_MxNDAarray<backendType>::value )
+			bt = mxnet::cpp::NDArray(raw_data, mxnet::cpp::Shape(shape), mxnet::cpp::Context::cpu());
 	}
+
 	/**
-	 *
+	 * Constructor from raw data and size only
+	 * @param raw_data
+	 * @param shape
+	 */
+	Tensor(float * raw_data, size_t size) {
+		tensor_type_check(( is_supported<backendType>::value ));
+
+		if ( is_MxNDAarray<backendType>::value )
+			bt = mxnet::cpp::NDArray(raw_data, mxnet::cpp::Shape(size), mxnet::cpp::Context::cpu());
+	}
+
+	/**
+	 * Copy constructor from NxNet NDArray
 	 * @param t
 	 */
 	Tensor(Tensor<mxnet::cpp::NDArray> t) {
-		if ( is_MxNDAarray<backendTensor>::value )
-			backend_tensor = t.getFrameworkTensor();
+		if ( is_MxNDAarray<backendType>::value )
+			bt = t.getFrameworkObject();
 	}
 
 	/**
@@ -90,17 +103,17 @@ public:
 	 * @return
 	 */
 	vector<unsigned int> getShape() const {
-		tensor_type_check(( is_supported<backendTensor>::value  ));
+		tensor_type_check(( is_supported<backendType>::value  ));
 
-		if ( is_MxNDAarray<backendTensor>::value )
-			return backend_tensor.GetShape();
+		if ( is_MxNDAarray<backendType>::value )
+			return bt.GetShape();
 	}
 
 	/**
 	 *
 	 * @return
 	 */
-	backendTensor getFrameworkTensor() const { return backend_tensor; };
+	backendType getFrameworkObject() const { return bt; };
 
 };
 

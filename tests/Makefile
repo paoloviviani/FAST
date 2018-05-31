@@ -20,7 +20,7 @@ LDFLAGS              =
 LIBS                 = -lpthread
 
 #Use #include "gam/include/xx.hpp" to avoid potential confusion with MxNet includes
-INCLUDES             = -I$(FAST_ROOT)/fast -I$(FAST_ROOT)/tests/catch2 -I$(FAST_ROOT)/3rdparty/gam
+INCLUDES             = -I$(FAST_ROOT)/fast -I$(FAST_ROOT)/tests/catch2 -I$(FAST_ROOT)/3rdparty/gam -I$(FAST_ROOT)/3rdparty/plog
 EXECS                = unit_test
 TARGET_OBJ_UNIT      = basic_unit_test.o
 TEST_DRIVER_OBJ      = test_driver.o
