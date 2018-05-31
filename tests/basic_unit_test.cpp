@@ -12,10 +12,10 @@
 //using namespace FAST;
 
 
-TEST_CASE( ",logger test", "logger test" ){
+TEST_CASE( "logger test", "logger test" ){
 
 	int i = 100;
 	FAST_DEBUG("Debug message with integer value, " << i)
-//	FAST_INFO("Info message with integer value, " << i)
+	FAST_INFO("Info message with integer value, " << i)
 //	FAST_ERROR("Error message with integer value, " << i)
 }

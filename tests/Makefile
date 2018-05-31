@@ -11,10 +11,6 @@ ifeq ($(DEBUG),0)
 OPTIMIZE_FLAGS       = -O3 -DLOGLEVEL_ERROR -g0
 endif
 
-ifeq ($(LOGFILE),0)
-OPTIMIZE_FLAGS       = -O3 -DLOGLEVEL_ERROR -g0
-endif
-
 CXX                  = g++
 LINK_OPT             = 
 VERSION              = 
@@ -28,10 +24,12 @@ EXECS                = unit_test
 TARGET_OBJ_UNIT      = basic_unit_test.o
 TEST_DRIVER_OBJ      = test_driver.o
 
-ifeq ($(USE_MXNET),1)
-TARGET_OBJ_UNIT      += mxnet_tests/mxnet_unit_test.o
+#MxNet dependecies
 INCLUDES             += -I$(MXNET_INCLUDE_DIR)
 LIBS                 += -L$(MXNET_LIB_DIR) -lmxnet
+
+ifeq ($(TEST_MXNET),1)
+TARGET_OBJ_UNIT      += mxnet_tests/mxnet_unit_test.o
 endif
 
 ifeq ($(USE_GAM),1)
