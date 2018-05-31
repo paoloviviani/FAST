@@ -1,5 +1,6 @@
 include config.mk
 
+OPTIMIZE_FLAGS       = -O3 -DLEVEL_INFO -g0
 ifeq ($(DEBUG),2)
 OPTIMIZE_FLAGS       = -O0 -DLEVEL_DEBUG -g3
 endif
@@ -8,9 +9,6 @@ OPTIMIZE_FLAGS       = -O3 -DLEVEL_INFO -g0
 endif
 ifeq ($(DEBUG),0)
 OPTIMIZE_FLAGS       = -O3 -DLEVEL_ERROR -g0
-endif
-ifeq ($(DEBUG),3)
-$(error Debug must be 0,1,2.)
 endif
 
 CXX                  = g++

@@ -17,7 +17,7 @@ namespace FAST {
  * Tensor interface to specialized sub-classes
  * Using Curiously recurring template pattern
  * https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern
- * Equivalent to abstract class with vistual methods, but with compile time resolution
+ * Equivalent to abstract class with virtual methods, but with compile time resolution
  */
 template <typename Tderived>
 class TensorWrapper {

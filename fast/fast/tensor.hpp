@@ -8,8 +8,10 @@
 #ifndef INCLUDE_FAST_TENSOR_HPP_
 #define INCLUDE_FAST_TENSOR_HPP_
 
-#include "fast/tensor_wrapper.hpp"
 #include "mxnet-cpp/MxNetCpp.h"
+#include <vector>
+
+using namespace std;
 
 namespace FAST {
 
@@ -17,9 +19,11 @@ namespace FAST {
  *
  */
 template <typename backendTensor>
-class Tensor : TensorWrapper<Tensor> {
+class Tensor {
 public:
-	//TODO implement static assert for NDArray
+	Tensor(backendTensor tensor);
+	Tensor(float * raw_data, vector<unsigned int> shape);
+	Tensor(Tensor tensor);
 	vector<unsigned int> getShape() const;
 	backendTensor getFrameworkTensor() const { return backend_tensor; };
 private:

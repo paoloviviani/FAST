@@ -39,10 +39,21 @@ struct is_MxNDAarray<mxnet::cpp::NDArray> {
 };
 
 /**
+ *
+ * @param tensor
+ */
+template <typename backendTensor>
+FAST::Tensor(backendTensor tensor) {
+	tensor_type_check(( is_supported<backendTensor>::value  ));
+	backend_tensor = tensor;
+}
+
+/**
  * Only enters if tensor type is supported
  * @return vector of unsigned integers with the shape of the tensor
  */
-vector<unsigned int> FAST::Tensor::getShape() const {
+template <typename backendTensor>
+vector<unsigned int> Tensor::getShape() const {
 	tensor_type_check(( is_supported<backendTensor>::value  ));
 
 	if ( is_MxNDAarray<backendTensor>::value ){
