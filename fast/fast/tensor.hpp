@@ -12,16 +12,21 @@
 #include "mxnet-cpp/MxNetCpp.h"
 
 namespace FAST {
-namespace mx {
-	class Tensor;
-}
-}
 
-class FAST::mx::Tensor : TensorWrapper {
+/**
+ *
+ */
+template <typename backendTensor>
+class Tensor : TensorWrapper<Tensor> {
 public:
-	vector<int> getShape() const { return mx_ndarray.GetShape(); };
+	//TODO implement static assert for NDArray
+	vector<unsigned int> getShape() const;
+	backendTensor getFrameworkTensor() const { return backend_tensor; };
 private:
-	mxnet::cpp::NDArray mx_ndarray;
+	backendTensor backend_tensor;
 };
 
+
+
+}
 #endif /* INCLUDE_FAST_TENSOR_HPP_ */
