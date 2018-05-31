@@ -8,21 +8,19 @@
 #ifndef INCLUDE_FAST_LOGGING_HPP_
 #define INCLUDE_FAST_LOGGING_HPP_
 
-#include <fstream>
-
 using namespace std;
 
-enum LogLevel {ERROR, INFO, DEBUG}
-
-#if defined LEVEL_DEBUG
-LogLevel logLevel = DEBUG;
-#elif defined LEVEL_INFO
-LogLevel logLevel = INFO;
+#if defined LOGLEVEL_DEBUG
+auto logLevel = plog::debug;
+#elif defined LOGLEVEL_INFO
+auto logLevel = plog::info;
+#elif defined LOGLEVEL_ERROR
+auto logLevel = plog::error;
 #else
-LogLevel logLevel = ERROR;
+auto logLevel = plog::info;
 #endif
 
-namespace FAST {
+static plog::ColorConsoleAppender<plog::TxtFormatter> consoleAppender;
+plog::init(plog::verbose, &consoleAppender);
 
-}
 #endif /* INCLUDE_FAST_LOGGING_HPP_ */
