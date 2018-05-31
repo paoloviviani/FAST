@@ -22,12 +22,12 @@ namespace FAST {
  */
 template <typename T>
 struct is_supported {
-  static const bool value = false;
+	static const bool value = false;
 };
 
 template <>
 struct is_supported<mxnet::cpp::NDArray> {
-  static const bool value = true;
+	static const bool value = true;
 };
 
 /**
@@ -35,12 +35,12 @@ struct is_supported<mxnet::cpp::NDArray> {
  */
 template <typename T>
 struct is_MxNDAarray {
-  static const bool value = false;
+	static const bool value = false;
 };
 
 template <>
 struct is_MxNDAarray<mxnet::cpp::NDArray> {
-  static const bool value = true;
+	static const bool value = true;
 };
 
 /**

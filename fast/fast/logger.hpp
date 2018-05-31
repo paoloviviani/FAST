@@ -21,39 +21,52 @@ using namespace std;
 
 #if defined LOGLEVEL_DEBUG
 #define FAST_DEBUG(x) {\
-    FAST::Logger::getLogger()->lock(); \
-    FAST::Logger::getLogger()->log_output() << x << std::endl; \
-    FAST::Logger::getLogger()->unlock();}
+		FAST::Logger::getLogger()->lock(); \
+		FAST::Logger::getLogger()->log_output() << x << std::endl; \
+		FAST::Logger::getLogger()->unlock();}
 #define FAST_INFO(x) {\
-    FAST::Logger::getLogger()->lock(); \
-    FAST::Logger::getLogger()->log_output() << x << std::endl; \
-    FAST::Logger::getLogger()->unlock();}
+		FAST::Logger::getLogger()->lock(); \
+		FAST::Logger::getLogger()->log_output() << x << std::endl; \
+		FAST::Logger::getLogger()->unlock();}
 #define FAST_ERROR(x) {\
-    FAST::Logger::getLogger()->lock(); \
-    FAST::Logger::getLogger()->log_error() << x << std::endl; \
-    FAST::Logger::getLogger()->unlock();}
+		FAST::Logger::getLogger()->lock(); \
+		FAST::Logger::getLogger()->log_error() << x << std::endl; \
+		FAST::Logger::getLogger()->unlock();}
 
 #elif defined LOGLEVEL_INFO
 #define FAST_DEBUG(...) {}
 #define FAST_INFO(x) {\
-    FAST::Logger::getLogger()->lock(); \
-    FAST::Logger::getLogger()->log_output() << x << std::endl; \
-    FAST::Logger::getLogger()->unlock();}
+		FAST::Logger::getLogger()->lock(); \
+		FAST::Logger::getLogger()->log_output() << x << std::endl; \
+		FAST::Logger::getLogger()->unlock();}
 #define FAST_ERROR(x) {\
-    FAST::Logger::getLogger()->lock(); \
-    FAST::Logger::getLogger()->log_error() << x << std::endl; \
-    FAST::Logger::getLogger()->unlock();}
+		FAST::Logger::getLogger()->lock(); \
+		FAST::Logger::getLogger()->log_error() << x << std::endl; \
+		FAST::Logger::getLogger()->unlock();}
 
 #else
 #define FAST_DEBUG(...) {}
 #define FAST_INFO(...) {}
 #define FAST_ERROR(x) {\
-    FAST::Logger::getLogger()->lock(); \
-    FAST::Logger::getLogger()->log_error() << x << std::endl; \
-    FAST::Logger::getLogger()->unlock();}
+		FAST::Logger::getLogger()->lock(); \
+		FAST::Logger::getLogger()->log_error() << x << std::endl; \
+		FAST::Logger::getLogger()->unlock();}
 
 #endif
 
+
+// Get current date/time, format is YYYY-MM-DD.HH:mm:ss
+inline const std::string currentDateTime() {
+	time_t     now = time(0);
+	struct tm  tstruct;
+	char       buf[80];
+	tstruct = *localtime(&now);
+	// Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
+	// for more information about date/time format
+	strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
+
+	return buf;
+}
 
 namespace FAST {
 
@@ -65,7 +78,7 @@ public:
 	}
 
 	void init() {
-		uint32_t id = FAST::rank();
+		id = FAST::rank();
 		log("I am FAST worker %d (pid=%d)", id, getpid());
 	}
 
@@ -79,14 +92,14 @@ public:
 	 * @return
 	 */
 	std::ostream &log_error() {
-			return cout << "[" << time(0) << "] ";
+		return cout << "[" << currentDateTime() << ", proc " << id <<"] ";
 	}
 	/**
 	 * Standard output stream provider
 	 * @return
 	 */
 	std::ostream &log_output() {
-		return cerr << "[" << time(0) << "] ";
+		return cerr << "[" << currentDateTime() << ", proc " << id <<"] ";
 	}
 
 	/**
@@ -112,6 +125,7 @@ public:
 	}
 
 private:
+	uint32_t id;
 	std::mutex mtx;
 
 	char sMessage[256];
