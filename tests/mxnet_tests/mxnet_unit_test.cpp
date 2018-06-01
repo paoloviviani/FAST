@@ -7,11 +7,14 @@
 
 #include <iostream>
 #include <catch.hpp>
+#include "fast.hpp"
 #include "mxnet-cpp/MxNetCpp.h"
 
 using namespace std;
 using namespace mxnet::cpp;
-//using namespace FAST::mxnet;
+//using namespace FAST;
+
+Context ctx = Context::cpu();  // Use CPU for training
 
 Symbol MLP(const vector<int> layers) {
 	auto input = Symbol::Variable("X");
@@ -36,12 +39,13 @@ Symbol MLP(const vector<int> layers) {
 	return LinearRegressionOutput("output", outputs.back(), label);
 }
 
-TEST_CASE( "mxnet basic test", "mxnet" ){
-	const vector<int> layers{256,256,1};
-	Context ctx = Context::cpu();  // Use CPU for training
-	Symbol net = MLP(layers);
-	int input_lines = 1;
-	int output_lines = 1;
-	REQUIRE(input_lines == output_lines);
+TEST_CASE( "Init Tensor from NDarray", "mxnet" ){
+	vector<unsigned int> shape = {50,2};
+	NDArray mxnet_tensor(Shape(shape), ctx);
+	NDArray::SampleUniform(0.,1.,&mxnet_tensor);
 
+	auto tensor = FAST::Tensor(mxnet_tensor);
+	REQUIRE(tensor.getShape() == mxnet_tensor.GetShape());
+	REQUIRE(tensor.getSize() == 100);
+	REQUIRE(mxnet_tensor == tensor.getFrameworkObject());
 }
