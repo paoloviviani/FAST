@@ -16,7 +16,7 @@ uint32_t rank();
 
 #include "gam.hpp"
 
-uint32_t FAST::rank() {
+inline uint32_t FAST::rank() {
 	return gam::rank();
 }
 

@@ -12,7 +12,7 @@
 //using namespace FAST;
 
 
-TEST_CASE( "logger test", "logger test" ){
+TEST_CASE( "logger test", "logger" ){
 
 	int i = 100;
 	FAST_DEBUG("Debug message with integer value, " << i)

@@ -36,7 +36,7 @@ Symbol MLP(const vector<int> layers) {
 	return LinearRegressionOutput("output", outputs.back(), label);
 }
 
-TEST_CASE( "mxnet unit test", "mxnet unit test tag" ){
+TEST_CASE( "mxnet basic test", "mxnet" ){
 	const vector<int> layers{256,256,1};
 	Context ctx = Context::cpu();  // Use CPU for training
 	Symbol net = MLP(layers);

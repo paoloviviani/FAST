@@ -5,8 +5,8 @@
  *      Author: pvi
  */
 
-#ifndef INCLUDE_FAST_LOGGING_HPP_
-#define INCLUDE_FAST_LOGGING_HPP_
+#ifndef FAST_FAST_LOGGING_HPP_
+#define FAST_FAST_LOGGING_HPP_
 
 #include <fstream>
 #include <iostream>
@@ -63,8 +63,8 @@ inline const std::string currentDateTime() {
 	tstruct = *localtime(&now);
 	// Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
 	// for more information about date/time format
-	strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
-
+//	strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
+	strftime(buf, sizeof(buf), "%X", &tstruct);
 	return buf;
 }
 
@@ -135,4 +135,4 @@ private:
 
 }
 
-#endif /* INCLUDE_FAST_LOGGING_HPP_ */
+#endif /* FAST_FAST_LOGGING_HPP_ */

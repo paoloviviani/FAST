@@ -5,17 +5,15 @@
  *      Author: pvi
  */
 
-#ifndef INCLUDE_FAST_TENSOR_HPP_
-#define INCLUDE_FAST_TENSOR_HPP_
+#ifndef FAST_FAST_TENSOR_HPP_
+#define FAST_FAST_TENSOR_HPP_
 
-#include "mxnet-cpp/MxNetCpp.h"
 #include <vector>
+#include "mxnet-cpp/MxNetCpp.h"
 
 #define tensor_type_check(condition)  static_assert( (condition), "error: incorrect or unsupported tensor type" )
 
 using namespace std;
-
-namespace FAST {
 
 /**
  * Statically check if type is supported
@@ -30,18 +28,8 @@ struct is_supported<mxnet::cpp::NDArray> {
 	static const bool value = true;
 };
 
-/**
- * Statically check if type is MxNet NDArray
- */
-template <typename T>
-struct is_MxNDAarray {
-	static const bool value = false;
-};
 
-template <>
-struct is_MxNDAarray<mxnet::cpp::NDArray> {
-	static const bool value = true;
-};
+namespace FAST {
 
 /**
  *
@@ -49,8 +37,9 @@ struct is_MxNDAarray<mxnet::cpp::NDArray> {
 template <typename backendType>
 class Tensor {
 
+	tensor_type_check(( is_supported<backendType>::value ));
 	/**
-	 *
+	 * Tensor object of deep learning framewrok
 	 */
 	backendType bt;
 
@@ -60,64 +49,44 @@ public:
 	 *
 	 * @param t
 	 */
-	Tensor() {
-		tensor_type_check(( is_supported<backendType>::value ));
-		if ( is_MxNDAarray<backendType>::value )
-			bt = mxnet::cpp::NDArray();
-	}
+	Tensor();
 
 	/**
 	 * Constructor from generic framework tensor
 	 * @param t
 	 */
-	Tensor(backendType t) {
-		tensor_type_check(( is_supported<backendType>::value ));
-		bt = t;
-	}
+	Tensor(backendType t) { bt = t; };
 
 	/**
 	 * Constructor from raw data and shape
 	 * @param raw_data
 	 * @param shape
 	 */
-	Tensor(float * raw_data, vector<unsigned int> shape) {
-		tensor_type_check(( is_supported<backendType>::value ));
-
-		if ( is_MxNDAarray<backendType>::value )
-			bt = mxnet::cpp::NDArray(raw_data, mxnet::cpp::Shape(shape), mxnet::cpp::Context::cpu());
-	}
+	Tensor(float * raw_data, vector<unsigned int> shape);
 
 	/**
 	 * Constructor from raw data and size only
 	 * @param raw_data
 	 * @param shape
 	 */
-	Tensor(float * raw_data, size_t size) {
-		tensor_type_check(( is_supported<backendType>::value ));
-
-		if ( is_MxNDAarray<backendType>::value )
-			bt = mxnet::cpp::NDArray(raw_data, mxnet::cpp::Shape(size), mxnet::cpp::Context::cpu());
-	}
+	Tensor(float * raw_data, size_t size);
 
 	/**
 	 * Copy constructor from NxNet NDArray
 	 * @param t
 	 */
-	Tensor(Tensor<mxnet::cpp::NDArray> & t) {
-		if ( is_MxNDAarray<backendType>::value )
-			bt = t.getFrameworkObject();
-	}
+	Tensor(Tensor<mxnet::cpp::NDArray> & t);
 
 	/**
 	 *
 	 * @return
 	 */
-	vector<unsigned int> getShape() const {
-		tensor_type_check(( is_supported<backendType>::value  ));
+	vector<unsigned int> getShape() const;
 
-		if ( is_MxNDAarray<backendType>::value )
-			return bt.GetShape();
-	}
+	size_t getSize() const {
+		auto v = this->getShape();
+		return std::accumulate(v.begin(), v.end(), 1, std::multiplies<unsigned int>());
+	};
 
 	/**
 	 *
@@ -128,4 +97,4 @@ public:
 };
 
 }
-#endif /* INCLUDE_FAST_TENSOR_HPP_ */
+#endif /* FAST_FAST_TENSOR_HPP_ */
