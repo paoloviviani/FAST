@@ -9,6 +9,8 @@
 #define INCLUDE_FAST_HPP_
 
 #include "fast/tensor.hpp"
+#include "fast/mxnet_tensor.hpp"
+
 #include "fast/logger.hpp"
 #include "fast/gam_wrapper.hpp"
 #include "fast/fast_utils.hpp"
