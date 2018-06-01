@@ -126,7 +126,7 @@ public:
 	 * Output stream for logging unit tests only
 	 * @return
 	 */
-	std::ostream &test_log() {
+	std::ostream &log_tests() {
 		return cerr << "[CATCH test - " << currentDateTime() << ", proc " << id <<"] ";
 	}
 
