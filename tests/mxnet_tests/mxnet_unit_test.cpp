@@ -40,14 +40,14 @@ Symbol MLP(const vector<int> layers) {
 }
 
 TEST_CASE( "Init Tensor from NDarray", "mxnet" ){
-	FAST_DEBUG(Catch::getResultCapture().getCurrentTestName())
+	FAST_TESTLOG(Catch::getResultCapture().getCurrentTestName())
 	vector<unsigned int> shape = {10,2};
 	NDArray mxnet_tensor(Shape(shape), ctx);
 	NDArray::SampleUniform(0.,1.,&mxnet_tensor);
 
 	FAST::Tensor<NDArray> tensor(mxnet_tensor);
 	REQUIRE(tensor.getShape() == mxnet_tensor.GetShape());
-	FAST_DEBUG("FAST tensor shape: " << tensor.getShape())
+	FAST_TESTLOG("FAST tensor shape: " << tensor.getShape())
 	for (uint i = 0; i < shape[0]; i++)
 		for (uint j = 0; j < shape[1]; j++){
 			REQUIRE(tensor.at(i,j) == mxnet_tensor.At(i,j));
@@ -56,7 +56,7 @@ TEST_CASE( "Init Tensor from NDarray", "mxnet" ){
 }
 
 TEST_CASE( "Init Tensor from raw pointer", "mxnet" ){
-	FAST_DEBUG(Catch::getResultCapture().getCurrentTestName())
+	FAST_TESTLOG(Catch::getResultCapture().getCurrentTestName())
 	vector<unsigned int> shape = {10,2};
 	NDArray mxnet_tensor(Shape(shape), ctx);
 	NDArray::SampleUniform(0.,1.,&mxnet_tensor);
@@ -65,7 +65,7 @@ TEST_CASE( "Init Tensor from raw pointer", "mxnet" ){
 
 	FAST::Tensor<NDArray> tensor(ndarray_values.data(),shape);
 	REQUIRE(tensor.getShape() == mxnet_tensor.GetShape());
-	FAST_DEBUG("FAST tensor shape: " << tensor.getShape())
+	FAST_TESTLOG("FAST tensor shape: " << tensor.getShape())
 	for (uint i = 0; i < shape[0]; i++)
 		for (uint j = 0; j < shape[1]; j++){
 			REQUIRE(tensor.at(i,j) == mxnet_tensor.At(i,j));

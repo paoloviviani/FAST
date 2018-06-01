@@ -54,6 +54,10 @@ using namespace std;
 
 #endif
 
+#define FAST_TESTLOG(x) {\
+		FAST::Logger::getLogger()->lock(); \
+		FAST::Logger::getLogger()->log_tests() << x << std::endl; \
+		FAST::Logger::getLogger()->unlock();}
 
 // Get current date/time, format is YYYY-MM-DD.HH:mm:ss
 inline const std::string currentDateTime() {
@@ -109,12 +113,21 @@ public:
 	std::ostream &log_error() {
 		return cout << "[" << currentDateTime() << ", proc " << id <<"] ";
 	}
+
 	/**
 	 * Standard output stream provider
 	 * @return
 	 */
 	std::ostream &log_output() {
 		return cerr << "[" << currentDateTime() << ", proc " << id <<"] ";
+	}
+
+	/**
+	 * Output stream for logging unit tests only
+	 * @return
+	 */
+	std::ostream &test_log() {
+		return cerr << "[CATCH test - " << currentDateTime() << ", proc " << id <<"] ";
 	}
 
 	/**
