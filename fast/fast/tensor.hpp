@@ -115,6 +115,10 @@ public:
 
 }
 
+/**
+ * Included to separate the generic class definition and the partial template specialization
+ * As the header including the specialization is never explicitly compiled, it must be included after the class definition
+ */
 #include "fast/mxnet_tensor.hpp"
 
 #endif /* FAST_FAST_TENSOR_HPP_ */

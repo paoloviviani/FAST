@@ -6,4 +6,4 @@
 .settings
 *.so
 *.o
-*/bin/*
+testenv.sh
