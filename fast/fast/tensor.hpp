@@ -91,6 +91,11 @@ public:
 
 	/**
 	 *
+	 */
+	void setShape(vector<unsigned int>);
+
+	/**
+	 *
 	 * @return the total number of elements of the tensor
 	 */
 	size_t getSize() const {
@@ -115,7 +120,7 @@ public:
 	 *
 	 * @return raw pointer of aligned tensor data
 	 */
-	float * getRawPtr();
+	const float * getRawPtr();
 
 	/**
 	 *
