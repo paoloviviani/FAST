@@ -6,4 +6,3 @@
 .settings
 *.so
 *.o
-testenv.sh
