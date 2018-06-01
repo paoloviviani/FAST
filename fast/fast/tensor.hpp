@@ -32,12 +32,18 @@ struct is_supported<mxnet::cpp::NDArray> {
 namespace FAST {
 
 /**
- *
+ * Generic tensor wrapper class
+ * Encapsulates a back-end type tensor (e.g. MxNet NDArray)
+ * and provides access to raw data and some facilities
  */
 template <typename backendType>
 class Tensor {
 
+	/**
+	 * Check if template type is supported
+	 */
 	tensor_type_check(( is_supported<backendType>::value ));
+
 	/**
 	 * Tensor object of deep learning framewrok
 	 */
@@ -104,6 +110,12 @@ public:
 	 * @return a vector of unsigned integer with the size of each dimension of the tensor
 	 */
 	vector<float> getStdValues();
+
+	/**
+	 *
+	 * @return raw pointer of aligned tensor data
+	 */
+	float * getRawPtr();
 
 	/**
 	 *
