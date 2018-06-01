@@ -40,14 +40,35 @@ Symbol MLP(const vector<int> layers) {
 }
 
 TEST_CASE( "Init Tensor from NDarray", "mxnet" ){
-	vector<unsigned int> shape = {50,2};
+	FAST_DEBUG(Catch::getResultCapture().getCurrentTestName())
+	vector<unsigned int> shape = {10,2};
 	NDArray mxnet_tensor(Shape(shape), ctx);
 	NDArray::SampleUniform(0.,1.,&mxnet_tensor);
 
 	FAST::Tensor<NDArray> tensor(mxnet_tensor);
 	REQUIRE(tensor.getShape() == mxnet_tensor.GetShape());
-//	std::string s;
-//	for (const auto item : tensor.getShape()) s += to_string(item);
 	FAST_DEBUG("FAST tensor shape: " << tensor.getShape())
-	REQUIRE(tensor.getSize() == 100);
+	for (uint i = 0; i < shape[0]; i++)
+		for (uint j = 0; j < shape[1]; j++){
+			REQUIRE(tensor.at(i,j) == mxnet_tensor.At(i,j));
+		}
+	REQUIRE(tensor.getSize() == std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<float>()));
+}
+
+TEST_CASE( "Init Tensor from raw pointer", "mxnet" ){
+	FAST_DEBUG(Catch::getResultCapture().getCurrentTestName())
+	vector<unsigned int> shape = {10,2};
+	NDArray mxnet_tensor(Shape(shape), ctx);
+	NDArray::SampleUniform(0.,1.,&mxnet_tensor);
+	std::vector<float> ndarray_values;
+	mxnet_tensor.SyncCopyToCPU(&ndarray_values);
+
+	FAST::Tensor<NDArray> tensor(ndarray_values.data(),shape);
+	REQUIRE(tensor.getShape() == mxnet_tensor.GetShape());
+	FAST_DEBUG("FAST tensor shape: " << tensor.getShape())
+	for (uint i = 0; i < shape[0]; i++)
+		for (uint j = 0; j < shape[1]; j++){
+			REQUIRE(tensor.at(i,j) == mxnet_tensor.At(i,j));
+		}
+	REQUIRE(tensor.getSize() == std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<float>()));
 }

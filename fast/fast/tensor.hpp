@@ -94,6 +94,13 @@ public:
 
 	/**
 	 *
+	 * @return the element at the given index, based on underlying implementation
+	 */
+	template<typename... Args>
+	float at(Args...) const;
+
+	/**
+	 *
 	 * @return the object of type defined by the deep learning framewrok
 	 */
 	backendType getFrameworkObject() const { return bt; };
