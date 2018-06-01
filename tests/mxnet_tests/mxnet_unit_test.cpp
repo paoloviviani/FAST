@@ -47,7 +47,7 @@ TEST_CASE( "Init Tensor from NDarray", "mxnet" ){
 	FAST::Tensor<NDArray> tensor(mxnet_tensor);
 	REQUIRE(tensor.getShape() == mxnet_tensor.GetShape());
 	std::string s;
-	for (const auto &piece : tensor.getShape()) s += piece;
+	for (const auto item : tensor.getShape()) s += to_string(item);
 	FAST_DEBUG("FAST tensor shape: " << s)
 	REQUIRE(tensor.getSize() == 100);
 }

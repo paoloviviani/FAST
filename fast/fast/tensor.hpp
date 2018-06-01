@@ -94,11 +94,14 @@ public:
 
 	/**
 	 *
-	 * @return the object of type defined bythe deep learning framewrok
+	 * @return the object of type defined by the deep learning framewrok
 	 */
 	backendType getFrameworkObject() const { return bt; };
 
 };
 
 }
+
+#include "fast/mxnet_tensor.hpp"
+
 #endif /* FAST_FAST_TENSOR_HPP_ */
