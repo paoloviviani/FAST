@@ -44,8 +44,10 @@ TEST_CASE( "Init Tensor from NDarray", "mxnet" ){
 	NDArray mxnet_tensor(Shape(shape), ctx);
 	NDArray::SampleUniform(0.,1.,&mxnet_tensor);
 
-	auto tensor = FAST::Tensor(mxnet_tensor);
+	FAST::Tensor<NDArray> tensor(mxnet_tensor);
 	REQUIRE(tensor.getShape() == mxnet_tensor.GetShape());
+	std::string s;
+	for (const auto &piece : tensor.getShape()) s += piece;
+	FAST_DEBUG("FAST tensor shape: " << s)
 	REQUIRE(tensor.getSize() == 100);
-	REQUIRE(mxnet_tensor == tensor.getFrameworkObject());
 }

@@ -21,7 +21,7 @@ inline uint32_t FAST::rank() {
 }
 
 #else
-uint32_t FAST::rank() {
+inline uint32_t FAST::rank() {
 	return 0;
 }
 #endif

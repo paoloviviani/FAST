@@ -79,10 +79,14 @@ public:
 
 	/**
 	 *
-	 * @return
+	 * @return a vector of unsigned integer with the size of each dimension of the tensor
 	 */
 	vector<unsigned int> getShape() const;
 
+	/**
+	 *
+	 * @return the total number of elements of the tensor
+	 */
 	size_t getSize() const {
 		auto v = this->getShape();
 		return std::accumulate(v.begin(), v.end(), 1, std::multiplies<unsigned int>());
@@ -90,7 +94,7 @@ public:
 
 	/**
 	 *
-	 * @return
+	 * @return the object of type defined bythe deep learning framewrok
 	 */
 	backendType getFrameworkObject() const { return bt; };
 

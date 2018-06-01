@@ -8,7 +8,8 @@
 #ifndef INCLUDE_FAST_HPP_
 #define INCLUDE_FAST_HPP_
 
-#include "fast/mxnet_tensor.hpp"
+#include "fast/tensor.hpp"
 #include "fast/logger.hpp"
+#include "fast/gam_wrapper.hpp"
 
 #endif /* INCLUDE_FAST_HPP_ */
