@@ -101,6 +101,12 @@ public:
 
 	/**
 	 *
+	 * @return a vector of unsigned integer with the size of each dimension of the tensor
+	 */
+	vector<float> getStdValues();
+
+	/**
+	 *
 	 * @return the object of type defined by the deep learning framewrok
 	 */
 	backendType getFrameworkObject() const { return bt; };
