@@ -31,7 +31,7 @@ Tensor<mxnet::cpp::NDArray>::Tensor() {
  * @param shape
  */
 template <>
-Tensor<mxnet::cpp::NDArray>::Tensor(float * raw_data, vector<unsigned int> shape) {
+Tensor<mxnet::cpp::NDArray>::Tensor(const float * raw_data, vector<unsigned int> shape) {
 	bt = mxnet::cpp::NDArray(raw_data, mxnet::cpp::Shape(shape), mxnet::cpp::Context::cpu());
 }
 
@@ -42,7 +42,7 @@ Tensor<mxnet::cpp::NDArray>::Tensor(float * raw_data, vector<unsigned int> shape
  * @param shape
  */
 template <>
-Tensor<mxnet::cpp::NDArray>::Tensor(float * raw_data, size_t size) {
+Tensor<mxnet::cpp::NDArray>::Tensor(const float * raw_data, size_t size) {
 	bt = mxnet::cpp::NDArray(raw_data, mxnet::cpp::Shape(size), mxnet::cpp::Context::cpu());
 }
 

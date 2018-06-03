@@ -68,14 +68,14 @@ public:
 	 * @param raw_data
 	 * @param shape
 	 */
-	Tensor(float * raw_data, vector<unsigned int> shape);
+	Tensor(const float * raw_data, vector<unsigned int> shape);
 
 	/**
 	 * Constructor from raw data and size only
 	 * @param raw_data
 	 * @param shape
 	 */
-	Tensor(float * raw_data, size_t size);
+	Tensor(const float * raw_data, size_t size);
 
 	/**
 	 * Copy constructor from NxNet NDArray

@@ -60,10 +60,8 @@ TEST_CASE( "Init Tensor from raw pointer", "mxnet" ) {
 	vector<unsigned int> shape = {10,2};
 	NDArray mxnet_tensor(Shape(shape), ctx);
 	NDArray::SampleUniform(0.,1.,&mxnet_tensor);
-	std::vector<float> ndarray_values;
-	mxnet_tensor.SyncCopyToCPU(&ndarray_values);
 
-	FAST::Tensor<NDArray> tensor(ndarray_values.data(),shape);
+	FAST::Tensor<NDArray> tensor(mxnet_tensor.GetData(),shape);
 	REQUIRE(tensor.getShape() == mxnet_tensor.GetShape());
 	FAST_TESTLOG("FAST tensor shape: " << tensor.getShape())
 	for (uint i = 0; i < shape[0]; i++)
