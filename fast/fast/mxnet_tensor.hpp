@@ -64,7 +64,7 @@ template <typename... Args>
 float Tensor<mxnet::cpp::NDArray>::at(Args... args) const {
 	//TODO use std forwarding
 	// http://thbecker.net/articles/rvalue_references/section_01.html
-	return bt.At(args...);
+	return bt.At(std::forward<Args>(args)...);
 }
 
 /**
