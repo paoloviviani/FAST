@@ -39,7 +39,7 @@ Symbol MLP(const vector<int> layers) {
 	return LinearRegressionOutput("output", outputs.back(), label);
 }
 
-TEST_CASE( "Init Tensor from NDarray", "mxnet" ){
+TEST_CASE( "Init Tensor from NDarray", "mxnet" ) {
 	FAST_TESTLOG(Catch::getResultCapture().getCurrentTestName())
 	vector<unsigned int> shape = {10,2};
 	NDArray mxnet_tensor(Shape(shape), ctx);
@@ -55,7 +55,7 @@ TEST_CASE( "Init Tensor from NDarray", "mxnet" ){
 	REQUIRE(tensor.getSize() == std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<float>()));
 }
 
-TEST_CASE( "Init Tensor from raw pointer", "mxnet" ){
+TEST_CASE( "Init Tensor from raw pointer", "mxnet" ) {
 	FAST_TESTLOG(Catch::getResultCapture().getCurrentTestName())
 	vector<unsigned int> shape = {10,2};
 	NDArray mxnet_tensor(Shape(shape), ctx);

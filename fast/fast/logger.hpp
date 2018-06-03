@@ -125,7 +125,7 @@ public:
 	 * @return
 	 */
 	std::ostream &log_tests() {
-		return cerr << "[CATCH test - " << currentDateTime() << ", proc " << id <<"] ";
+		return cerr << "[CATCH test - " << currentDateTime() << ", proc " << id <<"] Test Name: ";
 	}
 
 	/**

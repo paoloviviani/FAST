@@ -42,7 +42,7 @@ endif
 all: $(EXECS)
 
 #objects
-%.o: %.cpp
+%.o: %.cpp $(FAST_ROOT)/fast/fast/*.hpp
 	$(CXX) $(INCLUDES) $(CCFLAGS) $(CFLAGS) $(OPTIMIZE_FLAGS) -c -o $@ $<
 
 #basic unit test executable
