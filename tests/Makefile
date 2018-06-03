@@ -19,7 +19,7 @@ CFLAGS               = -std=c++11
 LDFLAGS              = 
 LIBS                 = -lpthread `pkg-config --libs libfabric`
 
-INCLUDES             = -I$(FAST_ROOT)/fast -I$(FAST_ROOT)/tests/catch2 -I$(FAST_ROOT)/3rdparty/gam/gam/include -I$(FAST_ROOT)/3rdparty/plog `pkg-config --cflags libfabric`
+INCLUDES             = -I$(FAST_ROOT)/fast -I$(FAST_ROOT)/tests/catch2 -I$(FAST_ROOT)/3rdparty/gam/gam/include `pkg-config --cflags libfabric`
 EXECS                = unit_test
 TARGET_OBJ_UNIT      = basic_unit_test.o
 TEST_DRIVER_OBJ      = test_driver.o

@@ -38,7 +38,7 @@ namespace FAST {
  */
 template <typename backendType>
 class Tensor {
-
+private:
 	/**
 	 * Check if template type is supported
 	 */
