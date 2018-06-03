@@ -6,3 +6,4 @@
 .settings
 *.so
 *.o
+unit_test
