@@ -25,7 +25,6 @@ using namespace mxnet::cpp;
 Context ctx = Context::cpu();  // Use CPU for training
 
 TEST_CASE( "Init Tensor from raw pointer", "tensor" ) {
-	FAST_TESTNAME
 	vector<unsigned int> shape = {6};
 	vector<float> data = {11.,12.,13.,21.,22.,23.};
 
@@ -36,7 +35,6 @@ TEST_CASE( "Init Tensor from raw pointer", "tensor" ) {
 
 
 TEST_CASE( "Access tensor elements", "tensor" ) {
-	FAST_TESTNAME;
 	vector<unsigned int> shape = {6};
 	vector<float> data = {11.,12.,13.,21.,22.,23.};
 
@@ -55,14 +53,12 @@ TEST_CASE( "Access tensor elements", "tensor" ) {
 }
 
 TEST_CASE( "Init Tensor from NDarray", "mxnet, tensor" ) {
-	FAST_TESTNAME;
 	vector<unsigned int> shape = {10,2};
 	NDArray mxnet_tensor(Shape(shape), ctx);
 	NDArray::SampleUniform(0.,1.,&mxnet_tensor);
 
 	FAST::Tensor<NDArray> tensor(mxnet_tensor);
 	REQUIRE(tensor.getShape() == mxnet_tensor.GetShape());
-	FAST_TESTLOG("FAST tensor shape: " << tensor.getShape());
 	for (uint i = 0; i < shape[0]; i++)
 		for (uint j = 0; j < shape[1]; j++){
 			REQUIRE(tensor.at(i,j) == mxnet_tensor.At(i,j));
