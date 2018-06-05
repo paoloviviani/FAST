@@ -9,6 +9,7 @@
 #define FAST_FAST_TENSOR_HPP_
 
 #include <vector>
+#include <memory>
 #include "mxnet-cpp/MxNetCpp.h"
 
 #define tensor_type_check(condition)  static_assert( (condition), "error: incorrect or unsupported tensor type" )
@@ -47,7 +48,7 @@ protected:
 	/**
 	 * Tensor object of deep learning framework
 	 */
-	float * data_;
+	std::unique_ptr<float> data_;
 	vector<unsigned int> shape_;
 
 public:
@@ -83,12 +84,6 @@ public:
 	 * @param t
 	 */
 	Tensor(Tensor<mxnet::cpp::NDArray> & t);
-
-	/**
-	 * Object destructor
-	 * @param t
-	 */
-	~Tensor();
 
 	/**
 	 *
@@ -127,7 +122,7 @@ public:
 	 *
 	 * @return raw pointer to tensor data
 	 */
-	const float * getRawPtr() {return data_;};
+	const float * getRawPtr() {return data_.get();};
 
 	/**
 	 *
