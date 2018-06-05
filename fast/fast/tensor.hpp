@@ -38,12 +38,12 @@ namespace FAST {
  */
 template <typename backendType>
 class Tensor {
-protected:
 	/**
 	 * Check if template type is supported
 	 */
 	tensor_type_check(( is_supported<backendType>::value ));
 
+protected:
 	/**
 	 * Tensor object of deep learning framework
 	 */
