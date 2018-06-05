@@ -16,6 +16,58 @@ namespace FAST {
 /* Needed to prevent multiple declarations */
 template class Tensor<mxnet::cpp::NDArray>;
 
+/* Auxiliary derived class, used for accessing elements with MxNet specific functions not to be shared with base class*/
+
+class MxNetTensor : Tensor<mxnet::cpp::NDArray> {
+public:
+	/**
+	 * return offset of the element at (h, w)
+	 * \param h height position
+	 * \param w width position
+	 * \return offset of two dimensions array
+	 */
+	size_t Offset(size_t h = 0, size_t w = 0) const {
+		return (h *shape_[1]) + w;
+	}
+	/**
+	 * return offset of three dimensions array
+	 * \param c channel position
+	 * \param h height position
+	 * \param w width position
+	 * \return offset of three dimensions array
+	 */
+	size_t Offset(size_t c, size_t h, size_t w) const {
+		  return h * shape_[0] * shape_[2] + w * shape_[0] + c;
+	}
+	/**
+	 * return value of the element at (i)
+	 * \param i position
+	 * \return value of one dimensions array
+	 */
+	float At(size_t i) const {
+		return data_[i];
+	}
+	/**
+	 * return value of the element at (h, w)
+	 * \param h height position
+	 * \param w width position
+	 * \return value of two dimensions array
+	 */
+	float At(size_t h, size_t w) const {
+		  return data_[Offset(h, w)];
+	}
+	/**
+	 * return value of three dimensions array
+	 * \param c channel position
+	 * \param h height position
+	 * \param w width position
+	 * \return value of three dimensions array
+	 */
+	float At(size_t c, size_t h, size_t w) const {
+		  return data_[Offset(c, h, w)];
+	}
+};
+
 /**
  * Empty constructor
  * @param t
@@ -83,71 +135,12 @@ Tensor<mxnet::cpp::NDArray>::~Tensor() {
 
 /**
  *
- * @param h
- * @param w
- * @return
- */
-template <>
-inline
-size_t Tensor<mxnet::cpp::NDArray>::Offset(size_t h, size_t w) const {
-  return (h *shape_[1]) + w;
-}
-
-/**
- *
- * @param c
- * @param h
- * @param w
- * @return
- */
-template <>
-inline
-size_t Tensor<mxnet::cpp::NDArray>::Offset(size_t c, size_t h, size_t w) const {
-  return h * shape_[0] * shape_[2] + w * shape_[0] + c;
-}
-
-/**
- *
- * @param h
- * @param w
- * @return
- */
-template <>
-inline
-float Tensor<mxnet::cpp::NDArray>::At(size_t h, size_t w) const {
-  return data_[Offset(h, w)];
-}
-
-/**
- *
- * @param c
- * @param h
- * @param w
- * @return
- */
-template <>
-inline
-float Tensor<mxnet::cpp::NDArray>::At(size_t c, size_t h, size_t w) const {
-  return data_[Offset(c, h, w)];
-}
-
-/**
- *
  * @return the value at the specified position
  */
 template <>
 template <typename... Args>
 float Tensor<mxnet::cpp::NDArray>::at(Args... args) const {
 	return this->At(std::forward<Args>(args)...);
-}
-
-/**
- *
- * @return raw pointer of aligned tensor data for NDArray
- */
-template <>
-const float * Tensor<mxnet::cpp::NDArray>::getRawPtr() {
-	return data_;
 }
 
 /**
@@ -184,7 +177,7 @@ vector<float> Tensor<mxnet::cpp::NDArray>::getStdValues() {
  */
 template <>
 mxnet::cpp::NDArray Tensor<mxnet::cpp::NDArray>::getFrameworkObject() {
-	return mxnet::cpp::NDArray(data_,shape_,mxnet::cpp::Context::cpu());
+	return mxnet::cpp::NDArray(data_,mxnet::cpp::Shape(shape_),mxnet::cpp::Context::cpu());
 }
 
 }

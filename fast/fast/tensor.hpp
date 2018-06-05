@@ -50,39 +50,6 @@ private:
 	float * data_;
 	vector<unsigned int> shape_;
 
-	/**
-	 *
-	 * @param h
-	 * @param w
-	 * @return
-	 */
-	size_t Offset(size_t h, size_t w) const;
-
-	/**
-	 *
-	 * @param c
-	 * @param h
-	 * @param w
-	 * @return
-	 */
-	size_t Offset(size_t c, size_t h, size_t w) const;
-
-	/**
-	 *
-	 * @param h
-	 * @param w
-	 * @return
-	 */
-	float At(size_t h, size_t w) const;
-
-	/**
-	 *
-	 * @param c
-	 * @param h
-	 * @param w
-	 * @return
-	 */float At(size_t c, size_t h, size_t w) const;
-
 public:
 
 	/**
@@ -158,9 +125,9 @@ public:
 
 	/**
 	 *
-	 * @return raw pointer of aligned tensor data
+	 * @return raw pointer to tensor data
 	 */
-	const float * getRawPtr();
+	const float * getRawPtr() {return data_;};
 
 	/**
 	 *

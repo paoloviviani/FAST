@@ -39,7 +39,25 @@ Symbol MLP(const vector<int> layers) {
 	return LinearRegressionOutput("output", outputs.back(), label);
 }
 
-TEST_CASE( "Init Tensor from NDarray", "mxnet" ) {
+TEST_CASE( "Access tensor elements", "tensor" ) {
+	FAST_TESTLOG(Catch::getResultCapture().getCurrentTestName())
+	vector<unsigned int> shape = {6};
+	vector<float> data = {11.,12.,13.,21.,22.,23.};
+
+	FAST::Tensor<NDArray> tensor(data,shape);
+	REQUIRE(tensor.getShape() == shape);
+	FAST_TESTLOG("FAST tensor shape: " << tensor.getShape())
+	for (uint i = 0; i < shape[0]; i++)
+		REQUIRE(tensor.at(i) == data.at(i));
+
+	shape = {2,3};
+	for (uint i = 0; i < shape[0]; i++)
+		for (uint j = 0; j < shape[1]; j++){
+			REQUIRE(tensor.at(i,j) == data.at(i*shape[0]+j));
+		}
+}
+
+TEST_CASE( "Init Tensor from NDarray", "mxnet, tensor" ) {
 	FAST_TESTLOG(Catch::getResultCapture().getCurrentTestName())
 	vector<unsigned int> shape = {10,2};
 	NDArray mxnet_tensor(Shape(shape), ctx);
@@ -55,7 +73,7 @@ TEST_CASE( "Init Tensor from NDarray", "mxnet" ) {
 	REQUIRE(tensor.getSize() == std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<float>()));
 }
 
-TEST_CASE( "Init Tensor from raw pointer", "mxnet" ) {
+TEST_CASE( "Init Tensor from raw pointer", "mxnet, tensor" ) {
 	FAST_TESTLOG(Catch::getResultCapture().getCurrentTestName())
 	vector<unsigned int> shape = {10,2};
 	NDArray mxnet_tensor(Shape(shape), ctx);
