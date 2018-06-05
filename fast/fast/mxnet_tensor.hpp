@@ -22,7 +22,19 @@ template class Tensor<mxnet::cpp::NDArray>;
  */
 template <>
 Tensor<mxnet::cpp::NDArray>::Tensor() {
-	bt = mxnet::cpp::NDArray();
+	data_ = NULL;
+	shape_ = vector<unsigned int>();
+}
+
+/**
+ * Empty constructor
+ * @param t
+ */
+template <>
+Tensor<mxnet::cpp::NDArray>::Tensor(mxnet::cpp::NDArray t) {
+	data_ = new float[t.Size()];
+	t.SyncCopyToCPU(data_,t.Size());
+	shape_ = t.GetShape();
 }
 
 /**
@@ -31,8 +43,10 @@ Tensor<mxnet::cpp::NDArray>::Tensor() {
  * @param shape
  */
 template <>
-Tensor<mxnet::cpp::NDArray>::Tensor(const float * raw_data, vector<unsigned int> shape) {
-	bt = mxnet::cpp::NDArray(raw_data, mxnet::cpp::Shape(shape), mxnet::cpp::Context::cpu());
+Tensor<mxnet::cpp::NDArray>::Tensor(const float * raw_data, vector<unsigned int> shape) : shape_(shape) {
+	size_t size = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<unsigned int>());
+	data_ = new float[size];
+	std::copy(raw_data, raw_data + size, data_);
 }
 
 /**
@@ -43,7 +57,8 @@ Tensor<mxnet::cpp::NDArray>::Tensor(const float * raw_data, vector<unsigned int>
  */
 template <>
 Tensor<mxnet::cpp::NDArray>::Tensor(const float * raw_data, size_t size) {
-	bt = mxnet::cpp::NDArray(raw_data, mxnet::cpp::Shape(size), mxnet::cpp::Context::cpu());
+	data_ = new float[size];
+	std::copy(raw_data, raw_data + size, data_);
 }
 
 /**
@@ -52,19 +67,78 @@ Tensor<mxnet::cpp::NDArray>::Tensor(const float * raw_data, size_t size) {
  */
 template <>
 Tensor<mxnet::cpp::NDArray>::Tensor(Tensor<mxnet::cpp::NDArray> & t) {
-	bt = t.getFrameworkObject();
+	size_t size = t.getSize();
+	data_ = new float[size];
+	std::copy(t.getRawPtr(), t.getRawPtr() + size, data_);
+}
+
+/**
+ * Destructor
+ * @param t
+ */
+template <>
+Tensor<mxnet::cpp::NDArray>::~Tensor() {
+	delete[] data_;
 }
 
 /**
  *
- * @return a vector with each dimension of the tensor
+ * @param h
+ * @param w
+ * @return
+ */
+template <>
+inline
+size_t Tensor<mxnet::cpp::NDArray>::Offset(size_t h, size_t w) const {
+  return (h *shape_[1]) + w;
+}
+
+/**
+ *
+ * @param c
+ * @param h
+ * @param w
+ * @return
+ */
+template <>
+inline
+size_t Tensor<mxnet::cpp::NDArray>::Offset(size_t c, size_t h, size_t w) const {
+  return h * shape_[0] * shape_[2] + w * shape_[0] + c;
+}
+
+/**
+ *
+ * @param h
+ * @param w
+ * @return
+ */
+template <>
+inline
+float Tensor<mxnet::cpp::NDArray>::At(size_t h, size_t w) const {
+  return data_[Offset(h, w)];
+}
+
+/**
+ *
+ * @param c
+ * @param h
+ * @param w
+ * @return
+ */
+template <>
+inline
+float Tensor<mxnet::cpp::NDArray>::At(size_t c, size_t h, size_t w) const {
+  return data_[Offset(c, h, w)];
+}
+
+/**
+ *
+ * @return the value at the specified position
  */
 template <>
 template <typename... Args>
 float Tensor<mxnet::cpp::NDArray>::at(Args... args) const {
-	//TODO use std forwarding
-	// http://thbecker.net/articles/rvalue_references/section_01.html
-	return bt.At(std::forward<Args>(args)...);
+	return this->At(std::forward<Args>(args)...);
 }
 
 /**
@@ -73,7 +147,7 @@ float Tensor<mxnet::cpp::NDArray>::at(Args... args) const {
  */
 template <>
 const float * Tensor<mxnet::cpp::NDArray>::getRawPtr() {
-	return bt.GetData();
+	return data_;
 }
 
 /**
@@ -82,7 +156,7 @@ const float * Tensor<mxnet::cpp::NDArray>::getRawPtr() {
  */
 template <>
 vector<unsigned int> Tensor<mxnet::cpp::NDArray>::getShape() const {
-	return bt.GetShape();
+	return shape_;
 }
 
 /**
@@ -91,7 +165,7 @@ vector<unsigned int> Tensor<mxnet::cpp::NDArray>::getShape() const {
  */
 template <>
 void Tensor<mxnet::cpp::NDArray>::setShape(vector<unsigned int> shape) {
-	bt.Reshape(mxnet::cpp::Shape(shape));
+	shape_ = shape;
 }
 
 /**
@@ -100,9 +174,17 @@ void Tensor<mxnet::cpp::NDArray>::setShape(vector<unsigned int> shape) {
  */
 template <>
 vector<float> Tensor<mxnet::cpp::NDArray>::getStdValues() {
-	vector<float> out;
-	bt.SyncCopyToCPU(&out);
+	vector<float> out(data_,data_+this->getSize());
 	return out;
+}
+
+/**
+ *
+ * @return
+ */
+template <>
+mxnet::cpp::NDArray Tensor<mxnet::cpp::NDArray>::getFrameworkObject() {
+	return mxnet::cpp::NDArray(data_,shape_,mxnet::cpp::Context::cpu());
 }
 
 }

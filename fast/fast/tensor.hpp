@@ -45,9 +45,43 @@ private:
 	tensor_type_check(( is_supported<backendType>::value ));
 
 	/**
-	 * Tensor object of deep learning framewrok
+	 * Tensor object of deep learning framework
 	 */
-	backendType bt;
+	float * data_;
+	vector<unsigned int> shape_;
+
+	/**
+	 *
+	 * @param h
+	 * @param w
+	 * @return
+	 */
+	size_t Offset(size_t h, size_t w) const;
+
+	/**
+	 *
+	 * @param c
+	 * @param h
+	 * @param w
+	 * @return
+	 */
+	size_t Offset(size_t c, size_t h, size_t w) const;
+
+	/**
+	 *
+	 * @param h
+	 * @param w
+	 * @return
+	 */
+	float At(size_t h, size_t w) const;
+
+	/**
+	 *
+	 * @param c
+	 * @param h
+	 * @param w
+	 * @return
+	 */float At(size_t c, size_t h, size_t w) const;
 
 public:
 
@@ -61,7 +95,7 @@ public:
 	 * Constructor from generic framework tensor
 	 * @param t
 	 */
-	Tensor(backendType t) { bt = t; };
+	Tensor(backendType t);
 
 	/**
 	 * Constructor from raw data and shape
@@ -82,6 +116,12 @@ public:
 	 * @param t
 	 */
 	Tensor(Tensor<mxnet::cpp::NDArray> & t);
+
+	/**
+	 * Object destructor
+	 * @param t
+	 */
+	~Tensor();
 
 	/**
 	 *
@@ -126,7 +166,7 @@ public:
 	 *
 	 * @return the object of type defined by the deep learning framewrok
 	 */
-	backendType getFrameworkObject() const { return bt; };
+	backendType getFrameworkObject();
 
 };
 
