@@ -17,8 +17,7 @@ namespace FAST {
 template class Tensor<mxnet::cpp::NDArray>;
 
 /* Auxiliary derived class, used for accessing elements with MxNet specific functions not to be shared with base class*/
-
-class MxNetTensor : Tensor<mxnet::cpp::NDArray> {
+class MxNetTensor : public Tensor<mxnet::cpp::NDArray> {
 public:
 	/**
 	 * return offset of the element at (h, w)
@@ -26,6 +25,7 @@ public:
 	 * \param w width position
 	 * \return offset of two dimensions array
 	 */
+	inline
 	size_t Offset(size_t h = 0, size_t w = 0) const {
 		return (h *shape_[1]) + w;
 	}
@@ -36,14 +36,16 @@ public:
 	 * \param w width position
 	 * \return offset of three dimensions array
 	 */
+	inline
 	size_t Offset(size_t c, size_t h, size_t w) const {
-		  return h * shape_[0] * shape_[2] + w * shape_[0] + c;
+		return h * shape_[0] * shape_[2] + w * shape_[0] + c;
 	}
 	/**
 	 * return value of the element at (i)
 	 * \param i position
 	 * \return value of one dimensions array
 	 */
+	inline
 	float At(size_t i) const {
 		return data_[i];
 	}
@@ -53,8 +55,9 @@ public:
 	 * \param w width position
 	 * \return value of two dimensions array
 	 */
+	inline
 	float At(size_t h, size_t w) const {
-		  return data_[Offset(h, w)];
+		return data_[Offset(h, w)];
 	}
 	/**
 	 * return value of three dimensions array
@@ -63,10 +66,13 @@ public:
 	 * \param w width position
 	 * \return value of three dimensions array
 	 */
+	inline
 	float At(size_t c, size_t h, size_t w) const {
-		  return data_[Offset(c, h, w)];
+		return data_[Offset(c, h, w)];
 	}
 };
+
+/* Tensor class partial template specialization implementations */
 
 /**
  * Empty constructor
@@ -140,7 +146,7 @@ Tensor<mxnet::cpp::NDArray>::~Tensor() {
 template <>
 template <typename... Args>
 float Tensor<mxnet::cpp::NDArray>::at(Args... args) const {
-	return this->At(std::forward<Args>(args)...);
+	return static_cast<const MxNetTensor*>(this)->At(std::forward<Args>(args)...);
 }
 
 /**
@@ -180,7 +186,7 @@ mxnet::cpp::NDArray Tensor<mxnet::cpp::NDArray>::getFrameworkObject() {
 	return mxnet::cpp::NDArray(data_,mxnet::cpp::Shape(shape_),mxnet::cpp::Context::cpu());
 }
 
-}
+} // End FAST namespace
 
 
 #endif /* FAST_FAST_MXNET_TENSOR_HPP_ */
