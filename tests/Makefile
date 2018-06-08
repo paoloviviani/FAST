@@ -18,14 +18,21 @@ VERSION              =
 CCFLAGS              = -Wall #-Wextra -Wstrict-aliasing -pedantic
 CFLAGS               = -std=c++11
 LDFLAGS              = 
-LIBS                 = -lpthread `pkg-config --libs libfabric`
+LIBS                 = -lpthread
 
-INCLUDES             = -I$(FAST_ROOT)/fast -I$(FAST_ROOT)/tests/catch2 -I$(FAST_ROOT)/3rdparty/gam/gam/include `pkg-config --cflags libfabric`
+INCLUDES             = -I$(FAST_ROOT)/fast -I$(FAST_ROOT)/tests/catch2 -I$(FAST_ROOT)/3rdparty/gam/gam/include
 EXECS                = unit_test
 TARGET_OBJ_UNIT      = basic_unit_test.o
 TEST_DRIVER_OBJ      = test_driver.o
 
-#MxNet dependecies
+#Libfabric dependency
+ifeq ($(LIBFABRIC_LIB_DIR),)
+LIBS                 += -lfabric
+else
+LIBS                 += -L$(LIBFABRIC_LIB_DIR) -lfabric
+endif
+
+#MxNet dependency
 INCLUDES             += -I$(MXNET_INCLUDE_DIR)
 LIBS                 += -L$(MXNET_LIB_DIR) -lmxnet
 
