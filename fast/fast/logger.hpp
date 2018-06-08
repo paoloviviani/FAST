@@ -94,9 +94,9 @@ public:
 		log("I am FAST worker %d (pid=%d)", id, getpid());
 	}
 
-	void finalize(int id = 0) {
+	void finalize(int proc_id = 0) {
 		//print footer message
-		log("stop logging worker %d", id);
+		log("stop logging worker %d", proc_id);
 	}
 
 	/**

@@ -14,7 +14,8 @@ endif
 CXX                  = g++
 LINK_OPT             = 
 VERSION              = 
-CCFLAGS              = -Wall
+
+CCFLAGS              = -Wall #-Wextra -Wstrict-aliasing -pedantic
 CFLAGS               = -std=c++11
 LDFLAGS              = 
 LIBS                 = -lpthread `pkg-config --libs libfabric`
