@@ -19,6 +19,7 @@ class worker {
 private:
 	//TODO gam pointer for local updates
 	//TODO gam pointer for remote updates
+
 public:
 
 };

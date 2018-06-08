@@ -17,7 +17,7 @@ namespace FAST {
 template class Tensor<mxnet::cpp::NDArray>;
 
 /* Auxiliary derived class, used for accessing elements with MxNet specific functions not to be shared with base class*/
-class MxNetTensor : public Tensor<mxnet::cpp::NDArray> {
+class AuxMxNetTensor : public Tensor<mxnet::cpp::NDArray> {
 public:
 	/**
 	 * return offset of the element at (h, w)
@@ -72,18 +72,6 @@ public:
 	}
 };
 
-/* Tensor class partial template specialization implementations */
-
-/**
- * Empty constructor
- * @param t
- */
-template <>
-Tensor<mxnet::cpp::NDArray>::Tensor() {
-	data_ = std::unique_ptr<float>();
-	shape_ = vector<unsigned int>();
-}
-
 /**
  * Empty constructor
  * @param t
@@ -93,30 +81,6 @@ Tensor<mxnet::cpp::NDArray>::Tensor(mxnet::cpp::NDArray t) {
 	data_ = std::unique_ptr<float>(new float[t.Size()]);
 	t.SyncCopyToCPU(data_.get(),t.Size());
 	shape_ = t.GetShape();
-}
-
-/**
- * Constructor from raw data and shape
- * @param raw_data
- * @param shape
- */
-template <>
-Tensor<mxnet::cpp::NDArray>::Tensor(const float * raw_data, vector<unsigned int> shape) : shape_(shape) {
-	size_t size = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<unsigned int>());
-	data_ = std::unique_ptr<float>(new float[size]);
-	std::copy(raw_data, raw_data + size, data_.get());
-}
-
-/**
- * Constructor from raw data and size only
- * Only for flat data
- * @param raw_data
- * @param shape
- */
-template <>
-Tensor<mxnet::cpp::NDArray>::Tensor(const float * raw_data, size_t size) {
-	data_ = std::unique_ptr<float>(new float[size]);
-	std::copy(raw_data, raw_data + size, data_.get());
 }
 
 /**
@@ -131,50 +95,13 @@ Tensor<mxnet::cpp::NDArray>::Tensor(Tensor<mxnet::cpp::NDArray> & t) {
 }
 
 /**
- * Destructor
- * @param t
- */
-//template <>
-//Tensor<mxnet::cpp::NDArray>::~Tensor() {
-//	delete[] data_;
-//}
-
-/**
  *
  * @return the value at the specified position
  */
 template <>
 template <typename... Args>
 float Tensor<mxnet::cpp::NDArray>::at(Args... args) const {
-	return static_cast<const MxNetTensor*>(this)->At(std::forward<Args>(args)...);
-}
-
-/**
- *
- * @return a vector with each dimension of the tensor
- */
-template <>
-vector<unsigned int> Tensor<mxnet::cpp::NDArray>::getShape() const {
-	return shape_;
-}
-
-/**
- *
- * @return a vector with each dimension of the tensor
- */
-template <>
-void Tensor<mxnet::cpp::NDArray>::setShape(vector<unsigned int> shape) {
-	shape_ = shape;
-}
-
-/**
- *
- * @return a vector with flattened tensor values
- */
-template <>
-vector<float> Tensor<mxnet::cpp::NDArray>::getStdValues() {
-	vector<float> out(data_.get(),data_.get()+this->getSize());
-	return out;
+	return static_cast<const AuxMxNetTensor*>(this)->At(std::forward<Args>(args)...);
 }
 
 /**
