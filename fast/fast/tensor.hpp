@@ -33,63 +33,6 @@ struct is_supported<mxnet::cpp::NDArray> {
 namespace FAST {
 
 /**
- * Tensor wrapper base class, meant to be used internally to manage different specializations of tensor
- */
-class TensorWrapper {
-protected:
-
-	/**
-	 * Constructor must not be used for this class
-	 * @param t
-	 */
-	TensorWrapper() {};
-
-	/**
-	 * Tensor object of deep learning framework
-	 */
-	std::unique_ptr<float> data_;
-	vector<unsigned int> shape_;
-
-public:
-
-	/**
-	 *
-	 * @return a vector of unsigned integer with the size of each dimension of the tensor
-	 */
-	vector<unsigned int> getShape() const { return shape_; };
-
-	/**
-	 *
-	 */
-	void setShape(vector<unsigned int> shape) {  shape_ = shape; };
-
-	/**
-	 *
-	 * @return the total number of elements of the tensor
-	 */
-	size_t getSize() const {
-		auto v = this->getShape();
-		return std::accumulate(v.begin(), v.end(), 1, std::multiplies<unsigned int>());
-	};
-
-	/**
-	 *
-	 * @return a vector of unsigned integer with the size of each dimension of the tensor
-	 */
-	vector<float> getStdValues() {
-		vector<float> out(data_.get(),data_.get()+this->getSize());
-		return out;
-	}
-
-	/**
-	 *
-	 * @return raw pointer to tensor data
-	 */
-	const float * getRawPtr() {return data_.get();};
-
-};
-
-/**
  * Generic tensor class
  * Encapsulates a back-end type tensor (e.g. MxNet NDArray)
  * and provides access to raw data and some facilities
@@ -101,6 +44,13 @@ class Tensor : public TensorWrapper {
 	 * Check if template type is supported
 	 */
 	tensor_type_check(( is_supported<backendType>::value ));
+protected:
+	/**
+	 * Tensor object of deep learning framework
+	 */
+	std::unique_ptr<float> data_;
+	vector<unsigned int> shape_;
+
 public:
 
 	/**
@@ -146,6 +96,41 @@ public:
 	 * @param t
 	 */
 	Tensor(Tensor<mxnet::cpp::NDArray> & t);
+
+	/**
+	 *
+	 * @return a vector of unsigned integer with the size of each dimension of the tensor
+	 */
+	vector<unsigned int> getShape() const { return shape_; };
+
+	/**
+	 *
+	 */
+	void setShape(vector<unsigned int> shape) {  shape_ = shape; };
+
+	/**
+	 *
+	 * @return the total number of elements of the tensor
+	 */
+	size_t getSize() const {
+		auto v = this->getShape();
+		return std::accumulate(v.begin(), v.end(), 1, std::multiplies<unsigned int>());
+	};
+
+	/**
+	 *
+	 * @return a vector of unsigned integer with the size of each dimension of the tensor
+	 */
+	vector<float> getStdValues() {
+		vector<float> out(data_.get(),data_.get()+this->getSize());
+		return out;
+	}
+
+	/**
+	 *
+	 * @return raw pointer to tensor data
+	 */
+	const float * getRawPtr() {return data_.get();};
 
 	/**
 	 *
