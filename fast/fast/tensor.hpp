@@ -39,7 +39,7 @@ namespace FAST {
  * Meant to be accessible to user
  */
 template <typename backendType>
-class Tensor : public TensorWrapper {
+class Tensor {
 	/**
 	 * Check if template type is supported
 	 */
