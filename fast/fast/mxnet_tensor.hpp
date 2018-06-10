@@ -79,7 +79,7 @@ public:
 template <>
 Tensor<mxnet::cpp::NDArray>::Tensor(mxnet::cpp::NDArray t) {
 	data_ = std::unique_ptr<float>(new float[t.Size()]);
-	t.SyncCopyToCPU(data_.get(),t.Size());
+	t.SyncCopyToCPU(data_.local().get()(),t.Size());
 	shape_ = t.GetShape();
 }
 
@@ -90,8 +90,8 @@ Tensor<mxnet::cpp::NDArray>::Tensor(mxnet::cpp::NDArray t) {
 template <>
 Tensor<mxnet::cpp::NDArray>::Tensor(Tensor<mxnet::cpp::NDArray> & t) {
 	size_t size = t.getSize();
-	data_ = std::unique_ptr<float>(new float[size]);
-	std::copy(t.getRawPtr(), t.getRawPtr() + size, data_.get());
+	data_ = gam::make_private<float>(new float[size]);
+	std::copy(t.getRawPtr(), t.getRawPtr() + size, data_.local().get());
 }
 
 /**

@@ -11,6 +11,7 @@
 #include <vector>
 #include <memory>
 #include "mxnet-cpp/MxNetCpp.h"
+#include "gam.hpp"
 
 #define tensor_type_check(condition)  static_assert( (condition), "error: incorrect or unsupported tensor type" )
 
@@ -48,7 +49,7 @@ protected:
 	/**
 	 * Tensor object of deep learning framework
 	 */
-	std::unique_ptr<float> data_;
+	gam::private_ptr<float> data_;
 	vector<unsigned int> shape_;
 
 public:
@@ -58,7 +59,7 @@ public:
 	 * @param t
 	 */
 	Tensor() {
-		data_ = std::unique_ptr<float>();
+		data_ = gam::private_ptr<float>();
 		shape_ = vector<unsigned int>();
 	}
 
@@ -75,7 +76,7 @@ public:
 	 */
 	Tensor(const float * raw_data, vector<unsigned int> shape) {
 		size_t size = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<unsigned int>());
-		data_ = std::unique_ptr<float>(new float[size]);
+		data_ = gam::make_private<float>(new float[size]);
 		std::copy(raw_data, raw_data + size, data_.get());
 		shape_ = shape;
 	}
@@ -86,7 +87,7 @@ public:
 	 * @param shape
 	 */
 	Tensor(const float * raw_data, size_t size) {
-		data_ = std::unique_ptr<float>(new float[size]);
+		data_ = gam::make_private<float>(new float[size]);
 		std::copy(raw_data, raw_data + size, data_.get());
 		shape_.push_back(size);
 	}
@@ -130,7 +131,9 @@ public:
 	 *
 	 * @return raw pointer to tensor data
 	 */
-	const float * getRawPtr() {return data_.get();};
+	const float * getRawPtr() {
+		return std::move(data_.local()).get();
+	}
 
 	/**
 	 *
