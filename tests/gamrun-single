@@ -86,7 +86,7 @@ for e in range(args.cardinality):
     if(args.verbose):
         print "> starting node = " + str(e)
 #     p = subprocess.check_output(CMD, env=my_env)
-    p = subprocess.Popen(CMD, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    p = subprocess.Popen(CMD, env=my_env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     for line in p.stdout:
         sys.stdout.write(line)
     p.wait()
