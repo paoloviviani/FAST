@@ -13,4 +13,5 @@ export GAM_RANK=0
 export GAM_CARDINALITY=1
 export GAM_LOG_PREFIX=
 
-$GAM_RUN_LOCAL -v -n 1 -l $GAM_LOCALHOST ./run_tests
+echo pwd
+$GAM_RUN_LOCAL -v -n 1 -l $GAM_LOCALHOST run_tests
