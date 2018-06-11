@@ -79,7 +79,7 @@ public:
 template <>
 Tensor<mxnet::cpp::NDArray>::Tensor(mxnet::cpp::NDArray t) {
 	size_t size = t.Size();
-	data_ = gam::make_private<float>(new float(size));
+	data_ = gam::make_private<float>(new float[size]);
 	t.SyncCopyToCPU(data_.local().get(),t.Size());
 	shape_ = t.GetShape();
 }
@@ -91,7 +91,7 @@ Tensor<mxnet::cpp::NDArray>::Tensor(mxnet::cpp::NDArray t) {
 template <>
 Tensor<mxnet::cpp::NDArray>::Tensor(Tensor<mxnet::cpp::NDArray> & t) {
 	size_t size = t.getSize();
-	data_ = gam::make_private<float>(new float(size));
+	data_ = gam::make_private<float>(new float[size]);
 	std::copy(t.getRawPtr(), t.getRawPtr() + size, data_.local().get());
 }
 
@@ -101,8 +101,8 @@ Tensor<mxnet::cpp::NDArray>::Tensor(Tensor<mxnet::cpp::NDArray> & t) {
  */
 template <>
 template <typename... Args>
-float Tensor<mxnet::cpp::NDArray>::at(Args... args) const {
-	return static_cast<const AuxMxNetTensor*>(this)->At(std::forward<Args>(args)...);
+float Tensor<mxnet::cpp::NDArray>::at(Args... args) {
+	return static_cast<AuxMxNetTensor*>(this)->At(std::forward<Args>(args)...);
 }
 
 /**

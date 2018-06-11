@@ -76,7 +76,7 @@ public:
 	 */
 	Tensor(const float * raw_data, vector<unsigned int> shape) {
 		size_t size = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<unsigned int>());
-		data_ = gam::make_private<float>(new float(size));
+		data_ = gam::make_private<float>(new float[size]);
 		std::copy(raw_data, raw_data + size, data_.local().get());
 		shape_ = shape;
 	}
@@ -87,7 +87,7 @@ public:
 	 * @param shape
 	 */
 	Tensor(const float * raw_data, size_t size) {
-		data_ = gam::make_private<float>(new float(size));
+		data_ = gam::make_private<float>(new float[size]);
 		std::copy(raw_data, raw_data + size, data_.local().get());
 		shape_.push_back(size);
 	}
@@ -140,7 +140,7 @@ public:
 	 * @return the element at the given index, based on underlying implementation
 	 */
 	template<typename... Args>
-	float at(Args...) const;
+	float at(Args...);
 
 	/**
 	 *
