@@ -27,9 +27,17 @@ using namespace mxnet::cpp;
 
 Context ctx = Context::cpu();  // Use CPU for training
 
-TEST_CASE( "Get control of private ptr", "gam" ) {
-	vector<unsigned int> shape = {6};
-	vector<float> data = {11.,12.,13.,21.,22.,23.};
-	FAST::Tensor<NDArray> tensor(data.data(),shape);
-	auto pptr = std::move(tensor.getPrivatePtr());
+TEST_CASE( "Gam basic", "gam" ) {
+	auto p = gam::make_private<int>(42);
+	assert(p != nullptr);
+	FAST_DEBUG("Private pointer value: " << *p.local() );
+	REQUIRE(*p.local() == 42);
+}
+
+TEST_CASE( "Gam private vector", "gam" ) {
+	gam::private_ptr<vector<float>> data;
+	data = gam::make_private<vector<float>>(6);
+	vector<float> buf = {11.,12.,13.,21.,22.,23.};
+	*data.local() = buf;
+	FAST_DEBUG(*data.local());
 }
