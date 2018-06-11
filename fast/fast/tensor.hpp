@@ -76,8 +76,8 @@ public:
 	 */
 	Tensor(const float * raw_data, vector<unsigned int> shape) {
 		size_t size = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<unsigned int>());
-		data_ = gam::make_private<float>(new float[size]);
-		std::copy(raw_data, raw_data + size, data_.get());
+		data_ = gam::make_private<float>(new float(size));
+		std::copy(raw_data, raw_data + size, data_.local().get());
 		shape_ = shape;
 	}
 
@@ -87,8 +87,8 @@ public:
 	 * @param shape
 	 */
 	Tensor(const float * raw_data, size_t size) {
-		data_ = gam::make_private<float>(new float[size]);
-		std::copy(raw_data, raw_data + size, data_.get());
+		data_ = gam::make_private<float>(new float(size));
+		std::copy(raw_data, raw_data + size, data_.local().get());
 		shape_.push_back(size);
 	}
 
@@ -123,7 +123,7 @@ public:
 	 * @return a vector of unsigned integer with the size of each dimension of the tensor
 	 */
 	vector<float> getStdValues() {
-		vector<float> out(data_.get(),data_.get()+this->getSize());
+		vector<float> out(data_.local().get(),data_.local().get()+this->getSize());
 		return out;
 	}
 
@@ -132,7 +132,7 @@ public:
 	 * @return raw pointer to tensor data
 	 */
 	const float * getRawPtr() {
-		return std::move(data_.local()).get();
+		return data_.local().get();
 	}
 
 	/**

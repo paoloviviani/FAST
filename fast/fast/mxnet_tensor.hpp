@@ -46,8 +46,8 @@ public:
 	 * \return value of one dimensions array
 	 */
 	inline
-	float At(size_t i) const {
-		return data_.get()[i];
+	float At(size_t i) {
+		return data_.local().get()[i];
 	}
 	/**
 	 * return value of the element at (h, w)
@@ -56,8 +56,8 @@ public:
 	 * \return value of two dimensions array
 	 */
 	inline
-	float At(size_t h, size_t w) const {
-		return data_.get()[Offset(h, w)];
+	float At(size_t h, size_t w) {
+		return data_.local().get()[Offset(h, w)];
 	}
 	/**
 	 * return value of three dimensions array
@@ -67,8 +67,8 @@ public:
 	 * \return value of three dimensions array
 	 */
 	inline
-	float At(size_t c, size_t h, size_t w) const {
-		return data_.get()[Offset(c, h, w)];
+	float At(size_t c, size_t h, size_t w) {
+		return data_.local().get()[Offset(c, h, w)];
 	}
 };
 
@@ -78,8 +78,9 @@ public:
  */
 template <>
 Tensor<mxnet::cpp::NDArray>::Tensor(mxnet::cpp::NDArray t) {
-	data_ = std::unique_ptr<float>(new float[t.Size()]);
-	t.SyncCopyToCPU(data_.local().get()(),t.Size());
+	size_t size = t.Size();
+	data_ = gam::make_private<float>(new float(size));
+	t.SyncCopyToCPU(data_.local().get(),t.Size());
 	shape_ = t.GetShape();
 }
 
@@ -90,7 +91,7 @@ Tensor<mxnet::cpp::NDArray>::Tensor(mxnet::cpp::NDArray t) {
 template <>
 Tensor<mxnet::cpp::NDArray>::Tensor(Tensor<mxnet::cpp::NDArray> & t) {
 	size_t size = t.getSize();
-	data_ = gam::make_private<float>(new float[size]);
+	data_ = gam::make_private<float>(new float(size));
 	std::copy(t.getRawPtr(), t.getRawPtr() + size, data_.local().get());
 }
 
@@ -110,7 +111,7 @@ float Tensor<mxnet::cpp::NDArray>::at(Args... args) const {
  */
 template <>
 mxnet::cpp::NDArray Tensor<mxnet::cpp::NDArray>::getFrameworkObject() {
-	return mxnet::cpp::NDArray(data_.get(),mxnet::cpp::Shape(shape_),mxnet::cpp::Context::cpu());
+	return mxnet::cpp::NDArray(data_.local().get(),mxnet::cpp::Shape(shape_),mxnet::cpp::Context::cpu());
 }
 
 } // End FAST namespace

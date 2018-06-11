@@ -14,10 +14,15 @@
 #include <string>
 #include <unistd.h>
 #include <mutex>
+#include <cassert>
 #include "fast/gam_wrapper.hpp"
 
 using namespace std;
 
+/*
+ * error reporting facilities
+ */
+#define FASTASSERT(x) assert(x)
 
 #if defined LOGLEVEL_DEBUG
 #define FAST_DEBUG(x) {\
