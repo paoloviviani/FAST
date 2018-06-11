@@ -80,6 +80,7 @@ template <>
 Tensor<mxnet::cpp::NDArray>::Tensor(mxnet::cpp::NDArray t) {
 	size_t size = t.Size();
 	data_ = gam::make_private<vector<float>>(size);
+	assert(data_ != nullptr);
 	FAST_DEBUG("Created vector with size: " << data_.local()->size());
 	t.SyncCopyToCPU(data_.local()->data(),t.Size());
 	shape_ = t.GetShape();
@@ -93,6 +94,7 @@ template <>
 Tensor<mxnet::cpp::NDArray>::Tensor(Tensor<mxnet::cpp::NDArray> & t) {
 	size_t size = t.getSize();
 	data_ = gam::make_private<vector<float>>(size);
+	assert(data_ != nullptr);
 	FAST_DEBUG("Created vector with size: " << data_.local()->size());
 	*data_.local() = t.getStdValues();
 //	std::copy(t.getRawPtr(), t.getRawPtr() + size, data_.local()->data());

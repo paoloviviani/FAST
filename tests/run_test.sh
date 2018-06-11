@@ -13,4 +13,4 @@ export GAM_CARDINALITY=1
 export GAM_LOG_PREFIX=
 
 $GAM_RUN_LOCAL -v -n 1 -l $GAM_LOCALHOST ./unit_test
-$GAM_RUN_LOCAL -v -n 1 -l $GAM_LOCALHOST ./gam_unit_test
+#$GAM_RUN_LOCAL -v -n 1 -l $GAM_LOCALHOST ./gam_unit_test

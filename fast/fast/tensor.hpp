@@ -76,11 +76,12 @@ public:
 	 */
 	Tensor(const float * raw_data, vector<unsigned int> shape) {
 		size_t size = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<unsigned int>());
-		data_ = gam::make_private<vector<float>>(size);
+		auto ptr = gam::make_private<vector<float>>(size);
+		assert(ptr != nullptr);
 		FAST_DEBUG("Created vector with size: " << data_.local()->size());
-		data_.local()->assign(raw_data, raw_data + size);
-//		std::copy(raw_data, raw_data + size, data_.local()->data());
+		ptr.local()->assign(raw_data, raw_data + size);
 		shape_ = shape;
+		data_ = std::move(ptr);
 	}
 
 	/**
@@ -90,9 +91,9 @@ public:
 	 */
 	Tensor(const float * raw_data, size_t size) {
 		data_ = gam::make_private<vector<float>>(size);
+		assert(data_ != nullptr);
 		FAST_DEBUG("Created vector with size: " << data_.local()->size());
 		data_.local()->assign(raw_data, raw_data + size);
-//		std::copy(raw_data, raw_data + size, data_.local()->data());
 		shape_.push_back(size);
 	}
 
