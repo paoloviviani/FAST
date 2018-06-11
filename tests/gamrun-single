@@ -64,24 +64,10 @@ if(args.cardinality > max_nodes_per_host):
 #parse hostname
 hostname = args.localhost
 
-# prepare log dir
-log_prefix_ = os.environ['PWD'] + "/logs"
-log_prefix_ += "/" + os.path.basename(args.command[0])
-log_prefix = log_prefix_ + "/{0}".format(int(time.time()))
-latest_link = log_prefix_ + "/latest"
-
-# create log dir and link
-if not os.path.exists(log_prefix):
-    os.makedirs(log_prefix)
-if os.path.exists(latest_link):
-    os.remove(latest_link)
-os.symlink(log_prefix, latest_link)
-
 # launch processes
 for e in range(args.cardinality):
     #compose environment
     my_env = os.environ.copy()
-    my_env["GAM_LOG_PREFIX"] = log_prefix
     my_env["GAM_RANK"] = str(e)
     my_env["GAM_CARDINALITY"] = str(args.cardinality)
     
@@ -95,16 +81,15 @@ for e in range(args.cardinality):
     for c in args.command[1:]:
         CMD += " " + c
 
-    #set output/error redirection
-    out_file = open(log_prefix + "/usr.{0}.out".format(e), "w")
-    out_file.write("")
-    err_file = open(log_prefix + "/usr.{0}.err".format(e), "w")
-    err_file.write("")
-    
+  
     # execute
     if(args.verbose):
         print "> starting node = " + str(e)
-    p = subprocess.check_output(CMD, env=my_env)
+#     p = subprocess.check_output(CMD, env=my_env)
+    p = subprocess.Popen(CMD, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    for line in p.stdout:
+        sys.stdout.write(line)
+    p.wait()
 
     inflight.append(p)
     exec_map[p] = e
