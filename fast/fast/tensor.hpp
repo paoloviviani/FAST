@@ -137,7 +137,7 @@ public:
 	 *
 	 * @return private pointer to tensor data
 	 */
-	const std::unique_ptr<float[]> getPrivatePtr() {
+	const std::unique_ptr<float[]> getUniquePtr() {
 		return std::move(data_);
 	}
 
