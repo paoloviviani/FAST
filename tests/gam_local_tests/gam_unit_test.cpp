@@ -10,6 +10,7 @@
 #include "fast.hpp"
 #include "mxnet-cpp/MxNetCpp.h"
 
+#ifndef FAST_TESTLOG(x)
 #define FAST_TESTLOG(x) {\
 		FAST::Logger::getLogger()->lock(); \
 		FAST::Logger::getLogger()->log_error() << \
@@ -17,6 +18,7 @@
 		FAST::Logger::getLogger()->unlock();}
 
 #define FAST_TESTNAME FAST_TESTLOG("")
+#endif
 
 using namespace std;
 using namespace mxnet::cpp;

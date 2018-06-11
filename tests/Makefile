@@ -15,7 +15,7 @@ CXX                  = g++
 LINK_OPT             = 
 VERSION              = 
 
-CCFLAGS              = -Wall #-Wextra -Wstrict-aliasing -pedantic
+CCFLAGS              = -Wall -Wfatal-errors #-Wextra -Wstrict-aliasing -pedantic
 CFLAGS               = -std=c++11
 LDFLAGS              = 
 LIBS                 = -lpthread
@@ -42,6 +42,7 @@ endif
 
 ifeq ($(USE_GAM),1)
 CCFLAGS              += -DUSE_GAM
+TARGET_OBJ_GAM       += gam_local_tests/gam_unit_test.o
 endif
 
 .PHONY: all clean cleanall
@@ -56,11 +57,13 @@ all: $(EXECS)
 #basic unit test executable
 unit_test: $(TARGET_OBJ_UNIT) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
+gam_unit_test: $(TARGET_OBJ_GAM) $(TEST_DRIVER_OBJ)
+	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
 
 clean:
 	rm -rf *.o *~ $(TARGET_OBJ_UNIT)
 
 cleanall: clean
 	rm -rf $(EXECS)
-	rm -rf $(TARGET_OBJ_UNIT) $(TEST_DRIVER_OBJ) *.d
+	rm -rf $(TARGET_OBJ_UNIT) $(TARGET_OBJ_GAM) $(TEST_DRIVER_OBJ) *.d
 

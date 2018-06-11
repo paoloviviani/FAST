@@ -11,7 +11,6 @@
 #include <vector>
 #include <memory>
 #include "mxnet-cpp/MxNetCpp.h"
-#include "gam.hpp"
 
 #define tensor_type_check(condition)  static_assert( (condition), "error: incorrect or unsupported tensor type" )
 
@@ -49,7 +48,7 @@ protected:
 	/**
 	 * Tensor object of deep learning framework
 	 */
-	gam::private_ptr<vector<float>> data_;
+	std::unique_ptr<float[]> data_;
 	vector<unsigned int> shape_;
 
 public:
@@ -59,7 +58,7 @@ public:
 	 * @param t
 	 */
 	Tensor() {
-		data_ = gam::make_private<vector<float>>();
+		data_ = std::unique_ptr<float[]>(new float[0]);
 		shape_ = vector<unsigned int>();
 	}
 
@@ -76,8 +75,8 @@ public:
 	 */
 	Tensor(const float * raw_data, vector<unsigned int> shape) {
 		size_t size = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<unsigned int>());
-		data_ = gam::make_private<vector<float>>(size);
-		std::copy(raw_data, raw_data + size, data_.local()->begin());
+		data_ = std::unique_ptr<float[]>(new float[size]);
+		std::copy(raw_data, raw_data + size, data_.get());
 		shape_ = shape;
 	}
 
@@ -87,8 +86,8 @@ public:
 	 * @param shape
 	 */
 	Tensor(const float * raw_data, size_t size) {
-		data_ = gam::make_private<vector<float>>(size);
-		std::copy(raw_data, raw_data + size, data_.local()->begin());
+		data_ = std::unique_ptr<float[]>(new float[size]);
+		std::copy(raw_data, raw_data + size, data_.get());
 		shape_.push_back(size);
 	}
 
@@ -123,7 +122,7 @@ public:
 	 * @return a vector of unsigned integer with the size of each dimension of the tensor
 	 */
 	vector<float> getStdValues() {
-		return *data_.local();
+		return vector<float>(data_.get(), data_.get() + this->getSize());
 	}
 
 	/**
@@ -131,7 +130,15 @@ public:
 	 * @return raw pointer to tensor data
 	 */
 	const float * getRawPtr() {
-		return data_.local()->data();
+		return data_.get();
+	}
+
+	/**
+	 *
+	 * @return private pointer to tensor data
+	 */
+	const std::unique_ptr<float[]> getPrivatePtr() {
+		return std::move(data_);
 	}
 
 	/**
@@ -143,7 +150,7 @@ public:
 
 	/**
 	 *
-	 * @return the object of type defined by the deep learning framewrok
+	 * @return the object of type defined by the deep learning framework
 	 */
 	backendType getFrameworkObject();
 
