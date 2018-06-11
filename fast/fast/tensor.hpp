@@ -11,6 +11,7 @@
 #include <vector>
 #include <memory>
 #include "mxnet-cpp/MxNetCpp.h"
+#include "gam.hpp"
 
 #define tensor_type_check(condition)  static_assert( (condition), "error: incorrect or unsupported tensor type" )
 
@@ -48,7 +49,7 @@ protected:
 	/**
 	 * Tensor object of deep learning framework
 	 */
-	std::unique_ptr<float[]> data_;
+	gam::private_ptr<vector<float>> data_;
 	vector<unsigned int> shape_;
 
 public:
@@ -58,7 +59,7 @@ public:
 	 * @param t
 	 */
 	Tensor() {
-		data_ = std::unique_ptr<float[]>(new float[0]);
+		data_ = gam::private_ptr<vector<float>>();
 		shape_ = vector<unsigned int>();
 	}
 
@@ -75,8 +76,10 @@ public:
 	 */
 	Tensor(const float * raw_data, vector<unsigned int> shape) {
 		size_t size = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<unsigned int>());
-		data_ = std::unique_ptr<float[]>(new float[size]);
-		std::copy(raw_data, raw_data + size, data_.get());
+		data_ = gam::make_private<vector<float>>(size);
+		FAST_DEBUG("Created vector with size: " << data_.local()->size());
+//		data_.local()->assign(raw_data, raw_data + size);
+		std::copy(raw_data, raw_data + size, data_.local()->data());
 		shape_ = shape;
 	}
 
@@ -86,8 +89,10 @@ public:
 	 * @param shape
 	 */
 	Tensor(const float * raw_data, size_t size) {
-		data_ = std::unique_ptr<float[]>(new float[size]);
-		std::copy(raw_data, raw_data + size, data_.get());
+		data_ = gam::make_private<vector<float>>(size);
+		FAST_DEBUG("Created vector with size: " << data_.local()->size());
+//		data_.local()->assign(raw_data, raw_data + size);
+		std::copy(raw_data, raw_data + size, data_.local()->data());
 		shape_.push_back(size);
 	}
 
@@ -122,7 +127,7 @@ public:
 	 * @return a vector of unsigned integer with the size of each dimension of the tensor
 	 */
 	vector<float> getStdValues() {
-		return vector<float>(data_.get(), data_.get() + this->getSize());
+		return vector<float>(*data_.local());
 	}
 
 	/**
@@ -130,14 +135,14 @@ public:
 	 * @return raw pointer to tensor data
 	 */
 	const float * getRawPtr() {
-		return data_.get();
+		return data_.local()->data();
 	}
 
 	/**
 	 *
 	 * @return private pointer to tensor data
 	 */
-	const std::unique_ptr<float[]> getUniquePtr() {
+	gam::private_ptr<vector<float>> getPrivatePtr() {
 		return std::move(data_);
 	}
 

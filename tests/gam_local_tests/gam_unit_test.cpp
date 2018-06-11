@@ -27,10 +27,9 @@ using namespace mxnet::cpp;
 
 Context ctx = Context::cpu();  // Use CPU for training
 
-TEST_CASE( "Make private from unique", "gam" ) {
+TEST_CASE( "Get control of private ptr", "gam" ) {
 	vector<unsigned int> shape = {6};
 	vector<float> data = {11.,12.,13.,21.,22.,23.};
 	FAST::Tensor<NDArray> tensor(data.data(),shape);
-	gam::private_ptr<float[]> pptr( tensor.getUniquePtr() );
-
+	auto pptr = std::move(tensor.getPrivatePtr());
 }

@@ -60,10 +60,12 @@ unit_test: $(TARGET_OBJ_UNIT) $(TEST_DRIVER_OBJ)
 gam_unit_test: $(TARGET_OBJ_GAM) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
 
+cleanbtr:
+	rm -rf *.btr
 clean:
 	rm -rf *.o *~ $(TARGET_OBJ_UNIT)
 
 cleanall: clean
 	rm -rf $(EXECS)
-	rm -rf $(TARGET_OBJ_UNIT) $(TARGET_OBJ_GAM) $(TEST_DRIVER_OBJ) *.d
+	rm -rf $(TARGET_OBJ_UNIT) $(TARGET_OBJ_GAM) $(TEST_DRIVER_OBJ) *.d *.btr
 

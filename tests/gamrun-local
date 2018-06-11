@@ -85,11 +85,8 @@ for e in range(args.cardinality):
     # execute
     if(args.verbose):
         print "> starting node = " + str(e)
-#     p = subprocess.check_output(CMD, env=my_env)
+
     p = subprocess.Popen(CMD, env=my_env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    for line in p.stdout:
-        sys.stdout.write(line)
-    p.wait()
 
     inflight.append(p)
     exec_map[p] = e
@@ -97,6 +94,9 @@ for e in range(args.cardinality):
 
 while len(inflight) > 0:
     p = inflight.popleft()
+    for line in p.stdout:
+        sys.stdout.write(line)
+#     p.wait()
     
     if(p.poll() != None):
         ret = p.returncode
