@@ -27,7 +27,7 @@ Context ctx = Context::cpu();  // Use CPU for training
 TEST_CASE( "Init Tensor from raw pointer", "tensor" ) {
 	vector<unsigned int> shape = {6};
 	vector<float> data = {11.,12.,13.,21.,22.,23.};
-
+	FAST_ERROR("DEBUG")
 	FAST::Tensor<NDArray> tensor(data.data(),shape);
 	REQUIRE(tensor.getShape() == shape);
 	REQUIRE(std::equal(std::begin(data), std::end(data), tensor.getRawPtr()));
