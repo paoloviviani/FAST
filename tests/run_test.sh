@@ -11,6 +11,6 @@ export GAM_LOCALHOST=localhost
 
 export GAM_RANK=0
 export GAM_CARDINALITY=1
-export GAM_LOG_PREFIX=gam_log_
+export GAM_LOG_PREFIX=
 
-./unit_test
+$GAM_RUN_LOCAL -v -n 1 -l $GAM_LOCALHOST ./run_tests

@@ -49,7 +49,7 @@ protected:
 	/**
 	 * Tensor object of deep learning framework
 	 */
-	gam::private_ptr<float> data_;
+	gam::private_ptr<vector<float>> data_;
 	vector<unsigned int> shape_;
 
 public:
@@ -59,7 +59,7 @@ public:
 	 * @param t
 	 */
 	Tensor() {
-		data_ = gam::private_ptr<float>();
+		data_ = gam::make_private<vector<float>>();
 		shape_ = vector<unsigned int>();
 	}
 
@@ -76,8 +76,8 @@ public:
 	 */
 	Tensor(const float * raw_data, vector<unsigned int> shape) {
 		size_t size = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<unsigned int>());
-		data_ = gam::make_private<float>(new float[size]);
-		std::copy(raw_data, raw_data + size, data_.local().get());
+		data_ = gam::make_private<vector<float>>(size);
+		std::copy(raw_data, raw_data + size, data_.local()->begin());
 		shape_ = shape;
 	}
 
@@ -87,8 +87,8 @@ public:
 	 * @param shape
 	 */
 	Tensor(const float * raw_data, size_t size) {
-		data_ = gam::make_private<float>(new float[size]);
-		std::copy(raw_data, raw_data + size, data_.local().get());
+		data_ = gam::make_private<vector<float>>(size);
+		std::copy(raw_data, raw_data + size, data_.local()->begin());
 		shape_.push_back(size);
 	}
 
@@ -123,8 +123,7 @@ public:
 	 * @return a vector of unsigned integer with the size of each dimension of the tensor
 	 */
 	vector<float> getStdValues() {
-		vector<float> out(data_.local().get(),data_.local().get()+this->getSize());
-		return out;
+		return *data_.local();
 	}
 
 	/**
@@ -132,7 +131,7 @@ public:
 	 * @return raw pointer to tensor data
 	 */
 	const float * getRawPtr() {
-		return data_.local().get();
+		return data_.local()->data();
 	}
 
 	/**
