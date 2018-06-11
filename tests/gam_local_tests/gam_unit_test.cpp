@@ -35,9 +35,9 @@ TEST_CASE( "Gam basic", "gam" ) {
 }
 
 TEST_CASE( "Gam private vector", "gam" ) {
-	gam::private_ptr<vector<float>> data;
-	data = gam::make_private<vector<float>>(6);
+//	gam::private_ptr<vector<float>> data;
+	auto data = gam::make_private<vector<float>>(6);
 	vector<float> buf = {11.,12.,13.,21.,22.,23.};
 	*data.local() = buf;
-	FAST_DEBUG(*data.local());
+	FAST_DEBUG(data.local()->at(0));
 }
