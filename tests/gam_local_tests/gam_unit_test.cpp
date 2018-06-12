@@ -30,14 +30,27 @@ Context ctx = Context::cpu();  // Use CPU for training
 TEST_CASE( "Gam basic", "gam" ) {
 	auto p = gam::make_private<int>(42);
 	assert(p != nullptr);
-	FAST_DEBUG("Private pointer value: " << *p.local() );
-	REQUIRE(*p.local() == 42);
+	auto local_p = p.local();
+	REQUIRE(*local_p == 42);
 }
 
 TEST_CASE( "Gam private vector", "gam" ) {
-//	gam::private_ptr<vector<float>> data;
-	auto data = gam::make_private<vector<float>>(6);
-	vector<float> buf = {11.,12.,13.,21.,22.,23.};
-	*data.local() = buf;
-	FAST_DEBUG(data.local()->at(0));
+	auto data = gam::make_private<vector<float>>(3);
+	vector<float> buf = {11.,12.,13.};
+	auto local_data = data.local();
+	*local_data = buf;
+	data = gam::private_ptr< vector<float>>(std::move(local_data));
+}
+
+TEST_CASE( "Tensor with Gam data", "gam,tensor" ) {
+	vector<unsigned int> shape = {2,3};
+	vector<float> data = {11.,12.,13.,21.,22.,23.};
+
+	FAST::Tensor<NDArray> tensor(data.data(),shape);
+	REQUIRE(tensor.getShape() == shape);
+	for (uint i = 0; i < shape[0]; i++)
+		for (uint j = 0; j < shape[1]; j++){
+			REQUIRE(tensor.getRawPtr()[i*shape[1]+j] == data.at(i*shape[1]+j));
+			REQUIRE(tensor.at(i,j) == data.at(i*shape[1]+j));
+		}
 }
