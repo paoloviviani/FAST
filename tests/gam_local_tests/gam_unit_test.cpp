@@ -54,4 +54,29 @@ TEST_CASE( "Tensor with Gam data", "gam,tensor" ) {
 		}
 }
 
+TEST_CASE( "SPMD Moving tensor", "gam,tensor" ) {
+	if (FAST::cardinality() > 1) {
+		switch (FAST::rank())
+	    {
+	    case 0:
+			vector<unsigned int> shape = {2,3};
+			vector<float> data = {11.,12.,13.,21.,22.,23.};
+			FAST::Tensor<NDArray> tensor(data.data(),shape);
+	        auto p = tensor.getPrivatePtr();
+			/* push to 1 */
+	        p.push(1);
 
+	        /* wait for the response */
+	        p = gam::pull_private<vector<float>>(1);
+	        assert(*p.local() == data);
+	        break;
+	    case 1:
+	        /* pull private pointer from 0 */
+	        auto p = gam::pull_private<vector<float>>(); //from-any just for testing
+
+	        /* push back to 0 */
+	        p.push(0);
+	        break;
+	    }
+	}
+}

@@ -9,21 +9,29 @@
 #define FAST_FAST_GAM_WRAPPER_HPP_
 
 namespace FAST{
-uint32_t rank();
-}
 
 #ifdef USE_GAM
 
 #include "gam.hpp"
 
-inline uint32_t FAST::rank() {
+static inline uint32_t FAST::rank() {
 	return gam::rank();
 }
 
+static inline uint32_t FAST::cardinality() {
+	return gam::cardinality();
+}
+
 #else
-inline uint32_t FAST::rank() {
+static inline uint32_t FAST::rank() {
+	return 0;
+}
+
+static inline uint32_t FAST::cardinality() {
 	return 0;
 }
 #endif
+
+} // end namespace FAST
 
 #endif /* FAST_FAST_GAM_WRAPPER_HPP_ */

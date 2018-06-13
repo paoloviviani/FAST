@@ -9,7 +9,6 @@
 #define INCLUDE_FAST_HPP_
 
 #include "fast/logger.hpp"
-#include "fast/gam_wrapper.hpp"
 #include "fast/fast_utils.hpp"
 
 #include "fast/tensor.hpp"
