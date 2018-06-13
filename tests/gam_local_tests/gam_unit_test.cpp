@@ -50,7 +50,6 @@ TEST_CASE( "Tensor with Gam data", "gam,tensor" ) {
 	REQUIRE(tensor.getShape() == shape);
 	for (uint i = 0; i < shape[0]; i++)
 		for (uint j = 0; j < shape[1]; j++){
-			REQUIRE(tensor.getRawPtr()[i*shape[1]+j] == data.at(i*shape[1]+j));
 			REQUIRE(tensor.at(i,j) == data.at(i*shape[1]+j));
 		}
 }

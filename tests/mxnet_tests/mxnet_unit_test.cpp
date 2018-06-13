@@ -29,7 +29,7 @@ TEST_CASE( "Init Tensor from raw pointer", "tensor" ) {
 	vector<float> data = {11.,12.,13.,21.,22.,23.};
 	FAST::Tensor<NDArray> tensor(data.data(),shape);
 	REQUIRE(tensor.getShape() == shape);
-	REQUIRE(std::equal(std::begin(data), std::end(data), tensor.getRawPtr()));
+	REQUIRE(std::equal(std::begin(data), std::end(data), tensor.getStdValues().begin()));
 }
 
 
@@ -46,7 +46,6 @@ TEST_CASE( "Access tensor elements", "tensor" ) {
 	tensor.setShape(shape);
 	for (uint i = 0; i < shape[0]; i++)
 		for (uint j = 0; j < shape[1]; j++){
-			REQUIRE(tensor.getRawPtr()[i*shape[1]+j] == data.at(i*shape[1]+j));
 			REQUIRE(tensor.at(i,j) == data.at(i*shape[1]+j));
 		}
 }

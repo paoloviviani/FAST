@@ -47,7 +47,10 @@ public:
 	 */
 	inline
 	float At(size_t i) {
-		return data_.local()->at(i);
+		auto data_local = data_.local();
+		float out = data_local->at(i);
+		data_ = gam::private_ptr<vector<float>>(std::move(data_local));
+		return out;
 	}
 	/**
 	 * return value of the element at (h, w)
@@ -57,7 +60,10 @@ public:
 	 */
 	inline
 	float At(size_t h, size_t w) {
-		return data_.local()->at(Offset(h, w));
+		auto data_local = data_.local();
+		float out = data_local->at(Offset(h, w));
+		data_ = gam::private_ptr<vector<float>>(std::move(data_local));
+		return out;
 	}
 	/**
 	 * return value of three dimensions array
@@ -68,7 +74,10 @@ public:
 	 */
 	inline
 	float At(size_t c, size_t h, size_t w) {
-		return data_.local()->at(Offset(c, h, w));
+		auto data_local = data_.local();
+		float out = data_local->at(Offset(c, h, w));
+		data_ = gam::private_ptr<vector<float>>(std::move(data_local));
+		return out;
 	}
 };
 
@@ -81,8 +90,10 @@ Tensor<mxnet::cpp::NDArray>::Tensor(mxnet::cpp::NDArray t) {
 	size_t size = t.Size();
 	data_ = gam::make_private<vector<float>>(size);
 	assert(data_ != nullptr);
-	FAST_DEBUG("Created vector with size: " << data_.local()->size());
+	FAST_DEBUG("Created vector with shape: " << t.GetShape());
+	auto data_local = data_.local();
 	t.SyncCopyToCPU(data_.local()->data(),t.Size());
+	data_ = gam::private_ptr<vector<float>>(std::move(data_local));
 	shape_ = t.GetShape();
 }
 
@@ -95,9 +106,10 @@ Tensor<mxnet::cpp::NDArray>::Tensor(Tensor<mxnet::cpp::NDArray> & t) {
 	size_t size = t.getSize();
 	data_ = gam::make_private<vector<float>>(size);
 	assert(data_ != nullptr);
-	FAST_DEBUG("Created vector with size: " << data_.local()->size());
-	*data_.local() = t.getStdValues();
-//	std::copy(t.getRawPtr(), t.getRawPtr() + size, data_.local()->data());
+	FAST_DEBUG("Created vector with shape: " << t.getShape());
+	auto data_local = data_.local();
+	*data_local = t.getStdValues();
+	data_ = gam::private_ptr<vector<float>>(std::move(data_local));
 }
 
 /**
