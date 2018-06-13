@@ -53,3 +53,5 @@ TEST_CASE( "Tensor with Gam data", "gam,tensor" ) {
 			REQUIRE(tensor.at(i,j) == data.at(i*shape[1]+j));
 		}
 }
+
+

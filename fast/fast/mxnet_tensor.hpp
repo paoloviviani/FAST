@@ -90,9 +90,9 @@ Tensor<mxnet::cpp::NDArray>::Tensor(mxnet::cpp::NDArray t) {
 	size_t size = t.Size();
 	data_ = gam::make_private<vector<float>>(size);
 	assert(data_ != nullptr);
-	FAST_DEBUG("Created vector with shape: " << t.GetShape());
 	auto data_local = data_.local();
-	t.SyncCopyToCPU(data_.local()->data(),t.Size());
+	FAST_DEBUG("Created vector with shape: " << t.GetShape());
+	t.SyncCopyToCPU(data_local->data(),t.Size());
 	data_ = gam::private_ptr<vector<float>>(std::move(data_local));
 	shape_ = t.GetShape();
 }
@@ -106,8 +106,8 @@ Tensor<mxnet::cpp::NDArray>::Tensor(Tensor<mxnet::cpp::NDArray> & t) {
 	size_t size = t.getSize();
 	data_ = gam::make_private<vector<float>>(size);
 	assert(data_ != nullptr);
-	FAST_DEBUG("Created vector with shape: " << t.getShape());
 	auto data_local = data_.local();
+	FAST_DEBUG("Created vector with shape: " << t.getShape());
 	*data_local = t.getStdValues();
 	data_ = gam::private_ptr<vector<float>>(std::move(data_local));
 }
