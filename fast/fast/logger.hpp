@@ -65,7 +65,6 @@ inline const std::string currentDateTime() {
 	struct tm  tstruct;
 	char       buf[80];
 	tstruct = *localtime(&now);
-//	strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
 	strftime(buf, sizeof(buf), "%X", &tstruct);
 	return buf;
 }
@@ -96,7 +95,7 @@ public:
 
 	void init() {
 		id = gam::rank();
-		log("I am FAST worker %d (pid=%d)", id);
+		log("I am FAST worker %d", id);
 	}
 
 	void finalize() {
