@@ -15,7 +15,7 @@
 #include <unistd.h>
 #include <mutex>
 #include <cassert>
-#include "fast/gam_wrapper.hpp"
+#include "gam.hpp"
 
 using namespace std;
 
@@ -95,13 +95,13 @@ public:
 	}
 
 	void init() {
-		id = FAST::rank();
-		log("I am FAST worker %d (pid=%d)", id, getpid());
+		id = gam::rank();
+		log("I am FAST worker %d (pid=%d)", id);
 	}
 
-	void finalize(int proc_id = 0) {
+	void finalize() {
 		//print footer message
-		log("stop logging worker %d", proc_id);
+		log("stop logging worker %d", id);
 	}
 
 	/**
