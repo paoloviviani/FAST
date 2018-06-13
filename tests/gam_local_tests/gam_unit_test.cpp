@@ -28,7 +28,7 @@ using namespace mxnet::cpp;
 Context ctx = Context::cpu();  // Use CPU for training
 
 TEST_CASE( "Gam basic", "gam" ) {
-	FAST::Logger::getLogger()->init();
+	FAST_LOG_INIT
 	auto p = gam::make_private<int>(42);
 	assert(p != nullptr);
 	auto local_p = p.local();
@@ -55,41 +55,65 @@ TEST_CASE( "Tensor with Gam data", "gam,tensor" ) {
 		}
 }
 
-TEST_CASE( "SPMD Moving tensor", "gam,tensor" ) {
+TEST_CASE( "SPMD tensor ping-pong", "gam,tensor" ) {
 	if (gam::cardinality() > 1) {
-		switch (gam::rank())
-	    {
-			case 0:
-			{
-				vector<unsigned int> shape = {2,3};
-				vector<float> data = {11.,12.,13.,21.,22.,23.};
-				FAST::Tensor<NDArray> tensor(data.data(),shape);
-				auto p = tensor.getPrivatePtr();
-				/* push to 1 */
-				p.push(1);
-				FAST_DEBUG("Tensor pushed");
-				/* wait for the response */
-				p = gam::pull_private<vector<float>>();
-				FAST_DEBUG("Tensor pulled");
-				REQUIRE(*p.local() == data);
-				break;
-			}
-			case 1:
-			{
-				vector<unsigned int> shape = {2,3};
-				vector<float> data = {11.,12.,13.,21.,22.,23.};
-				/* pull private pointer from 0 */
-				auto p = gam::pull_private<vector<float>>(0); //from-any just for testing
-				assert(p != nullptr);
-				FAST_DEBUG("Tensor pulled")
-				auto p_local = p.local();
-//				REQUIRE(*p_local == data);
-				/* push back to 0 */
-				gam::private_ptr<vector<float>>(std::move(p_local)).push(0);
-				FAST_DEBUG("Tensor pushed");
-				break;
-			}
-	    }
+		switch (gam::rank()) {
+		case 0:
+		{
+			vector<unsigned int> shape = {2,3};
+			vector<float> data = {11.,12.,13.,21.,22.,23.};
+			FAST::Tensor<NDArray> tensor(data.data(),shape);
+			auto p = tensor.getPrivatePtr();
+			/* push to 1 */
+			p.push(1);
+			FAST_DEBUG("Tensor pushed");
+			/* wait for the response */
+			auto p2 = gam::pull_private<vector<float>>(1);
+			FAST_DEBUG("Tensor pulled");
+			auto p2_local = p2.local();
+			REQUIRE(*p2_local == data);
+			FAST_DEBUG(*p2_local);
+			break;
+		}
+		case 1:
+		{
+			/* pull private pointer from 0 */
+			auto p = gam::pull_private<vector<float>>(0);
+			assert(p != nullptr);
+			FAST_DEBUG("Tensor pulled")
+			/* push back to 0 */
+			p.push(0);
+			FAST_DEBUG("Tensor pushed");
+			break;
+		}
+		}
 	}
-	FAST::Logger::getLogger()->finalize();
+}
+
+TEST_CASE( "SPMD tensor remote read", "gam,tensor" ) {
+	if (gam::cardinality() > 1) {
+		switch (gam::rank()) {
+		case 0:
+		{
+			vector<float> data = {11.,12.,13.,21.,22.,23.};
+			FAST::Tensor<NDArray> tensor(data.data(),6);
+			auto p = tensor.getPrivatePtr();
+			/* push to 1 */
+			p.push(1);
+			FAST_DEBUG("Tensor pushed");
+			break;
+		}
+		case 1:
+		{
+			/* pull private pointer from 0 */
+			vector<float> control = {11.,12.,13.,21.,22.,23.};
+			auto s = gam::pull_private<vector<float>>(0);
+			assert(s != nullptr);
+			FAST_DEBUG("Tensor pulled")
+			auto s_ = s.local();
+			REQUIRE(*s_ == control);
+			break;
+		}
+		}
+	}
 }

@@ -22,7 +22,9 @@ using namespace std;
 /*
  * error reporting facilities
  */
-#define FASTASSERT(x) assert(x)
+#define FAST_LOG_INIT FAST::Logger::getLogger()->init();
+#define FAST_LOG_FINALIZE FAST::Logger::getLogger()->finalize();
+
 
 #if defined LOGLEVEL_DEBUG
 #define FAST_DEBUG(x) {\
@@ -100,7 +102,7 @@ public:
 
 	void finalize() {
 		//print footer message
-		log("stop logging worker %d", id);
+//		log("stop logging worker %d", id);
 	}
 
 	/**
