@@ -123,29 +123,29 @@ TEST_CASE( "SPMD vector remote read", "gam,tensor" ) {
 	}
 }
 
-//TEST_CASE( "SPMD vector remote read", "gam,tensor" ) {
-//	if (gam::cardinality() > 1) {
-//		switch (gam::rank()) {
-//		case 0:
-//		{
-//			vector<float> buf = {11.,12.,13.,21.,22.,23.};
-//			auto data = gam::make_private<vector<float>>(buf);
-//			/* push to 1 */
-//			data.push(1);
-//			FAST_DEBUG("Tensor pushed");
-//			break;
-//		}
-//		case 1:
-//		{
-//			/* pull private pointer from 0 */
-//			vector<float> control = {11.,12.,13.,21.,22.,23.};
-//			auto s = gam::pull_private<vector<float>>(0);
-//			assert(s != nullptr);
-//			FAST_DEBUG("Tensor pulled")
-//			vector<float> rcv = *s.local();
-//			REQUIRE(rcv == control);
-//			break;
-//		}
-//		}
-//	}
-//}
+TEST_CASE( "SPMD vector remote read", "gam,tensor" ) {
+	if (gam::cardinality() > 1) {
+		switch (gam::rank()) {
+		case 0:
+		{
+			vector<float> buf = {11.,12.,13.,21.,22.,23.};
+			auto data = gam::make_private<vector<float>>(buf);
+			/* push to 1 */
+			data.push(1);
+			FAST_DEBUG("Tensor pushed");
+			break;
+		}
+		case 1:
+		{
+			/* pull private pointer from 0 */
+			vector<float> control = {11.,12.,13.,21.,22.,23.};
+			auto s = gam::pull_private<vector<float>>(0);
+			assert(s != nullptr);
+			FAST_DEBUG("Tensor pulled")
+			vector<float> rcv = *s.local();
+			REQUIRE(rcv == control);
+			break;
+		}
+		}
+	}
+}
