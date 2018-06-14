@@ -10,7 +10,6 @@
 #include "fast.hpp"
 #include "mxnet-cpp/MxNetCpp.h"
 #include "gam.hpp"
-#include "armadillo"
 #include <string>
 
 #ifndef FAST_TESTLOG
@@ -93,7 +92,37 @@ TEST_CASE( "Tensor with Gam data", "gam,tensor" ) {
 //		}
 //	}
 //}
-//
+
+TEST_CASE( "SPMD vector remote read", "gam,tensor" ) {
+	if (gam::cardinality() > 1) {
+		switch (gam::rank()) {
+		case 0:
+		{
+			auto z = gam::make_private<float[]>(new float[3]);
+			auto z_ = z.local();
+			for (int i = 0; i < 3; i++){
+				z_[i] = i;
+			}
+			z = gam::private_ptr<float[]>(std::move(z_));
+			/* push to 1 */
+			z.push(1);
+			FAST_DEBUG("Tensor pushed");
+			break;
+		}
+		case 1:
+		{
+			/* pull private pointer from 0 */
+			auto s = gam::pull_private<float[]>(0);
+			assert(s != nullptr);
+			FAST_DEBUG("Tensor pulled")
+			auto s_ = s.local();
+			FAST_DEBUG((*s_)[1])
+			break;
+		}
+		}
+	}
+}
+
 //TEST_CASE( "SPMD vector remote read", "gam,tensor" ) {
 //	if (gam::cardinality() > 1) {
 //		switch (gam::rank()) {
