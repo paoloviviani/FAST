@@ -30,7 +30,6 @@ struct is_supported<mxnet::cpp::NDArray> {
 	static const bool value = true;
 };
 
-
 namespace FAST {
 
 /**
