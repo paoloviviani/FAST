@@ -36,46 +36,32 @@ TEST_CASE( "Gam basic", "gam" ) {
 	REQUIRE(*local_p == 42);
 }
 
-TEST_CASE( "Tensor with Gam data", "gam,tensor" ) {
-	vector<unsigned int> shape = {2,3};
-	vector<float> data = {11.,12.,13.,21.,22.,23.};
-
-	FAST::Tensor<NDArray> tensor(data.data(),shape);
-	REQUIRE(tensor.getShape() == shape);
-	for (uint i = 0; i < shape[0]; i++)
-		for (uint j = 0; j < shape[1]; j++){
-			REQUIRE(tensor.at(i,j) == data.at(i*shape[1]+j));
+TEST_CASE( "SPMD tensor send", "gam,tensor" ) {
+	if (gam::cardinality() > 1) {
+		vector<unsigned int> shape = {2,3};
+		vector<float> data = {11.,12.,13.,21.,22.,23.};
+		switch (gam::rank()) {
+		case 0:
+		{
+			FAST::Tensor<NDArray> tensor(data.data(),shape);
+			tensor.push(1);
+			break;
 		}
+		case 1:
+		{
+			auto p = gam::pull_private<gam_vector<float>>();
+			auto p_local = p.local();
+			FAST::Tensor<NDArray> tensor(p_local->data(),shape);
+			for (uint i = 0; i < shape[0]; i++)
+				for (uint j = 0; j < shape[1]; j++){
+					REQUIRE(tensor.at(i,j) == data.at(i*shape[1]+j));
+				}
+			break;
+		}
+		}
+	}
 }
 
-//template<typename T>
-//struct gam_vector : public std::vector<T> {
-//	using vsize_t = typename std::vector<T>::size_type;
-//	vsize_t size_ = 0;
-//
-//	gam_vector() = default;
-//
-//	/* ingesting constructor */
-//	template<typename StreamInF>
-//	gam_vector(StreamInF &&f) {
-//		typename std::vector<T>::size_type in_size;
-//		f(&in_size, sizeof(vsize_t));
-//		this->resize(in_size);
-//		assert(this->size() == in_size);
-//		f(this->data(), in_size * sizeof(T));
-//	}
-//
-//	/* marshalling function */
-//	gam::marshalled_t marshall() {
-//		gam::marshalled_t res;
-//		size_ = this->size();
-//		res.emplace_back(&size_, sizeof(vsize_t));
-//		res.emplace_back(this->data(), size_ * sizeof(T));
-//		return res;
-//	}
-//};
-//
-//
 //TEST_CASE( "SPMD tensor ping-pong", "gam,tensor" ) {
 //	if (gam::cardinality() > 1) {
 //		switch (gam::rank()) {
