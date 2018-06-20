@@ -23,7 +23,7 @@ LIBS                 = -lpthread
 INCLUDES             = -I$(FAST_ROOT)/fast -I$(FAST_ROOT)/tests/catch2 -I$(FAST_ROOT)/3rdparty/gam/gam/include -I$(FAST_ROOT)/3rdparty/armadillo
 EXECS                = unit_test gam_unit_test
 TARGET_OBJ_UNIT      = basic_unit_tests/basic_unit_test.o
-TEST_DRIVER_OBJ      = test_driver.o
+TEST_DRIVER_OBJ      = catch2/test_driver.o
 
 #Libfabric dependency
 ifeq ($(LIBFABRIC_LIB_DIR),)
@@ -42,7 +42,7 @@ endif
 
 ifeq ($(USE_GAM),1)
 CCFLAGS              += -DUSE_GAM
-TARGET_OBJ_GAM       += gam_local_tests/gam_unit_test.o
+TARGET_OBJ_GAM       += gam_tests/gam_unit_test.o
 endif
 
 .PHONY: all clean cleanall
@@ -56,9 +56,9 @@ all: $(EXECS)
 
 #basic unit test executable
 unit_test: $(TARGET_OBJ_UNIT) $(TEST_DRIVER_OBJ)
-	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
+	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
 gam_unit_test: $(TARGET_OBJ_GAM) $(TEST_DRIVER_OBJ)
-	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
+	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
 
 cleanbtr:
 	rm -rf *.btr
