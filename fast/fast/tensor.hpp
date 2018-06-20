@@ -12,6 +12,7 @@
 #include <memory>
 #include "mxnet-cpp/MxNetCpp.h"
 #include "gam.hpp"
+#include "fast/gam_vector.hpp"
 
 #define tensor_type_check(condition)  static_assert( (condition), "error: incorrect or unsupported tensor type" )
 
@@ -48,7 +49,7 @@ protected:
 	/**
 	 * Tensor object of deep learning framework
 	 */
-	gam::private_ptr<vector<float>> data_;
+	gam::private_ptr<gam_vector<float>> data_;
 	vector<unsigned int> shape_;
 
 public:
@@ -58,7 +59,7 @@ public:
 	 * @param t
 	 */
 	Tensor() {
-		data_ = gam::private_ptr<vector<float>>();
+		data_ = gam::make_private<gam_vector<float>>();
 		shape_ = vector<unsigned int>();
 	}
 
@@ -75,12 +76,13 @@ public:
 	 */
 	Tensor(const float * raw_data, vector<unsigned int> shape) {
 		size_t size = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<unsigned int>());
-		data_ = gam::make_private<vector<float>>(size);
+		data_ = gam::make_private<gam_vector<float>>();
 		assert(data_ != nullptr);
 		auto data_local = data_.local();
+		data_local->resize(size);
 		FAST_DEBUG("Created vector with size: " << data_local->size());
 		data_local->assign(raw_data, raw_data + size);
-		data_ = gam::private_ptr<vector<float>>(std::move(data_local));
+		data_ = gam::private_ptr<gam_vector<float>>(std::move(data_local));
 		shape_ = shape;
 	}
 
@@ -90,12 +92,13 @@ public:
 	 * @param shape
 	 */
 	Tensor(const float * raw_data, size_t size) {
-		data_ = gam::make_private<vector<float>>(size);
+		data_ = gam::make_private<gam_vector<float>>();
 		assert(data_ != nullptr);
 		auto data_local = data_.local();
+		data_local->resize(size);
 		FAST_DEBUG("Created vector with size: " << data_local->size());
 		data_local->assign(raw_data, raw_data + size);
-		data_ = gam::private_ptr<vector<float>>(std::move(data_local));
+		data_ = gam::private_ptr<gam_vector<float>>(std::move(data_local));
 		shape_.push_back(size);
 	}
 
@@ -131,8 +134,8 @@ public:
 	 */
 	vector<float> getStdValues() {
 		auto data_local = data_.local();
-		vector<float> out = vector<float>(*data_local);
-		data_ = gam::private_ptr<vector<float>>(std::move(data_local));
+		vector<float> out = vector<float>(data_local->data(),data_local->data() + data_local->size());
+		data_ = gam::private_ptr<gam_vector<float>>(std::move(data_local));
 		return out;
 	}
 
@@ -140,7 +143,7 @@ public:
 	 *
 	 * @return private pointer to tensor data
 	 */
-	gam::private_ptr<vector<float>> getPrivatePtr() {
+	gam::private_ptr<gam_vector<float>> getPrivatePtr() {
 		return std::move(data_);
 	}
 
@@ -156,6 +159,10 @@ public:
 	 * @return the object of type defined by the deep learning framework
 	 */
 	backendType getFrameworkObject();
+
+	void push(uint32_t to) {
+		data_.push(to);
+	}
 
 };
 

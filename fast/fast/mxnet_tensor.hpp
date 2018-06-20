@@ -49,7 +49,7 @@ public:
 	float At(size_t i) {
 		auto data_local = data_.local();
 		float out = data_local->at(i);
-		data_ = gam::private_ptr<vector<float>>(std::move(data_local));
+		data_ = gam::private_ptr<gam_vector<float>>(std::move(data_local));
 		return out;
 	}
 	/**
@@ -62,7 +62,7 @@ public:
 	float At(size_t h, size_t w) {
 		auto data_local = data_.local();
 		float out = data_local->at(Offset(h, w));
-		data_ = gam::private_ptr<vector<float>>(std::move(data_local));
+		data_ = gam::private_ptr<gam_vector<float>>(std::move(data_local));
 		return out;
 	}
 	/**
@@ -76,7 +76,7 @@ public:
 	float At(size_t c, size_t h, size_t w) {
 		auto data_local = data_.local();
 		float out = data_local->at(Offset(c, h, w));
-		data_ = gam::private_ptr<vector<float>>(std::move(data_local));
+		data_ = gam::private_ptr<gam_vector<float>>(std::move(data_local));
 		return out;
 	}
 };
@@ -88,12 +88,13 @@ public:
 template <>
 Tensor<mxnet::cpp::NDArray>::Tensor(mxnet::cpp::NDArray t) {
 	size_t size = t.Size();
-	data_ = gam::make_private<vector<float>>(size);
+	data_ = gam::make_private<gam_vector<float>>();
 	assert(data_ != nullptr);
 	auto data_local = data_.local();
 	FAST_DEBUG("Created vector with shape: " << t.GetShape());
+	data_local->resize(t.Size());
 	t.SyncCopyToCPU(data_local->data(),t.Size());
-	data_ = gam::private_ptr<vector<float>>(std::move(data_local));
+	data_ = gam::private_ptr<gam_vector<float>>(std::move(data_local));
 	shape_ = t.GetShape();
 }
 
@@ -104,12 +105,13 @@ Tensor<mxnet::cpp::NDArray>::Tensor(mxnet::cpp::NDArray t) {
 template <>
 Tensor<mxnet::cpp::NDArray>::Tensor(Tensor<mxnet::cpp::NDArray> & t) {
 	size_t size = t.getSize();
-	data_ = gam::make_private<vector<float>>(size);
+	data_ = gam::make_private<gam_vector<float>>();
 	assert(data_ != nullptr);
 	auto data_local = data_.local();
 	FAST_DEBUG("Created vector with shape: " << t.getShape());
-	*data_local = t.getStdValues();
-	data_ = gam::private_ptr<vector<float>>(std::move(data_local));
+	data_local->resize(t.getSize());
+	data_local->assign(data_local->data(),data_local->data() + data_local->size());
+	data_ = gam::private_ptr<gam_vector<float>>(std::move(data_local));
 }
 
 /**
