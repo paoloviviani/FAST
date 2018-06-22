@@ -49,12 +49,11 @@ TEST_CASE( "SPMD tensor send", "gam,tensor" ) {
 		}
 		case 1:
 		{
-			auto p = gam::pull_private<gam_vector<float>>();
-			auto p_local = p.local();
-			FAST::Tensor<float> tensor(p_local->data(),shape);
+			auto recv = FAST::pull_tensor<float>();
+			recv->reShape(shape);
 			for (uint i = 0; i < shape[0]; i++)
 				for (uint j = 0; j < shape[1]; j++){
-					REQUIRE(tensor.at(i,j) == data.at(i*shape[1]+j));
+					REQUIRE(recv->at(i,j) == data.at(i*shape[1]+j));
 				}
 			break;
 		}
@@ -71,20 +70,19 @@ TEST_CASE( "SPMD tensor ping-pong", "gam,tensor" ) {
 		{
 			FAST::Tensor<float> tensor(data.data(),shape);
 			tensor.push(1);
-			auto p = gam::pull_private<gam_vector<float>>(1);
-			auto p_local = p.local();
+			auto recv = FAST::pull_tensor<float>();
+			recv->reShape(shape);
 			for (uint i = 0; i < shape[0]; i++)
 				for (uint j = 0; j < shape[1]; j++){
-					REQUIRE(p_local->at(i*shape[1]+j) == data.at(i*shape[1]+j));
+					REQUIRE(recv->at(i,j) == data.at(i*shape[1]+j));
 				}
 			break;
 		}
 		case 1:
 		{
-			auto p = gam::pull_private<gam_vector<float>>();
-			auto p_local = p.local();
-			FAST::Tensor<float> tensor(p_local->data(),shape);
-			tensor.push(0);
+			auto recv = FAST::pull_tensor<float>();
+			recv->reShape(shape);
+			recv->push(0);
 			break;
 		}
 		}

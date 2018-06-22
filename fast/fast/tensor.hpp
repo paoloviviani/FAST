@@ -140,7 +140,12 @@ public:
 	/**
 	 *
 	 */
-	void setShape(vector<unsigned int> shape) {  shape_ = shape; };
+	void reShape(vector<unsigned int> shape) {
+		size_t oldshape = std::accumulate(shape_.begin(), shape_.end(), 1, std::multiplies<unsigned int>());
+		size_t newshape = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<unsigned int>());
+		assert(oldshape == newshape);
+		shape_ = shape;
+	};
 
 	/**
 	 *
@@ -241,19 +246,19 @@ public:
 };
 
 template<typename T>
-Tensor<T> pull_tensor(uint32_t from){
-	auto p = gam::pull_private<gam_vector<float>>(from);
+std::unique_ptr<Tensor<T>> pull_tensor(uint32_t from){
+	auto p = gam::pull_private<gam_vector<T>>(from);
 	auto p_local = p.local();
 	unsigned int size = p_local->size();
-	return FAST::Tensor<float>(p_local->data(),size);
+	return std::unique_ptr<Tensor<T>>(new Tensor<T>(p_local->data(),size));
 }
 
 template<typename T>
-Tensor<T> pull_tensor(){
-	auto p = gam::pull_private<gam_vector<float>>();
+std::unique_ptr<Tensor<T>> pull_tensor(){
+	auto p = gam::pull_private<gam_vector<T>>();
 	auto p_local = p.local();
 	unsigned int size = p_local->size();
-	return FAST::Tensor<float>(p_local->data(),size);
+	return std::unique_ptr<Tensor<T>>(new Tensor<T>(p_local->data(),size));
 }
 
 }

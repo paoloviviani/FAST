@@ -43,7 +43,7 @@ TEST_CASE( "Access tensor elements", "tensor" ) {
 		REQUIRE(tensor.at(i) == data.at(i));
 
 	shape = {2,3};
-	tensor.setShape(shape);
+	tensor.reShape(shape);
 	for (uint i = 0; i < shape[0]; i++)
 		for (uint j = 0; j < shape[1]; j++){
 			REQUIRE(tensor.at(i,j) == data.at(i*shape[1]+j));
