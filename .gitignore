@@ -7,4 +7,5 @@
 *.so
 *.o
 unit_test
+gam_unit_test
 *.btr
