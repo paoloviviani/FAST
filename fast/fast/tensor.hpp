@@ -39,7 +39,7 @@ namespace FAST {
  * and provides access to raw data and some facilities
  * Meant to be accessible to user
  */
-template <typename backendType>
+template <typename backendType, typename T = float>
 class Tensor {
 	/**
 	 * Check if template type is supported
