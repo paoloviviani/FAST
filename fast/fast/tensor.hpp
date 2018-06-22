@@ -60,7 +60,7 @@ class Tensor {
 	 * Check if template type is supported
 	 */
 	tensor_type_check(( is_supported<T>::value ));
-protected:
+private:
 	/**
 	 * Tensor object of deep learning framework
 	 */
@@ -68,6 +68,15 @@ protected:
 	vector<unsigned int> shape_;
 
 public:
+	/*
+	 * Dedicated functions prototype. Implement in separate files for different back-ends */
+	/**
+	 * Constructor from MxNet NDArray, specified in separate file
+	 * @param t
+	 */
+	Tensor(mxnet::cpp::NDArray & t);
+	/*
+	 * End of dedicated functions */
 
 	/**
 	 *
@@ -121,12 +130,6 @@ public:
 		data_local->assign(data_local->data(),data_local->data() + data_local->size());
 		data_ = gam::private_ptr<gam_vector<T>>(std::move(data_local));
 	}
-
-	/**
-	 * Copy constructor from NxNet NDArray
-	 * @param t
-	 */
-	Tensor(mxnet::cpp::NDArray & t);
 
 	/**
 	 *
