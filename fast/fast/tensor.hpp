@@ -240,6 +240,22 @@ public:
 	}
 };
 
+template<typename T>
+Tensor<T> pull_tensor(uint32_t from){
+	auto p = gam::pull_private<gam_vector<float>>(from);
+	auto p_local = p.local();
+	unsigned int size = p_local->size();
+	return FAST::Tensor<float>(p_local->data(),size);
+}
+
+template<typename T>
+Tensor<T> pull_tensor(){
+	auto p = gam::pull_private<gam_vector<float>>();
+	auto p_local = p.local();
+	unsigned int size = p_local->size();
+	return FAST::Tensor<float>(p_local->data(),size);
+}
+
 }
 
 #endif /* FAST_FAST_TENSOR_HPP_ */
