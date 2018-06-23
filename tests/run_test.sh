@@ -1,10 +1,11 @@
 #!/bin/bash
-MXNET_LIBDIR=$(cd ..; pwd)/3rdparty/mxnet/lib
+FAST_ROOT=$(cd ..; pwd)
+MXNET_LIBDIR=$FAST_ROOT/3rdparty/mxnet/lib
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$MXNET_LIBDIR
 
-export GAM_HOME=$(cd ..; pwd)/3rdparty/gam/gam
+export GAM_HOME=$FAST_ROOT/3rdparty/gam/gam
 export GAM_INCS=$GAM_HOME/include
-export GAM_RUN_LOCAL=./bin/gamrun-local
+export GAM_RUN_LOCAL=$FAST_ROOT/bin/gamrun-local
 export GAM_CONF=$GAM_HOME/conf/local.conf
 export GAM_LOCALHOST=localhost
 
