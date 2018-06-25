@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
   }
 
   // Create sgd optimizer
-  Optimizer* opt = OptimizerRegistry::Find("sgd");
+  Optimizer* opt = OptimizerRegistry::Find("adam");
   opt->SetParam("lr", learning_rate)
      ->SetParam("wd", weight_decay);
 
@@ -118,14 +118,14 @@ int main(int argc, char** argv) {
       // Update parameters
       for (size_t i = 0; i < arg_names.size(); ++i) {
         if (arg_names[i] == "X" || arg_names[i] == "label") continue;
+        opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
+
         FAST::Tensor<float> gradients(exec->grad_arrays[i]);
 
         if (gam::rank() == 0)
         	gradients.push(1);
         else
         	gradients.push(0);
-        opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
-
         NDArray recv_grads;
         if (gam::rank() == 0){
             auto recv_gradients = FAST::pull_tensor<float>();
