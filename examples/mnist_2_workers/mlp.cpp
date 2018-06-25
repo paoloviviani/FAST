@@ -23,6 +23,7 @@
 #include <chrono>
 #include "mxnet-cpp/MxNetCpp.h"
 #include "fast.hpp"
+#include "gam.hpp"
 
 using namespace std;
 using namespace mxnet::cpp;
@@ -52,20 +53,20 @@ Symbol mlp(const vector<int> &layers) {
 int main(int argc, char** argv) {
   const int image_size = 28;
   const vector<int> layers{128, 64, 10};
-  const int batch_size = 100;
-  const int max_epoch = 10;
+  const int batch_size = 256;
+  const int max_epoch = 1;
   const float learning_rate = 0.001;
   const float weight_decay = 1e-4;
 
   auto train_iter = MXDataIter("MNISTIter")
-      .SetParam("image", "../data/mnist_data/train-images-idx3-ubyte")
-      .SetParam("label", "../data/mnist_data/train-labels-idx1-ubyte")
+      .SetParam("image", "./mnist_data/train-images-idx3-ubyte")
+      .SetParam("label", "./mnist_data/train-labels-idx1-ubyte")
       .SetParam("batch_size", batch_size)
       .SetParam("flat", 1)
       .CreateDataIter();
   auto val_iter = MXDataIter("MNISTIter")
-      .SetParam("image", "../data/mnist_data/t10k-images-idx3-ubyte")
-      .SetParam("label", "../data/mnist_data/t10k-labels-idx1-ubyte")
+      .SetParam("image", "./mnist_data/t10k-images-idx3-ubyte")
+      .SetParam("label", "./mnist_data/t10k-labels-idx1-ubyte")
       .SetParam("batch_size", batch_size)
       .SetParam("flat", 1)
       .CreateDataIter();
@@ -88,9 +89,8 @@ int main(int argc, char** argv) {
   }
 
   // Create sgd optimizer
-  Optimizer* opt = OptimizerRegistry::Find("adam");
-  opt->SetParam("rescale_grad", 1.0/batch_size)
-     ->SetParam("lr", learning_rate)
+  Optimizer* opt = OptimizerRegistry::Find("sgd");
+  opt->SetParam("lr", learning_rate)
      ->SetParam("wd", weight_decay);
 
   // Create executor by binding parameters to the model
@@ -118,14 +118,32 @@ int main(int argc, char** argv) {
       // Update parameters
       for (size_t i = 0; i < arg_names.size(); ++i) {
         if (arg_names[i] == "X" || arg_names[i] == "label") continue;
+        FAST::Tensor<float> gradients(exec->grad_arrays[i]);
+
+        if (gam::rank() == 0)
+        	gradients.push(1);
+        else
+        	gradients.push(0);
         opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
+
+        NDArray recv_grads;
+        if (gam::rank() == 0){
+            auto recv_gradients = FAST::pull_tensor<float>();
+            recv_grads = NDArray(recv_gradients->getStdValues(),Shape(exec->grad_arrays[i].GetShape()), ctx);
+        }
+		else{
+            auto recv_gradients = FAST::pull_tensor<float>();
+			recv_grads = NDArray(recv_gradients->getStdValues(),Shape(exec->grad_arrays[i].GetShape()), ctx);
+		}
+        opt->Update(i, exec->arg_arrays[i], recv_grads);
       }
+      LG << "Worker: " << gam::rank();
     }
     auto toc = chrono::system_clock::now();
 
 
     float duration = chrono::duration_cast<chrono::milliseconds>(toc - tic).count() / 1000.0;
-    LG << "Epoch: " << iter << " " << samples/duration << " samples/sec Training accuracy: " << train_acc.Get();
+    LG << "Worker: " << gam::rank() <<  ", Epoch: " << iter << " " << samples/duration << " samples/sec Training accuracy: " << train_acc.Get();
   }
 
   Accuracy acc;

@@ -1,0 +1,126 @@
+#!/usr/bin/env python
+
+# This file is part of gam.
+#
+# gam is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Foobar is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with gam.  If not, see <http://www.gnu.org/licenses/>.
+
+import argparse
+from subprocess import Popen
+import sys
+import os
+import time
+import signal
+from collections import deque
+
+# hard-code starting port numbers
+max_nodes_per_host = 128
+base_pap = 6000
+base_mem = base_pap + max_nodes_per_host
+base_dmn = base_mem + max_nodes_per_host
+
+inflight = deque()
+exec_map = dict()
+
+# handle termination
+def signal_handler(signal, frame):
+        print('Termination triggered by signal {0}'.format(signal))
+        killall()
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGHUP, signal_handler)
+
+def killall():
+    "terminate all inflight processes"
+    while len(inflight) > 0:
+        p = inflight.popleft()
+        print "killing executor {0}".format(exec_map[p])
+        p.kill() #trigger server-side SIGKILL
+    assert len(inflight) == 0
+
+# parse command line
+parser = argparse.ArgumentParser(description='This is the gam launcher.')
+parser.add_argument('-n', '--cardinality', help='Number of executors',
+                    type=long, required=True)
+parser.add_argument('-l', '--localhost', help='Local host address', required=True)
+parser.add_argument('-v', '--verbose', help='Set verbose mode',
+                    action="store_true")
+parser.add_argument('command', help='Command string', nargs='+')
+args = parser.parse_args()
+
+if(args.cardinality > max_nodes_per_host):
+    sys.exit('Error! Too many nodes')
+    
+#parse hostname
+hostname = args.localhost
+
+# prepare log dir
+log_prefix_ = os.environ['PWD'] + "/logs"
+log_prefix_ += "/" + os.path.basename(args.command[0])
+log_prefix = log_prefix_ + "/{0}".format(int(time.time()))
+latest_link = log_prefix_ + "/latest"
+
+# create log dir and link
+if not os.path.exists(log_prefix):
+    os.makedirs(log_prefix)
+if os.path.exists(latest_link):
+    os.remove(latest_link)
+os.symlink(log_prefix, latest_link)
+
+# launch processes
+for e in range(args.cardinality):
+    #compose environment
+    my_env = os.environ.copy()
+    my_env["GAM_LOG_PREFIX"] = log_prefix
+    my_env["GAM_RANK"] = str(e)
+    my_env["GAM_CARDINALITY"] = str(args.cardinality)
+    
+    for e_ in range(args.cardinality):
+        my_env["GAM_NODE_{0}".format(e_)] = hostname
+        my_env["GAM_SVC_PAP_{0}".format(e_)] = str(base_pap + e_)
+        my_env["GAM_SVC_MEM_{0}".format(e_)] = str(base_mem + e_)
+        my_env["GAM_SVC_DMN_{0}".format(e_)] = str(base_dmn + e_)
+
+    CMD = os.path.abspath(args.command[0])
+    for c in args.command[1:]:
+        CMD += " " + c
+
+    #set output/error redirection
+    out_file = open(log_prefix + "/usr.{0}.out".format(e), "w")
+    out_file.write("")
+    err_file = open(log_prefix + "/usr.{0}.err".format(e), "w")
+    err_file.write("")
+    
+    # execute
+    if(args.verbose):
+        print "> starting node = " + str(e)
+    p = Popen(CMD, env=my_env, stdout=out_file, stderr=err_file)
+
+    inflight.append(p)
+    exec_map[p] = e
+
+
+while len(inflight) > 0:
+    p = inflight.popleft()
+    
+    if(p.poll() != None):
+        ret = p.returncode
+        
+        if(ret != 0):
+            print "ERROR: executor {0} returned {1}".format(exec_map[p], ret)
+            killall()
+        else:
+            if(args.verbose):
+                print "> completed node = " + str(exec_map[p])
+ 
+    else:
+        inflight.append(p)
