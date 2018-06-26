@@ -75,6 +75,8 @@ int main(int argc, char** argv) {
 
   Context ctx = Context::cpu();  // Use CPU for training
 
+  unsigned int cardinality = gam::cardinality();
+
   std::map<string, NDArray> args;
   args["X"] = NDArray(Shape(batch_size, image_size*image_size), ctx);
   args["label"] = NDArray(Shape(batch_size), ctx);
@@ -109,7 +111,7 @@ int main(int argc, char** argv) {
       samples += batch_size;
       auto data_batch = train_iter.GetDataBatch();
 
-      if (ii%2 == gam::rank()){
+      if (ii%cardinality == gam::rank()){
   	      // Set data and label
     	  data_batch.data.CopyTo(&args["X"]);
     	  data_batch.label.CopyTo(&args["label"]);
@@ -122,22 +124,24 @@ int main(int argc, char** argv) {
 	        if (arg_names[i] == "X" || arg_names[i] == "label") continue;
 	        opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 
-	        FAST::Tensor<float> gradients(exec->grad_arrays[i]);
+	        if (cardinality > 1){
+		        FAST::Tensor<float> gradients(exec->grad_arrays[i]);
+		        if (gam::rank() == 0)
+		        	gradients.push(1);
+		        else
+		        	gradients.push(0);
+		        NDArray recv_grads;
+		        if (gam::rank() == 0) {
+		            auto recv_gradients = FAST::pull_tensor<float>();
+	            	recv_grads = NDArray(recv_gradients->getStdValues(),Shape(exec->grad_arrays[i].GetShape()), ctx);
+	            }
+				else {
+		            auto recv_gradients = FAST::pull_tensor<float>();
+	            	recv_grads = NDArray(recv_gradients->getStdValues(),Shape(exec->grad_arrays[i].GetShape()), ctx);
+	            }
+		        opt->Update(i, exec->arg_arrays[i], recv_grads);
+	    	}
 
-	        if (gam::rank() == 0)
-	        	gradients.push(1);
-	        else
-	        	gradients.push(0);
-	        NDArray recv_grads;
-	        if (gam::rank() == 0){
-	            auto recv_gradients = FAST::pull_tensor<float>();
-	            recv_grads = NDArray(recv_gradients->getStdValues(),Shape(exec->grad_arrays[i].GetShape()), ctx);
-	        }
-			else{
-	            auto recv_gradients = FAST::pull_tensor<float>();
-				recv_grads = NDArray(recv_gradients->getStdValues(),Shape(exec->grad_arrays[i].GetShape()), ctx);
-			}
-	        opt->Update(i, exec->arg_arrays[i], recv_grads);
 	      }
       }
       ii++;
@@ -146,7 +150,7 @@ int main(int argc, char** argv) {
 
 
     float duration = chrono::duration_cast<chrono::milliseconds>(toc - tic).count() / 1000.0;
-    LG << "Worker: " << gam::rank() <<  ", Epoch: " << iter << " " << samples/(2*duration) << " samples/sec Training accuracy: " << train_acc.Get();
+    LG << "Worker: " << gam::rank() <<  ", Epoch: " << iter << " " << samples/(cardinality*duration) << " samples/sec Training accuracy: " << train_acc.Get();
   }
 
   Accuracy acc;
