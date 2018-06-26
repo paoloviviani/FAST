@@ -21,8 +21,12 @@ LDFLAGS              =
 LIBS                 = -lpthread
 
 INCLUDES             = -I$(FAST_ROOT)/fast -I$(FAST_ROOT)/tests/catch2 -I$(FAST_ROOT)/3rdparty/gam/gam/include -I$(FAST_ROOT)/3rdparty/armadillo
+TARGET_OBJ_CPU       = mlp_cpu.o
+TARGET_OBJ_GPU       = mlp_gpu.o
 EXECS                = mnist_cpu
-TARGET_OBJ           = mlp_cpu.o
+ifeq ($(USE_CUDA),1)
+EXECS                += mnist_gpu
+endif
 
 #Libfabric dependency
 ifeq ($(LIBFABRIC_LIB_DIR),)
@@ -49,16 +53,17 @@ all: $(EXECS)
 	$(CXX) $(INCLUDES) $(CCFLAGS) $(CFLAGS) $(OPTIMIZE_FLAGS) -c -o $@ $<
 
 #basic unit test executable
-mnist_cpu: $(TARGET_OBJ)
+mnist_cpu: $(TARGET_OBJ_CPU)
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
-
+mnist_gpu: $(TARGET_OBJ_GPU)
+	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
 
 cleanbtr:
 	rm -rf *.btr
 clean:
-	rm -rf *.o *~ $(TARGET_OBJ)
+	rm -rf *.o *~ $(TARGET_OBJ_CPU) $(TARGET_OBJ_GPU)
 
 cleanall: clean
 	rm -rf $(EXECS)
-	rm -rf $(TARGET_OBJ) *.d *.btr
+	rm -rf  $(TARGET_OBJ_CPU) $(TARGET_OBJ_GPU) *.d *.btr
 
