@@ -21,8 +21,8 @@ LDFLAGS              =
 LIBS                 = -lpthread
 
 INCLUDES             = -I$(FAST_ROOT)/fast -I$(FAST_ROOT)/tests/catch2 -I$(FAST_ROOT)/3rdparty/gam/gam/include -I$(FAST_ROOT)/3rdparty/armadillo
-EXECS                = mnist2w
-TARGET_OBJ           = mlp.o
+EXECS                = mnist_cpu
+TARGET_OBJ           = mlp_cpu.o
 
 #Libfabric dependency
 ifeq ($(LIBFABRIC_LIB_DIR),)
@@ -46,7 +46,7 @@ all: $(EXECS)
 	$(CXX) $(INCLUDES) $(CCFLAGS) $(CFLAGS) $(OPTIMIZE_FLAGS) -c -o $@ $<
 
 #basic unit test executable
-mnist2w: $(TARGET_OBJ)
+mnist_cpu: $(TARGET_OBJ)
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
 
 
