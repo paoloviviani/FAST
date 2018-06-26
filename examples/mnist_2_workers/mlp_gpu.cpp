@@ -138,7 +138,6 @@ int main(int argc, char** argv) {
 		}
         opt->Update(i, exec->arg_arrays[i], recv_grads);
       }
-      LG << "Worker: " << gam::rank();
     }
     auto toc = chrono::system_clock::now();
 
