@@ -30,6 +30,9 @@ LIBS                 += -lfabric
 else
 LIBS                 += -L$(LIBFABRIC_LIB_DIR) -lfabric
 endif
+ifneq ($(LIBFABRIC_INCLUDE_DIR),)
+INCLUDES             += -I$(LIBFABRIC_INCLUDE_DIR)
+endif
 
 #MxNet dependency
 INCLUDES             += -I$(MXNET_INCLUDE_DIR)

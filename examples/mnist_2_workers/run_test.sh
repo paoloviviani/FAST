@@ -17,4 +17,4 @@ export GAM_RUN_LOCAL=$FAST_ROOT/bin/gamrun-local_logging
 else
 export GAM_RUN_LOCAL=$FAST_ROOT/bin/gamrun-local
 fi
-$GAM_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./mnist2w
+$GAM_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./mnist_cpu

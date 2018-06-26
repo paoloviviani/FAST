@@ -3,4 +3,5 @@ FAST_ROOT				=	../..
 DEBUG					=	error
 MXNET_INCLUDE_DIR		=	$(FAST_ROOT)/3rdparty/mxnet/include
 MXNET_LIB_DIR			=	/mxnet/lib
-LIBFABRIC_LIB_DIR		=	
+LIBFABRIC_LIB_DIR		=	/opt/libfabric/lib
+LIBFABRIC_INCLUDE_DIR	=	/opt/libfabric/include
