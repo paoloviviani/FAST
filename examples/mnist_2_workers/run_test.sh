@@ -10,6 +10,7 @@ export GAM_LOCALHOST=localhost
 
 export GAM_LOG_PREFIX=
 
+# Use no more than 2
 export GAM_CARDINALITY=2
 
 if [[ $* == *-l* ]]; then
@@ -17,4 +18,4 @@ export GAM_RUN_LOCAL=$FAST_ROOT/bin/gamrun-local_logging
 else
 export GAM_RUN_LOCAL=$FAST_ROOT/bin/gamrun-local
 fi
-$GAM_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./mnist_cpu
+$GAM_RUN_LOCAL -v -n $GAM_CARDINALITY -l $GAM_LOCALHOST ./mnist_cpu
