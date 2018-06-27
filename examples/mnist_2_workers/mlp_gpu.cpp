@@ -52,9 +52,9 @@ Symbol mlp(const vector<int> &layers) {
 
 int main(int argc, char** argv) {
   const int image_size = 28;
-  const vector<int> layers{128, 64, 10};
-  const int batch_size = 256;
-  const int max_epoch = 1;
+  const vector<int> layers{128, 64, 32, 10};
+  const int batch_size = 128;
+  const int max_epoch = 10;
   const float learning_rate = 0.001;
   const float weight_decay = 1e-4;
 
@@ -73,7 +73,9 @@ int main(int argc, char** argv) {
 
   auto net = mlp(layers);
 
-  Context ctx = Context::gpu();  // Use CPU for training
+  unsigned int cardinality = gam::cardinality();
+
+  Context ctx = Context::cpu(cardinality);  // Use GPU for training
 
   std::map<string, NDArray> args;
   args["X"] = NDArray(Shape(batch_size, image_size*image_size), ctx);
@@ -104,46 +106,52 @@ int main(int argc, char** argv) {
     train_acc.Reset();
 
     auto tic = chrono::system_clock::now();
+    unsigned int ii = 0;
     while (train_iter.Next()) {
       samples += batch_size;
       auto data_batch = train_iter.GetDataBatch();
-      // Set data and label
-      data_batch.data.CopyTo(&args["X"]);
-      data_batch.label.CopyTo(&args["label"]);
-      NDArray::WaitAll();
 
-      // Compute gradients
-      exec->Forward(true);
-      exec->Backward();
-      train_acc.Update(data_batch.label, exec->outputs[0]);
-      // Update parameters
-      for (size_t i = 0; i < arg_names.size(); ++i) {
-        if (arg_names[i] == "X" || arg_names[i] == "label") continue;
-        opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
+      if (ii%cardinality == gam::rank()){
+  	      // Set data and label
+    	  data_batch.data.CopyTo(&args["X"]);
+    	  data_batch.label.CopyTo(&args["label"]);
+    	  NDArray::WaitAll();
+  	      // Compute gradients
+	      exec->Forward(true);
+	      exec->Backward();
+	      train_acc.Update(data_batch.label, exec->outputs[0]);
+	      // Update parameters
+	      for (size_t i = 0; i < arg_names.size(); ++i) {
+	        if (arg_names[i] == "X" || arg_names[i] == "label") continue;
+	        opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 
-        FAST::Tensor<float> gradients(exec->grad_arrays[i]);
+	        if (cardinality > 1){
+		        FAST::Tensor<float> gradients(exec->grad_arrays[i]);
+		        if (gam::rank() == 0)
+		        	gradients.push(1);
+		        else
+		        	gradients.push(0);
+		        NDArray recv_grads;
+		        if (gam::rank() == 0) {
+		            auto recv_gradients = FAST::pull_tensor<float>();
+	            	recv_grads = NDArray(recv_gradients->getStdValues(),Shape(exec->grad_arrays[i].GetShape()), ctx);
+	            }
+				else {
+		            auto recv_gradients = FAST::pull_tensor<float>();
+	            	recv_grads = NDArray(recv_gradients->getStdValues(),Shape(exec->grad_arrays[i].GetShape()), ctx);
+	            }
+		        opt->Update(i, exec->arg_arrays[i], recv_grads);
+	    	}
 
-        if (gam::rank() == 0)
-        	gradients.push(1);
-        else
-        	gradients.push(0);
-        NDArray recv_grads;
-        if (gam::rank() == 0){
-            auto recv_gradients = FAST::pull_tensor<float>();
-            recv_grads = NDArray(recv_gradients->getStdValues(),Shape(exec->grad_arrays[i].GetShape()), ctx);
-        }
-		else{
-            auto recv_gradients = FAST::pull_tensor<float>();
-			recv_grads = NDArray(recv_gradients->getStdValues(),Shape(exec->grad_arrays[i].GetShape()), ctx);
-		}
-        opt->Update(i, exec->arg_arrays[i], recv_grads);
+	      }
       }
+      ii++;
     }
     auto toc = chrono::system_clock::now();
 
 
     float duration = chrono::duration_cast<chrono::milliseconds>(toc - tic).count() / 1000.0;
-    LG << "Worker: " << gam::rank() <<  ", Epoch: " << iter << " " << samples/duration << " samples/sec Training accuracy: " << train_acc.Get();
+    LG << "Worker: " << gam::rank() <<  ", Epoch: " << iter << " " << samples/(cardinality*duration) << " samples/sec Training accuracy: " << train_acc.Get();
   }
 
   Accuracy acc;
