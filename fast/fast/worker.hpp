@@ -17,6 +17,7 @@ namespace FAST {
  */
 class worker {
 private:
+	//test
 	//TODO gam pointer for local updates
 	//TODO gam pointer for remote updates
 
