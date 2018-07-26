@@ -14,8 +14,4 @@
 #include "fast/tensor.hpp"
 #include "fast/mxnet_tensor.hpp"
 
-#include "fast/worker.hpp"
-#include "fast/network.hpp"
-
-
 #endif /* INCLUDE_FAST_HPP_ */

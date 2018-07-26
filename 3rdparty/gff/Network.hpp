@@ -18,21 +18,25 @@
  ****************************************************************************
  */
 
-/*
- * network.hpp
- *
- *  Created on: Jul 26, 2018
- *      Author: Maurizio Drocco, modified by Paolo Viviani
+/**
+ * 
+ * @file        Network.hpp
+ * @brief       implements Network class.
+ * @author      Maurizio Drocco
+ * 
  */
-
-#ifndef FAST_FAST_NETWORK_HPP_
-#define FAST_FAST_NETWORK_HPP_
-
+#ifndef FF_D_GFF_NETWORK_HPP_
+#define FF_D_GFF_NETWORK_HPP_
 
 #include <cassert>
-#include "gam.hpp"
 
-namespace FAST {
+#include <gam.hpp>
+
+#include "Node.hpp"
+#include "Logger.hpp"
+#include "Profiler.hpp"
+
+namespace gff {
 
 /*
  * Singleton class representing a whole GFF application.
@@ -45,7 +49,7 @@ public:
 	}
 
 	~Network() {
-		std::vector<Worker *>::size_type i;
+		std::vector<Node *>::size_type i;
 		for (i = 0; i < gam::rank() && i < cardinality(); ++i)
 			delete nodes[i];
 		if (i < cardinality())
@@ -61,33 +65,43 @@ public:
 
 	template<typename T>
 	void add(const T &n) {
-		auto np = dynamic_cast<Worker *>(new T(n));
+		auto np = dynamic_cast<Node *>(new T(n));
 		np->id((gam::executor_id) nodes.size());
 		nodes.push_back(np);
 	}
 
 	template<typename T>
 	void add(T &&n) {
-		auto np = dynamic_cast<Worker *>(new T(std::move(n)));
+		auto np = dynamic_cast<Node *>(new T(std::move(n)));
 		np->id((gam::executor_id) nodes.size());
 		nodes.push_back(np);
 	}
 
 	void run() {
+		GFF_PROFILER_TIMER(t0);
+		GFF_PROFILER_TIMER(t_init);
+		GFF_PROFILER_TIMER(t_run);
+
+		GFF_PROFILER_HRT(t0);
+
 		/* initialize the logger */
 		char *env = std::getenv("GAM_LOG_PREFIX");
 		assert(env);
-		FAST_LOG_INIT;
+		GFF_LOGGER_INIT(env, gam::rank());
+
+		/* initialize the profiler */
+		GFF_PROFILER_INIT(env, gam::rank());
+
+		GFF_PROFILER_HRT(t_init);
 
 		/* check cardinality */
-		if (gam::cardinality() < cardinality()) {
-			FAST_ERROR("Executor id > network cardinality")
-			assert(false);
-		}
+		assert(gam::cardinality() >= cardinality()); //todo error reporting
 
 		if (gam::rank() < cardinality()) {
 			/* run the node associated to the executor */
 			nodes[gam::rank()]->run();
+
+			GFF_PROFILER_HRT(t_run);
 
 			/* call node destructor to trigger destruction of data members */
 			delete nodes[gam::rank()];
@@ -95,12 +109,25 @@ public:
 
 		}
 
+		/* write profiling */
+		GFF_PROFLN("NET init  = %f s", GFF_PROFILER_SPAN(t0, t_init));
+		GFF_PROFLN("NET run   = %f s", GFF_PROFILER_SPAN(t_init, t_run));
+
+		/* write single-line profiling */
+		GFF_PROFLN_RAW("init\tsvc");
+		GFF_PROFLN_RAW("%f\t%f", //
+				GFF_PROFILER_SPAN(t0, t_init),//
+				GFF_PROFILER_SPAN(t_init, t_run));
+
+		/* finalize the profiler */
+		GFF_PROFILER_FINALIZE(gam::rank());
+
 		/* finalize the logger */
-		FAST_LOG_FINALIZE;
+		GFF_LOGGER_FINALIZE(gam::rank());
 	}
 
 private:
-	std::vector<Worker *> nodes;
+	std::vector<Node *> nodes;
 };
 
 template<typename T>
@@ -117,6 +144,6 @@ static void run() {
 	Network::getNetwork()->run();
 }
 
-}// namespace FAST
+} /* namespace gff */
 
-#endif /* FAST_FAST_NETWORK_HPP_ */
+#endif /* FF_D_GFF_NETWORK_HPP_ */

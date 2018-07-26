@@ -18,57 +18,26 @@
  ****************************************************************************
  */
 
-/*
- * worker.hpp
- *
- *  Created on: Jun 3, 2018
- *      Author: Maurizio Drocco, modified by Paolo Viviani
+/**
+ * @defgroup gff-bb-api GFF building blocks API
  */
-
-#ifndef FAST_FAST_WORKER_HPP_
-#define FAST_FAST_WORKER_HPP_
-
-#include "gam.hpp"
-
-namespace FAST {
 
 /**
+ * @file gff.hpp
+ * @author Maurizio Drocco
+ * @date Apr 12, 2017
  *
  */
-class Worker {
-public:
-	virtual ~Worker() {
 
-	}
+#ifndef FF_D_GFF_GFF_HPP_
+#define FF_D_GFF_GFF_HPP_
 
-	void id(gam::executor_id i) {
-		id__ = i;
-		set_links();
-	}
+#include <gam.hpp>
 
-	gam::executor_id id() {
-		return id__;
-	}
+#include "communicators/builtin.hpp"
+#include "Network.hpp"
+#include "Filter.hpp"
+#include "Sink.hpp"
+#include "Source.hpp"
 
-	virtual void set_links() = 0;
-
-	virtual void run() = 0;
-
-protected:
-	template<typename Logic>
-	void init_(Logic &l) {
-		l.svc_init();
-	}
-
-	template<typename Logic>
-	void end_(Logic &l) {
-		l.svc_end();
-	}
-
-protected:
-	gam::executor_id id__;
-};
-
-}
-
-#endif /* FAST_FAST_WORKER_HPP_ */
+#endif /* FF_D_GFF_GFF_HPP_ */
