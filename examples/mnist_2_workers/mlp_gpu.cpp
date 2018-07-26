@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
 
   unsigned int cardinality = gam::cardinality();
 
-  Context ctx = Context::cpu(cardinality);  // Use GPU for training
+  Context ctx = Context::gpu(gam::rank());  // Use GPU for training
 
   std::map<string, NDArray> args;
   args["X"] = NDArray(Shape(batch_size, image_size*image_size), ctx);
@@ -87,7 +87,17 @@ int main(int argc, char** argv) {
   auto initializer = Uniform(0.01);
   for (auto& arg : args) {
     // arg.first is parameter name, and arg.second is the value
-    initializer(arg.first, &arg.second);
+	  if (cardinality == 1 || gam::rank() == 0)
+		  initializer(arg.first, &arg.second);
+	  if (cardinality > 1 && gam::rank() == 0) {
+		  FAST::Tensor<float> arg_init(arg.second);
+		  arg_init.push(1);
+	  }
+	  if (gam::rank() == 1) {
+          auto recv_init = FAST::pull_tensor<float>();
+          arg.second = NDArray(recv_init->getStdValues(),Shape(arg.second.GetShape()), ctx);
+	  }
+
   }
 
   // Create sgd optimizer
