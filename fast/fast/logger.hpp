@@ -102,7 +102,7 @@ public:
 
 	void finalize() {
 		//print footer message
-//		log("stop logging worker %d", id);
+		log("stop logging worker %d", id);
 	}
 
 	/**
@@ -152,6 +152,6 @@ private:
 
 };
 
-}
+} //Namespace FAST
 
 #endif /* FAST_FAST_LOGGING_HPP_ */
