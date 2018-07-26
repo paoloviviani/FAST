@@ -1,8 +1,28 @@
+/* ***************************************************************************
+ *
+ *  This file is part of gam.
+ *
+ *  gam is free software; you can redistribute it and/or modify it
+ *  under the terms of the GNU Lesser General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  gam is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public License
+ *  along with gam. If not, see <http://www.gnu.org/licenses/>.
+ *
+ ****************************************************************************
+ */
+
 /*
  * network.hpp
  *
  *  Created on: Jul 26, 2018
- *      Author: pvi
+ *      Author: Maurizio Drocco, modified by Paolo Viviani
  */
 
 #ifndef FAST_FAST_NETWORK_HPP_
@@ -60,7 +80,10 @@ public:
 		FAST_LOG_INIT;
 
 		/* check cardinality */
-		assert(gam::cardinality() >= cardinality()); //todo error reporting
+		if (gam::cardinality() < cardinality()) {
+			FAST_ERROR("Executor id > network cardinality")
+			assert(false);
+		}
 
 		if (gam::rank() < cardinality()) {
 			/* run the node associated to the executor */
