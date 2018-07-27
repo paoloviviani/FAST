@@ -246,7 +246,7 @@ public:
 	}
 };
 
-typedef std::future< std::unique_ptr<FAST::Tensor<float> > > future_ptr_float;
+typedef std::future< FAST::Tensor<float> > future_float;
 
 
 template<typename T>
@@ -263,13 +263,6 @@ std::unique_ptr<Tensor<T>> pull_tensor(){
 	auto p_local = p.local();
 	unsigned int size = p_local->size();
 	return std::unique_ptr<Tensor<T>>(new Tensor<T>(p_local->data(),size));
-}
-
-template<typename T>
-std::future< std::unique_ptr<Tensor<T>> > pull_tensor_async(){
-	auto pull = []() {return pull_tensor<T>();};
-	auto handle = std::async(std::launch::async, pull);
-	return handle;
 }
 
 }
