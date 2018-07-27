@@ -1,5 +1,5 @@
 #!/bin/bash
-FAST_ROOT=$(cd ../..; pwd)
+FAST_ROOT=$(cd ..; pwd)
 MXNET_LIBDIR=$FAST_ROOT/3rdparty/mxnet/lib
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$MXNET_LIBDIR
 
@@ -17,4 +17,6 @@ export GAM_RUN_LOCAL=$FAST_ROOT/bin/gamrun-local_logging
 else
 export GAM_RUN_LOCAL=$FAST_ROOT/bin/gamrun-local
 fi
-$GAM_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./mnist2w
+
+$GAM_RUN_LOCAL -v -n 1 -l $GAM_LOCALHOST ./bin/unit_test
+$GAM_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/gam_unit_test

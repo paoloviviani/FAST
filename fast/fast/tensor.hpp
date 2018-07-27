@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <memory>
+#include <future>
 #include "gam.hpp"
 #include "fast/gam_vector.hpp"
 #include "mxnet-cpp/MxNetCpp.h"
@@ -259,6 +260,13 @@ std::unique_ptr<Tensor<T>> pull_tensor(){
 	auto p_local = p.local();
 	unsigned int size = p_local->size();
 	return std::unique_ptr<Tensor<T>>(new Tensor<T>(p_local->data(),size));
+}
+
+template<typename T>
+std::future< std::unique_ptr<Tensor<T>> > pull_tensor_async(){
+	auto pull = []() {return pull_tensor<T>();};
+	auto handle = std::async(std::launch::async, pull);
+	return handle;
 }
 
 }
