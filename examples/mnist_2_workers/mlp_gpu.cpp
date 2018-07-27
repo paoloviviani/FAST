@@ -52,7 +52,7 @@ Symbol mlp(const vector<int> &layers) {
 
 int main(int argc, char** argv) {
   const int image_size = 28;
-  const vector<int> layers{128, 64, 32, 10};
+  const vector<int> layers{128, 64, 10};
   const int batch_size = 128;
   const int max_epoch = 10;
   const float learning_rate = 0.001;

@@ -11,7 +11,7 @@ export GAM_LOCALHOST=localhost
 export GAM_LOG_PREFIX=
 
 # Use no more than 2
-export GAM_CARDINALITY=2
+export GAM_CARDINALITY=1
 
 if [[ $* == *-l* ]]; then
 export GAM_RUN_LOCAL=$FAST_ROOT/bin/gamrun-local_logging
