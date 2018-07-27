@@ -246,6 +246,9 @@ public:
 	}
 };
 
+typedef std::future< std::unique_ptr<FAST::Tensor<float> > > future_ptr_float;
+
+
 template<typename T>
 std::unique_ptr<Tensor<T>> pull_tensor(uint32_t from){
 	auto p = gam::pull_private<gam_vector<T>>(from);

@@ -74,7 +74,7 @@ TEST_CASE( "SPMD tensor send async", "gam,tensor" ) {
 		}
 		case 1:
 		{
-			auto recv = FAST::pull_tensor_async<float>();
+			FAST::future_ptr_float recv = FAST::pull_tensor_async<float>();
 			auto received = recv.get();
 			received->reShape(shape);
 			for (uint i = 0; i < shape[0]; i++)

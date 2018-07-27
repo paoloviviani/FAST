@@ -30,8 +30,6 @@
 using namespace std;
 using namespace mxnet::cpp;
 
-
-
 Symbol mlp(const vector<int> &layers) {
 	auto x = Symbol::Variable("X");
 	auto label = Symbol::Variable("label");
@@ -79,7 +77,7 @@ int main(int argc, char** argv) {
 
 	unsigned int cardinality = gam::cardinality();
 
-	Context ctx = Context::gpu(gam::rank());  // Use GPU for training
+	Context ctx = Context::cpu();//Context::gpu(gam::rank());  // Use GPU for training
 
 	std::map<string, NDArray> args;
 	args["X"] = NDArray(Shape(batch_size, image_size*image_size), ctx);
@@ -139,26 +137,28 @@ int main(int argc, char** argv) {
 				for (size_t i = 0; i < arg_names.size(); ++i) {
 					if (arg_names[i] == "X" || arg_names[i] == "label") continue;
 					opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
-//
-//					FAST::Tensor<float> gradients(exec->grad_arrays[i]);
-//					if (gam::rank() == 0)
-//						gradients.push(1);
-//					else
-//						gradients.push(0);
+
+					FAST::Tensor<float> gradients(exec->grad_arrays[i]);
+					if (gam::rank() == 0)
+						gradients.push(1);
+					else
+						gradients.push(0);
 				}
 
-//				std::vector< std::future< std::unique_ptr<FAST::Tensor<float> > > > recv_gradients(arg_names.size());
-//
-//				for (size_t i = 0; i < arg_names.size(); ++i) {
-//					recv_gradients[i] = FAST::pull_tensor_async<float>();
-//				}
-//				for (size_t i = 0; i < arg_names.size(); ++i) {
-//					auto present = recv_gradients[i].get();
-//					FAST_DEBUG(present->getStdValues());
-//					 NDArray recv_grads(Shape(exec->grad_arrays[i].GetShape()), ctx);
-//					 recv_grads = NDArray(present->getStdValues(),Shape(exec->grad_arrays[i].GetShape()), ctx);
+				std::vector< FAST::future_ptr_float > recv_gradients;
+				for (size_t i = 0; i < arg_names.size(); ++i) {
+					if (arg_names[i] == "X" || arg_names[i] == "label") continue;
+					FAST::future_ptr_float temp = FAST::pull_tensor_async<float>();
+					recv_gradients.push_back(std::move(temp));
+				}
+
+				for (size_t i = 0; i < arg_names.size(); ++i) {
+					if (arg_names[i] == "X" || arg_names[i] == "label") continue;
+					auto present = recv_gradients[i].get();
+//					NDArray recv_grads(Shape(exec->grad_arrays[i].GetShape()), ctx);
+//					recv_grads = NDArray(present->getStdValues(),Shape(exec->grad_arrays[i].GetShape()), ctx);
 //					opt->Update(i, exec->arg_arrays[i], recv_grads);
-//				}
+				}
 
 			}
 			ii++;
