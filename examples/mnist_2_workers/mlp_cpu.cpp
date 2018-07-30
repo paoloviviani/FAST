@@ -52,7 +52,7 @@ Symbol mlp(const vector<int> &layers) {
 
 int main(int argc, char** argv) {
   const int image_size = 28;
-  const vector<int> layers{128, 64, 32, 10};
+  const vector<int> layers{128, 32, 10};
   const int batch_size = 128;
   const int max_epoch = 10;
   const float learning_rate = 0.001;
@@ -87,7 +87,17 @@ int main(int argc, char** argv) {
   auto initializer = Uniform(0.01);
   for (auto& arg : args) {
     // arg.first is parameter name, and arg.second is the value
-    initializer(arg.first, &arg.second);
+    if (cardinality == 1 || gam::rank() == 0)
+      initializer(arg.first, &arg.second);
+    if (cardinality > 1 && gam::rank() == 0) {
+      FAST::Tensor<float> arg_init(arg.second);
+      arg_init.push(1);
+    }
+    if (gam::rank() == 1) {
+          auto recv_init = FAST::pull_tensor<float>();
+          arg.second = NDArray(recv_init->getStdValues(),Shape(arg.second.GetShape()), ctx);
+    }
+
   }
 
   // Create sgd optimizer
