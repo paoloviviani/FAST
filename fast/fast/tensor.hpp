@@ -142,9 +142,9 @@ public:
 	 *
 	 */
 	void reShape(vector<unsigned int> shape) {
-		size_t oldshape = std::accumulate(shape_.begin(), shape_.end(), 1, std::multiplies<unsigned int>());
-		size_t newshape = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<unsigned int>());
-		assert(oldshape == newshape);
+		size_t oldsize = std::accumulate(shape_.begin(), shape_.end(), 1, std::multiplies<unsigned int>());
+		size_t newsize = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<unsigned int>());
+		assert(oldsize == newsize);
 		shape_ = shape;
 	};
 
@@ -245,9 +245,6 @@ public:
 		return out;
 	}
 };
-
-typedef std::future< FAST::Tensor<float> > future_float;
-
 
 template<typename T>
 std::unique_ptr<Tensor<T>> pull_tensor(uint32_t from){

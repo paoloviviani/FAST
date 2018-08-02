@@ -14,4 +14,6 @@
 #include "fast/tensor.hpp"
 #include "fast/mxnet_tensor.hpp"
 
+#include "fast/workers/async_complete.hpp"
+
 #endif /* FAST_FAST_HPP_ */
