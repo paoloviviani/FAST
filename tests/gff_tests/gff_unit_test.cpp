@@ -13,6 +13,8 @@
 #include <cmath>
 #include "fast.hpp"
 
+#define CATCH_CONFIG_MAIN
+
 using namespace std;
 
 #define NWORKERS    4
@@ -58,7 +60,7 @@ public:
 	 */
 	gff::token_t svc(gff::OneToAll &c) {
 		FAST_DEBUG("Emitter svc")
-		c.emit(gam::make_private<int>(NUMBER));
+		c.emit(gam::make_public<int>(NUMBER));
 		return gff::eos;
 	}
 
@@ -79,7 +81,7 @@ private:
  * - the gff logic
  */
 typedef gff::Source<gff::OneToAll, //
-		gam::private_ptr<int>, //
+		gam::public_ptr<int>, //
 		EmitterLogic> Emitter;
 
 /*
@@ -96,7 +98,7 @@ public:
 	 * @param c is the output channel (could be a template for simplicity)
 	 * @return a gff token
 	 */
-	gff::token_t svc(gam::private_ptr<int> &in, gff::NondeterminateMerge &c) {
+	gff::token_t svc(gam::public_ptr<int> &in, gff::NondeterminateMerge &c) {
 		FAST_DEBUG("Worker")
 		auto local_in = in.local();
 		c.emit(gam::make_private<char>((char) std::sqrt(*local_in)));
@@ -120,7 +122,7 @@ public:
  * - the gff logic
  */
 typedef gff::Filter<gff::OneToAll, gff::NondeterminateMerge, //
-		gam::private_ptr<int>, gam::private_ptr<char>, //
+		gam::public_ptr<int>, gam::private_ptr<char>, //
 		WorkerLogic> Worker;
 
 /*
