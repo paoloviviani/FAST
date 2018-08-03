@@ -59,16 +59,15 @@ public:
 	 * @return a gff token
 	 */
 	gff::token_t svc(gff::OneToAll &c) {
-		FAST_DEBUG("Emitter svc")
 		c.emit(gam::make_public<int>(NUMBER));
 		return gff::eos;
 	}
 
 	void svc_init() {
-		FAST_DEBUG("Emitter init")
 	}
 
 	void svc_end() {
+		REQUIRE(true);
 	}
 
 private:
@@ -99,14 +98,13 @@ public:
 	 * @return a gff token
 	 */
 	gff::token_t svc(gam::public_ptr<int> &in, gff::NondeterminateMerge &c) {
-		FAST_DEBUG("Worker")
 		auto local_in = in.local();
+		REQUIRE(NUMBER == *local_in);
 		c.emit(gam::make_private<char>((char) std::sqrt(*local_in)));
 		return gff::go_on;
 	}
 
 	void svc_init() {
-		FAST_DEBUG("Worker init")
 	}
 
 	void svc_end() {
@@ -140,12 +138,11 @@ public:
 	 */
 	void svc(gam::private_ptr<char> &in) {
 		auto local_in = in.local();
-		std::cout << (int) *local_in << std::endl;
+		REQUIRE(std::sqrt(NUMBER) == *local_in);
 		sum += *local_in;
 	}
 
 	void svc_init() {
-		FAST_DEBUG("Collector init")
 	}
 
 	/*
@@ -153,9 +150,7 @@ public:
 	 */
 	void svc_end() {
 		int res = std::sqrt(NUMBER)*NWORKERS;
-		fprintf(stderr, "sum=%d exp=%d\n", sum, res);
-		REQUIRE(res == sum);
-
+ 		REQUIRE(res == sum);
 	}
 
 private:
@@ -175,12 +170,11 @@ typedef gff::Sink<gff::NondeterminateMerge, //
 /*
  *******************************************************************************
  *
- * main
+ * mains
  *
  *******************************************************************************
  */
 TEST_CASE( "gff basic broadcast", "gam,gff" ) {
-	FAST_LOG_INIT
 	/*
 	 * Create the channels for inter-node communication.
 	 * A channel can carry both public and private pointers.

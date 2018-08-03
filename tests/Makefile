@@ -2,7 +2,7 @@ include config.mk
 
 OPTIMIZE_FLAGS       = -O3 -DLOGLEVEL_INFO -g0
 ifeq ($(DEBUG),debug)
-OPTIMIZE_FLAGS       = -O0 -DLOGLEVEL_DEBUG -DGFF_LOG -DGAM_DBG -g3
+OPTIMIZE_FLAGS       = -O0 -DLOGLEVEL_DEBUG -g3 #-DGFF_LOG -DGAM_DBG
 endif
 ifeq ($(DEBUG),info)
 OPTIMIZE_FLAGS       = -O3 -DLOGLEVEL_INFO -g0
