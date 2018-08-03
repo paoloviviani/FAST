@@ -64,10 +64,13 @@ if(args.cardinality > max_nodes_per_host):
 #parse hostname
 hostname = args.localhost
 
+log_prefix = os.environ['PWD']
+
 # launch processes
 for e in range(args.cardinality):
     #compose environment
     my_env = os.environ.copy()
+    my_env["GAM_LOG_PREFIX"] = log_prefix
     my_env["GAM_RANK"] = str(e)
     my_env["GAM_CARDINALITY"] = str(args.cardinality)
     

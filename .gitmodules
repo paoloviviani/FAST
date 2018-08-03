@@ -2,3 +2,6 @@
 	path = 3rdparty/fastflow
 	url = git@github.com:paoloviviani/fastflow.git
 	branch = distributed2
+[submodule "3rdparty/gam"]
+	path = 3rdparty/gam
+	url = git@github.com:paoloviviani/gam.git

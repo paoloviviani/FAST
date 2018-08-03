@@ -2,7 +2,7 @@ include config.mk
 
 OPTIMIZE_FLAGS       = -O3 -DLOGLEVEL_INFO -g0
 ifeq ($(DEBUG),debug)
-OPTIMIZE_FLAGS       = -O0 -DLOGLEVEL_DEBUG -g3
+OPTIMIZE_FLAGS       = -O0 -DLOGLEVEL_DEBUG -DGFF_LOG -DGAM_DBG -g3
 endif
 ifeq ($(DEBUG),info)
 OPTIMIZE_FLAGS       = -O3 -DLOGLEVEL_INFO -g0
@@ -20,8 +20,8 @@ CFLAGS               = -std=c++11
 LDFLAGS              = 
 LIBS                 = -lpthread
 
-INCLUDES             = -I$(FAST_ROOT)/fast -I$(FAST_ROOT)/tests/catch2 -I$(FAST_ROOT)/3rdparty/gff -I$(FAST_ROOT)/3rdparty/gam/gam/include -I$(FAST_ROOT)/3rdparty/armadillo
-EXECS                = unit_test gam_unit_test
+INCLUDES             = -I$(FAST_ROOT)/fast -I$(FAST_ROOT)/tests/catch2 -I$(FAST_ROOT)/3rdparty/fastflow/ff/d/gff -I$(FAST_ROOT)/3rdparty/gam/gam/include -I$(FAST_ROOT)/3rdparty/armadillo
+EXECS                = unit_test gam_unit_test gff_unit_test
 TARGET_OBJ_UNIT      = basic_unit_tests/basic_unit_test.o
 TEST_DRIVER_OBJ      = catch2/test_driver.o
 
@@ -42,7 +42,8 @@ endif
 
 ifeq ($(USE_GAM),1)
 CCFLAGS              += -DUSE_GAM
-TARGET_OBJ_GAM       += gam_tests/gam_unit_test.o
+TARGET_OBJ_GAM       = gam_tests/gam_unit_test.o 
+TARGET_OBJ_GFF       = gff_tests/gff_unit_test.o
 endif
 
 .PHONY: all clean cleanall
@@ -58,6 +59,8 @@ all: $(EXECS)
 unit_test: $(TARGET_OBJ_UNIT) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
 gam_unit_test: $(TARGET_OBJ_GAM) $(TEST_DRIVER_OBJ)
+	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
+gff_unit_test: $(TARGET_OBJ_GFF) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
 
 cleanbtr:
