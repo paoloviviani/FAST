@@ -1,3 +1,6 @@
 [submodule "3rdparty/gam"]
 	path = 3rdparty/gam
-	url = git@github.com:alpha-unito/gam.git
+	url = git@github.com:paoloviviani/gam.git
+[submodule "3rdparty/fastflow"]
+	path = 3rdparty/fastflow
+	url = git@github.com:paoloviviani/fastflow.git
