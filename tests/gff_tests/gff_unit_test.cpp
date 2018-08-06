@@ -167,6 +167,51 @@ typedef gff::Sink<gff::NondeterminateMerge, //
 		gam::private_ptr<char>, //
 		CollectorLogic> Collector;
 
+class WorkerLogicAllReduce {
+public:
+	/**
+	 * The svc function is called upon each incoming pointer from upstream.
+	 * Pointers are sent downstream by calling the emit() function on the
+	 * output channel, that is passed as input argument.
+	 *
+	 * @param in is the input pointer
+	 * @param c is the output channel (could be a template for simplicity)
+	 * @return a gff token
+	 */
+	gff::token_t svc(gam::public_ptr<int> &in, gff::OneToAll &c) {
+		if (init_) {
+			c.emit(gam::make_public<int>(NUMBER));
+			init_ = false;
+		}
+		else {
+			auto local_in = in.local();
+			REQUIRE(NUMBER == *local_in);
+			c.emit(gam::make_public<int>(NUMBER));
+		}
+		return gff::go_on;
+	}
+
+	void svc_init() {
+		init_ = true;
+	}
+
+	void svc_end() {
+	}
+private:
+	bool init_;
+};
+
+/*
+ * define a Source node with the following template parameters:
+ * - the type of the input channel
+ * - the type of the output channel
+ * - the type of the input pointers
+ * - the type of the output pointers
+ * - the gff logic
+ */
+typedef gff::Filter<gff::OneToAll, gff::OneToAll,//
+		gam::public_ptr<int>, gam::public_ptr<char>, //
+		WorkerLogicAllReduce> WorkerAllReduce;
 /*
  *******************************************************************************
  *
@@ -192,6 +237,18 @@ TEST_CASE( "gff basic broadcast", "gam,gff" ) {
 	for (unsigned i = 0; i < NWORKERS; ++i)
 		gff::add(Worker(e2w, w2c)); //e2w/w2c are the workers' i/o channels
 	gff::add(Collector(w2c)); //w2c is the collector's input channel
+
+	/* execute the network */
+	gff::run();
+}
+
+TEST_CASE( "gff allreduce", "gam,gff" ) {
+
+	gff::OneToAll out;
+	gff::OneToAll in;
+
+	for (unsigned i = 0; i < NWORKERS + 2; i++)
+		gff::add(WorkerAllReduce(in,out));
 
 	/* execute the network */
 	gff::run();
