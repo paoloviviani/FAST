@@ -178,7 +178,7 @@ public:
 	 * @param c is the output channel (could be a template for simplicity)
 	 * @return a gff token
 	 */
-	gff::token_t svc(gam::public_ptr<int> &in, gff::OneToAll &c) {
+	gff::token_t svc(gam::public_ptr<int> &in, gff::NDOneToAll &c) {
 		if (init_) {
 			c.emit(gam::make_public<int>(NUMBER));
 			init_ = false;
@@ -186,7 +186,7 @@ public:
 		else {
 			auto local_in = in.local();
 			REQUIRE(NUMBER == *local_in);
-			c.emit(gam::make_public<int>(NUMBER));
+			c.emit(gam::make_public<int>(*local_in));
 		}
 		return gff::go_on;
 	}
@@ -209,7 +209,7 @@ private:
  * - the type of the output pointers
  * - the gff logic
  */
-typedef gff::Filter<gff::OneToAll, gff::OneToAll,//
+typedef gff::Filter<gff::NDOneToAll, gff::NDOneToAll,//
 		gam::public_ptr<int>, gam::public_ptr<char>, //
 		WorkerLogicAllReduce> WorkerAllReduce;
 /*
@@ -244,11 +244,10 @@ TEST_CASE( "gff basic broadcast", "gam,gff" ) {
 
 TEST_CASE( "gff allreduce", "gam,gff" ) {
 
-	gff::OneToAll out;
-	gff::OneToAll in;
+	gff::NDOneToAll all;
 
 	for (unsigned i = 0; i < NWORKERS + 2; i++)
-		gff::add(WorkerAllReduce(in,out));
+		gff::add(WorkerAllReduce(all,all));
 
 	/* execute the network */
 	gff::run();

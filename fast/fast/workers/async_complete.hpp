@@ -24,7 +24,7 @@ public:
 	 * @param c is the output channel (could be a template for simplicity)
 	 * @return a gff token
 	 */
-	gff::token_t svc(gam::private_ptr<int> &in, gff::NondeterminateMerge &c) {
+	gff::token_t svc(gam::public_ptr<int> &in, gff::NondeterminateMerge &c) {
 		auto local_in = in.local();
 		if (*local_in < THRESHOLD)
 			c.emit(gam::make_private<char>((char) std::sqrt(*local_in)));
@@ -52,7 +52,7 @@ private:
 
 template<typename ModelLogic>
 using ACWorker = gff::Filter<gff::RoundRobinSwitch, gff::NondeterminateMerge, //
-		gam::private_ptr<int>, gam::private_ptr<char>, //
+		gam::public_ptr<int>, gam::public_ptr<char>, //
 		ACWorkerLogic<ModelLogic>>;
 
 } // Namespace FAST
