@@ -21,7 +21,7 @@ LDFLAGS              =
 LIBS                 = -lpthread
 
 INCLUDES             = -I$(FAST_ROOT)/fast -I$(FAST_ROOT)/tests/catch2 -I$(FAST_ROOT)/3rdparty/fastflow/ff/d/gff -I$(FAST_ROOT)/3rdparty/gam/gam/include -I$(FAST_ROOT)/3rdparty/armadillo
-EXECS                = unit_test gam_unit_test gff_unit_test
+EXECS                = unit_test gam_unit_test gff_farm gff_all_reduce
 TARGET_OBJ_UNIT      = basic_unit_tests/basic_unit_test.o
 TEST_DRIVER_OBJ      = catch2/test_driver.o
 
@@ -43,7 +43,8 @@ endif
 ifeq ($(USE_GAM),1)
 CCFLAGS              += -DUSE_GAM
 TARGET_OBJ_GAM       = gam_tests/gam_unit_test.o 
-TARGET_OBJ_GFF       = gff_tests/gff_unit_test.o
+TARGET_OBJ_GFF_FARM  = gff_tests/basic_farm.o
+TARGET_OBJ_GFF_ALL   = gff_tests/all_reduce.o
 endif
 
 .PHONY: all clean cleanall
@@ -60,7 +61,9 @@ unit_test: $(TARGET_OBJ_UNIT) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
 gam_unit_test: $(TARGET_OBJ_GAM) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
-gff_unit_test: $(TARGET_OBJ_GFF) $(TEST_DRIVER_OBJ)
+gff_farm: $(TARGET_OBJ_GFF_FARM) $(TEST_DRIVER_OBJ)
+	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
+gff_all_reduce: $(TARGET_OBJ_GFF_ALL) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
 
 cleanbtr:
@@ -69,6 +72,6 @@ clean:
 	rm -rf *.o *~ $(TARGET_OBJ_UNIT)
 
 cleanall: clean
-	rm -rf $(EXECS)
+	rm -rf bin/$(EXECS)
 	rm -rf $(TARGET_OBJ_UNIT) $(TARGET_OBJ_GAM) $(TEST_DRIVER_OBJ) *.d *.btr
 
