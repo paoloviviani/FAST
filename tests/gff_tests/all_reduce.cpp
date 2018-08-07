@@ -17,7 +17,7 @@
 
 using namespace std;
 
-#define NWORKERS    4
+#define NWORKERS    3
 #define NUMBER      5
 
 /*
@@ -39,14 +39,15 @@ public:
 	 * @return a gff token
 	 */
 	gff::token_t svc(gam::public_ptr<int> &in, gff::NDOneToAll &c) {
-		while (iter_ > 0){
-			auto local_in = in.local();
-			REQUIRE(NUMBER == *local_in);
-			c.emit(gam::make_public<int>(*local_in));
-			iter_--;
+		auto local_in = in.local();
+		buffer_.push_back(*local_in);
+		if (buffer_.size() < 2)
 			return gff::go_on;
+		else {
+			int sum = std::accumulate(buffer_.begin(), buffer_.end(), 0);
+			REQUIRE(2*NUMBER == sum);
+			return gff::eos;
 		}
-		return gff::eos;
 	}
 
 	void svc_init(gff::NDOneToAll &c) {
@@ -56,7 +57,8 @@ public:
 	void svc_end() {
 	}
 private:
-	unsigned int iter_ = 3;
+	vector< int > buffer_;
+	unsigned int iter_ = 2;
 };
 
 /*
