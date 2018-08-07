@@ -167,6 +167,45 @@ typedef gff::Sink<gff::NondeterminateMerge, //
 		gam::private_ptr<char>, //
 		CollectorLogic> Collector;
 
+class DummyEmitterLogic {
+public:
+	DummyEmitterLogic() {
+	}
+
+	/**
+	 * The svc function is called repeatedly by the runtime, until an eos
+	 * token is returned.
+	 * Pointers are sent downstream by calling the emit() function on the
+	 * output channel, that is passed as input argument.
+	 *
+	 * @param c is the output channel (could be a template for simplicity)
+	 * @return a gff token
+	 */
+	gff::token_t svc(gff::NDOneToAll &c) {
+		c.emit(gam::make_public<int>(NUMBER));
+		return gff::eos;
+	}
+
+	void svc_init(gff::NDOneToAll &c) {
+	}
+
+	void svc_end() {
+		REQUIRE(true);
+	}
+
+private:
+};
+
+/*
+ * define a Source node with the following template parameters:
+ * - the type of the output channel
+ * - the type of the emitted pointers
+ * - the gff logic
+ */
+typedef gff::Source<gff::NDOneToAll, //
+		gam::public_ptr<int>, //
+		DummyEmitterLogic> DummyEmitter;
+
 class WorkerLogicAllReduce {
 public:
 	/**
@@ -179,26 +218,24 @@ public:
 	 * @return a gff token
 	 */
 	gff::token_t svc(gam::public_ptr<int> &in, gff::NDOneToAll &c) {
-		if (init_) {
-			c.emit(gam::make_public<int>(NUMBER));
-			init_ = false;
-		}
-		else {
+		while (iter_ > 0){
 			auto local_in = in.local();
 			REQUIRE(NUMBER == *local_in);
 			c.emit(gam::make_public<int>(*local_in));
+			iter_--;
+			return gff::go_on;
 		}
-		return gff::go_on;
+		return gff::eos;
 	}
 
-	void svc_init() {
-		init_ = true;
+	void svc_init(gff::NDOneToAll &c) {
+		c.emit(gam::make_public<int>(NUMBER));
 	}
 
 	void svc_end() {
 	}
 private:
-	bool init_;
+	unsigned int iter_ = 3;
 };
 
 /*
@@ -219,28 +256,28 @@ typedef gff::Filter<gff::NDOneToAll, gff::NDOneToAll,//
  *
  *******************************************************************************
  */
-TEST_CASE( "gff basic broadcast", "gam,gff" ) {
-	/*
-	 * Create the channels for inter-node communication.
-	 * A channel can carry both public and private pointers.
-	 */
-	gff::OneToAll e2w;
-	gff::NondeterminateMerge w2c;
-
-	/*
-	 * In this preliminary implementation, a single global network is
-	 * created and nodes can be added only to the global network.
-	 */
-
-	/* bind nodes to channels and add to the network */
-	gff::add(Emitter(e2w)); //e2w is the emitter's output channel
-	for (unsigned i = 0; i < NWORKERS; ++i)
-		gff::add(Worker(e2w, w2c)); //e2w/w2c are the workers' i/o channels
-	gff::add(Collector(w2c)); //w2c is the collector's input channel
-
-	/* execute the network */
-	gff::run();
-}
+//TEST_CASE( "gff basic broadcast", "gam,gff" ) {
+//	/*
+//	 * Create the channels for inter-node communication.
+//	 * A channel can carry both public and private pointers.
+//	 */
+//	gff::OneToAll e2w;
+//	gff::NondeterminateMerge w2c;
+//
+//	/*
+//	 * In this preliminary implementation, a single global network is
+//	 * created and nodes can be added only to the global network.
+//	 */
+//
+//	/* bind nodes to channels and add to the network */
+//	gff::add(Emitter(e2w)); //e2w is the emitter's output channel
+//	for (unsigned i = 0; i < NWORKERS; ++i)
+//		gff::add(Worker(e2w, w2c)); //e2w/w2c are the workers' i/o channels
+//	gff::add(Collector(w2c)); //w2c is the collector's input channel
+//
+//	/* execute the network */
+//	gff::run();
+//}
 
 TEST_CASE( "gff allreduce", "gam,gff" ) {
 
