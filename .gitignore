@@ -10,3 +10,7 @@ unit_test
 gam_unit_test
 *.btr
 .pydevproject
+mnist_cpu
+mnist_gpu
+mnist_data/
+bin/
