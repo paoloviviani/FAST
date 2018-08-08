@@ -70,7 +70,7 @@ private:
  * - the gff logic
  */
 typedef gff::Filter<gff::NDOneToAll, gff::NDOneToAll,//
-		gam::public_ptr<int>, gam::public_ptr<char>, //
+		gam::public_ptr<int>, gam::public_ptr<int>, //
 		WorkerLogicAllReduce> WorkerAllReduce;
 /*
  *******************************************************************************

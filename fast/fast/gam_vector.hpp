@@ -8,6 +8,8 @@
 #ifndef FAST_FAST_GAM_VECTOR_HPP_
 #define FAST_FAST_GAM_VECTOR_HPP_
 
+namespace FAST {
+
 template<typename T>
 struct gam_vector : public std::vector<T> {
 	using vsize_t = typename std::vector<T>::size_type;
@@ -35,5 +37,6 @@ struct gam_vector : public std::vector<T> {
 	}
 };
 
+} //Namespace FAST
 
 #endif /* FAST_FAST_GAM_VECTOR_HPP_ */
