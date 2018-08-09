@@ -8,6 +8,8 @@
 using namespace std;
 using namespace mxnet::cpp;
 
+#define BATCH_SIZE 128
+
 Symbol mlp(const vector<int> &layers) {
 	auto x = Symbol::Variable("X");
 	auto label = Symbol::Variable("label");
@@ -66,7 +68,7 @@ public:
 	void svc_init(gff::NDOneToAll &c) {
 		const int image_size = 28;
 		const vector<int> layers{128, 64, 10};
-		const int batch_size = 128;
+		const int batch_size = BATCH_SIZE;
 		const float learning_rate = 0.001;
 		const float weight_decay = 1e-4;
 
@@ -95,14 +97,38 @@ public:
 
 		opt = OptimizerRegistry::Find("sgd");
 		opt->SetParam("rescale_grad", 1.0/batch_size)
-		    				 ->SetParam("lr", learning_rate);
+			->SetParam("lr", learning_rate);
 		exec = net.SimpleBind(ctx, args);
 		arg_names = net.ListArguments();
+
+		grad_size = 0;
+		for (size_t i = 0; i < arg_names.size(); ++i) {
+			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
+			grad_size += exec->grad_arrays[i].Size();
+		}
 
 	}
 
 	void svc_end() {
+		auto val_iter = MXDataIter("MNISTIter")
+			  .SetParam("image", "../data/mnist_data/t10k-images-idx3-ubyte")
+			  .SetParam("label", "../data/mnist_data/t10k-labels-idx1-ubyte")
+			  .SetParam("batch_size", BATCH_SIZE)
+			  .SetParam("flat", 1)
+			  .CreateDataIter();
+
+		Accuracy acc;
+		val_iter.Reset();
+		while (val_iter.Next()) {
+			auto data_batch = val_iter.GetDataBatch();
+			data_batch.data.CopyTo(&args["X"]);
+			data_batch.label.CopyTo(&args["label"]);
+			// Forward pass is enough as no gradient is needed when evaluating
+			exec->Forward(false);
+			acc.Update(data_batch.label, exec->outputs[0]);
+		}
 	}
+
 private:
 	array<unsigned int,2> idx;
 	MXDataIter train_iter;
@@ -114,10 +140,12 @@ private:
 	Accuracy train_acc;
 	unsigned int local_epoch = 0, local_iter = 0, samples = 0;
 	const int max_epoch = 2;
+	gam::public_ptr< FAST::gam_tensor<float> > grad_store;
+	unsigned int grad_size;
 };
 
 
-using MXNetWorkerSync = gff::Filter<gff::NDOneToAll, gff::NDOneToAll,//
+using MXNetWorker = gff::Filter<gff::NDOneToAll, gff::NDOneToAll,//
 		gam::public_ptr< FAST::gam_vector<float> >, //
 		gam::public_ptr< FAST::gam_vector<float> >, //
 		MXNetWorkerLogic >;

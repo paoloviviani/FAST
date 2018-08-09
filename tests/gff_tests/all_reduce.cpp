@@ -54,7 +54,7 @@ public:
 		c.emit(gam::make_public<int>(NUMBER));
 	}
 
-	void svc_end() {
+	void svc_end(gff::NDOneToAll &c) {
 	}
 private:
 	vector< int > buffer_;

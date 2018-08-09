@@ -11,6 +11,8 @@
 #include "fast/logger.hpp"
 #include "fast/fast_utils.hpp"
 
+#include "fast/gam_vector.hpp"
+
 #include "fast/tensor.hpp"
 #include "fast/mxnet_tensor.hpp"
 

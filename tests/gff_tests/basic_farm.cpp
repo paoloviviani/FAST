@@ -66,7 +66,7 @@ public:
 	void svc_init() {
 	}
 
-	void svc_end() {
+	void svc_end(gff::OneToAll &c) {
 		REQUIRE(true);
 	}
 
@@ -107,7 +107,7 @@ public:
 	void svc_init(gff::NondeterminateMerge &c) {
 	}
 
-	void svc_end() {
+	void svc_end(gff::NondeterminateMerge &c) {
 	}
 };
 
