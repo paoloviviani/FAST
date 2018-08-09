@@ -10,6 +10,8 @@ using namespace mxnet::cpp;
 
 #define BATCH_SIZE 128
 
+Context ctx = Context::cpu();  // Use CPU for training
+
 Symbol mlp(const vector<int> &layers) {
 	auto x = Symbol::Variable("X");
 	auto label = Symbol::Variable("label");
@@ -40,6 +42,7 @@ public:
 			return gff::eos;
 
 		if (train_iter.Next()) {
+			FAST_INFO("Epoch: " << local_epoch << " iter: " << local_iter)
 			auto data_batch = train_iter.GetDataBatch();
 			// Set data and label
 			data_batch.data.CopyTo(&args["X"]);
@@ -49,14 +52,34 @@ public:
 			exec->Forward(true);
 			exec->Backward();
 			train_acc.Update(data_batch.label, exec->outputs[0]);
+
 			// Update parameters
+			size_t placement = 0;
 			for (size_t i = 0; i < arg_names.size(); ++i) {
 				if (arg_names[i] == "X" || arg_names[i] == "label") continue;
+				std::copy(exec->grad_arrays[i].GetData(), exec->grad_arrays[i].GetData()+exec->grad_arrays[i].Size(), //
+						grad_store.local()->begin()+placement);
+				placement += exec->grad_arrays[i].Size();
 				opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 			}
+			placement = 0;
+
+			c.emit(grad_store);
+			auto ecv_grad = grad_store.local();
+
+			for (size_t i = 0; i < arg_names.size(); ++i) {
+				if (arg_names[i] == "X" || arg_names[i] == "label") continue;
+				exec->grad_arrays[i] = NDArray(grad_store.local()->begin()+placement,Shape(exec->grad_arrays[i].GetShape()),ctx);
+				placement += exec->grad_arrays[i].Size();
+				opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
+			}
+			placement = 0;
+
+			local_iter++;
 		}
 		else {
 			local_epoch++;
+			local_iter = 0;
 			train_iter.Reset();
 			train_acc.Reset();
 		}
@@ -127,6 +150,7 @@ public:
 			exec->Forward(false);
 			acc.Update(data_batch.label, exec->outputs[0]);
 		}
+		FAST_INFO("Validation Accuracy: " << acc.Get())
 	}
 
 private:
@@ -138,9 +162,9 @@ private:
 	Executor * exec;
 	vector<string> arg_names;
 	Accuracy train_acc;
-	unsigned int local_epoch = 0, local_iter = 0, samples = 0;
+	unsigned int local_epoch = 0, local_iter = 0;
 	const int max_epoch = 2;
-	gam::public_ptr< FAST::gam_tensor<float> > grad_store;
+	gam::public_ptr< FAST::gam_vector<float> > grad_store;
 	unsigned int grad_size;
 };
 
@@ -151,5 +175,11 @@ using MXNetWorker = gff::Filter<gff::NDOneToAll, gff::NDOneToAll,//
 		MXNetWorkerLogic >;
 
 void main(int argc, char** argv) {
+	gff::NDOneToAll all;
 
+	for (unsigned i = 0; i < 3; i++)
+		gff::add(MXNetWorker(all,all));
+
+	/* execute the network */
+	gff::run();
 }
