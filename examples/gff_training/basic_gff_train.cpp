@@ -55,21 +55,24 @@ public:
 
 			// Update parameters
 			size_t placement = 0;
+			auto grad_local = grad_store.local();
+
 			for (size_t i = 0; i < arg_names.size(); ++i) {
 				if (arg_names[i] == "X" || arg_names[i] == "label") continue;
 				std::copy(exec->grad_arrays[i].GetData(), exec->grad_arrays[i].GetData()+exec->grad_arrays[i].Size(), //
-						grad_store.local()->begin()+placement);
+						grad_local->begin()+placement);
 				placement += exec->grad_arrays[i].Size();
 				opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 			}
 			placement = 0;
 
 			c.emit(grad_store);
-			auto ecv_grad = grad_store.local();
+			auto recv_grad = grad_store.local();
+			auto recv_ptr = recv_grad->data();
 
 			for (size_t i = 0; i < arg_names.size(); ++i) {
 				if (arg_names[i] == "X" || arg_names[i] == "label") continue;
-				exec->grad_arrays[i] = NDArray(grad_store.local()->data()+placement,Shape(exec->grad_arrays[i].GetShape()),ctx);
+				exec->grad_arrays[i] = NDArray(&recv_ptr[placement],Shape(exec->grad_arrays[i].GetShape()),ctx);
 				placement += exec->grad_arrays[i].Size();
 				opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 			}
@@ -128,7 +131,7 @@ public:
 			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
 			grad_size += exec->grad_arrays[i].Size();
 		}
-
+		grad_store = gam::make_public<FAST::gam_vector<float>>(grad_size);
 	}
 
 	void svc_end(gff::NDOneToAll &c) {

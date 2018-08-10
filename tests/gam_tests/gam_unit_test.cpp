@@ -16,8 +16,6 @@ using namespace std;
 using namespace mxnet::cpp;
 //using namespace FAST;
 
-using public_vector = FAST::gam_vector< gam::public_ptr< int > >;
-
 Context ctx = Context::cpu();  // Use CPU for training
 
 TEST_CASE( "Gam basic", "gam" ) {
