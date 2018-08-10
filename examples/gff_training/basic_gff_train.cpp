@@ -69,7 +69,7 @@ public:
 
 			for (size_t i = 0; i < arg_names.size(); ++i) {
 				if (arg_names[i] == "X" || arg_names[i] == "label") continue;
-				exec->grad_arrays[i] = NDArray(grad_store.local()->begin()+placement,Shape(exec->grad_arrays[i].GetShape()),ctx);
+				exec->grad_arrays[i] = NDArray(grad_store.local()->data()+placement,Shape(exec->grad_arrays[i].GetShape()),ctx);
 				placement += exec->grad_arrays[i].Size();
 				opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 			}
@@ -95,8 +95,7 @@ public:
 		const float learning_rate = 0.001;
 		const float weight_decay = 1e-4;
 
-		train_iter = MXDataIter("MNISTIter")
-				  .SetParam("image", "../data/mnist_data/train-images-idx3-ubyte")
+		train_iter.SetParam("image", "../data/mnist_data/train-images-idx3-ubyte")
 				  .SetParam("label", "../data/mnist_data/train-labels-idx1-ubyte")
 				  .SetParam("batch_size", batch_size)
 				  .SetParam("flat", 1)
@@ -132,7 +131,7 @@ public:
 
 	}
 
-	void svc_end() {
+	void svc_end(gff::NDOneToAll &c) {
 		auto val_iter = MXDataIter("MNISTIter")
 			  .SetParam("image", "../data/mnist_data/t10k-images-idx3-ubyte")
 			  .SetParam("label", "../data/mnist_data/t10k-labels-idx1-ubyte")
@@ -155,26 +154,26 @@ public:
 
 private:
 	array<unsigned int,2> idx;
-	MXDataIter train_iter;
+	MXDataIter train_iter = MXDataIter("MNISTIter");
 	Symbol net;
 	std::map<string, NDArray> args;
 	Optimizer* opt;
 	Executor * exec;
 	vector<string> arg_names;
 	Accuracy train_acc;
-	unsigned int local_epoch = 0, local_iter = 0;
+	int local_epoch = 0, local_iter = 0;
 	const int max_epoch = 2;
 	gam::public_ptr< FAST::gam_vector<float> > grad_store;
 	unsigned int grad_size;
 };
 
 
-using MXNetWorker = gff::Filter<gff::NDOneToAll, gff::NDOneToAll,//
+typedef gff::Filter<gff::NDOneToAll, gff::NDOneToAll,//
 		gam::public_ptr< FAST::gam_vector<float> >, //
 		gam::public_ptr< FAST::gam_vector<float> >, //
-		MXNetWorkerLogic >;
+		MXNetWorkerLogic > MXNetWorker;
 
-void main(int argc, char** argv) {
+int main(int argc, char** argv) {
 	gff::NDOneToAll all;
 
 	for (unsigned i = 0; i < 3; i++)
@@ -182,4 +181,6 @@ void main(int argc, char** argv) {
 
 	/* execute the network */
 	gff::run();
+
+	return 0;
 }

@@ -21,9 +21,8 @@ LDFLAGS              =
 LIBS                 = -lpthread
 
 INCLUDES             = -I$(FAST_ROOT)/fast -I$(FAST_ROOT)/tests/catch2 -I$(FAST_ROOT)/3rdparty/fastflow/ff/d/gff -I$(FAST_ROOT)/3rdparty/gam/gam/include -I$(FAST_ROOT)/3rdparty/armadillo
-EXECS                = unit_test gam_unit_test gff_farm gff_all_reduce
-TARGET_OBJ_UNIT      = basic_unit_tests/basic_unit_test.o
-TEST_DRIVER_OBJ      = catch2/test_driver.o
+EXECS                = basic_gff_train
+TARGET_OBJ           = basic_gff_train.o
 
 #Libfabric dependency
 ifeq ($(LIBFABRIC_LIB_DIR),)
@@ -31,21 +30,14 @@ LIBS                 += -lfabric
 else
 LIBS                 += -L$(LIBFABRIC_LIB_DIR) -lfabric
 endif
+ifneq ($(LIBFABRIC_INCLUDE_DIR),)
+INCLUDES             += -I$(LIBFABRIC_INCLUDE_DIR)
+endif
 
 #MxNet dependency
 INCLUDES             += -I$(MXNET_INCLUDE_DIR)
 LIBS                 += -L$(MXNET_LIB_DIR) -lmxnet
-
-ifeq ($(TEST_MXNET),1)
-TARGET_OBJ_UNIT      += mxnet_tests/mxnet_unit_test.o
-endif
-
-ifeq ($(USE_GAM),1)
 CCFLAGS              += -DUSE_GAM
-TARGET_OBJ_GAM       = gam_tests/gam_unit_test.o 
-TARGET_OBJ_GFF_FARM  = gff_tests/basic_farm.o
-TARGET_OBJ_GFF_ALL   = gff_tests/all_reduce.o
-endif
 
 .PHONY: all clean cleanall
 .SUFFIXES: .c .cpp .o
@@ -57,21 +49,15 @@ all: $(EXECS)
 	$(CXX) $(INCLUDES) $(CCFLAGS) $(CFLAGS) $(OPTIMIZE_FLAGS) -c -o $@ $<
 
 #basic unit test executable
-unit_test: $(TARGET_OBJ_UNIT) $(TEST_DRIVER_OBJ)
-	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
-gam_unit_test: $(TARGET_OBJ_GAM) $(TEST_DRIVER_OBJ)
-	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
-gff_farm: $(TARGET_OBJ_GFF_FARM) $(TEST_DRIVER_OBJ)
-	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
-gff_all_reduce: $(TARGET_OBJ_GFF_ALL) $(TEST_DRIVER_OBJ)
-	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
+basic_gff_train: $(TARGET_OBJ)
+	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
 
 cleanbtr:
 	rm -rf *.btr
 clean:
-	rm -rf *.o *~ $(TARGET_OBJ_UNIT)
+	rm -rf *.o *~ $(TARGET_OBJ)
 
 cleanall: clean
 	rm -rf bin/$(EXECS)
-	rm -rf $(TARGET_OBJ_UNIT) $(TARGET_OBJ_GAM) $(TEST_DRIVER_OBJ) *.d *.btr
+	rm -rf $(TARGET_OBJ) *.d *.btr
 

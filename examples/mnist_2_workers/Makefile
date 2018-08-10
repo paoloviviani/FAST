@@ -20,7 +20,7 @@ CFLAGS               = -std=c++11
 LDFLAGS              = 
 LIBS                 = -lpthread
 
-INCLUDES             = -I$(FAST_ROOT)/fast -I$(FAST_ROOT)/tests/catch2 -I$(FAST_ROOT)/3rdparty/gam/gam/include -I$(FAST_ROOT)/3rdparty/armadillo
+INCLUDES             = -I$(FAST_ROOT)/fast -I$(FAST_ROOT)/tests/catch2 -I$(FAST_ROOT)/3rdparty/gam/gam/include
 TARGET_OBJ_CPU       = mlp_cpu.o
 TARGET_OBJ_GPU       = mlp_gpu.o
 EXECS                = mnist_cpu
