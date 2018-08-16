@@ -55,6 +55,7 @@ public:
 
 			// Update parameters
 			size_t placement = 0;
+			auto grad_store = gam::make_private<FAST::gam_vector<float>>(grad_size);
 			auto grad_local = grad_store.local();
 
 			for (size_t i = 0; i < arg_names.size(); ++i) {
@@ -66,8 +67,8 @@ public:
 			}
 			placement = 0;
 
-			c.emit(grad_store);
-			auto recv_grad = grad_store.local();
+			c.emit(gam::public_ptr< FAST::gam_vector<float> >(std::move(grad_store)));
+			auto recv_grad = in.local();
 			auto recv_ptr = recv_grad->data();
 
 			for (size_t i = 0; i < arg_names.size(); ++i) {
@@ -131,7 +132,6 @@ public:
 			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
 			grad_size += exec->grad_arrays[i].Size();
 		}
-		grad_store = gam::make_public<FAST::gam_vector<float>>(grad_size);
 	}
 
 	void svc_end(gff::NDOneToAll &c) {
@@ -166,7 +166,6 @@ private:
 	Accuracy train_acc;
 	int local_epoch = 0, local_iter = 0;
 	const int max_epoch = 2;
-	gam::public_ptr< FAST::gam_vector<float> > grad_store;
 	unsigned int grad_size;
 };
 

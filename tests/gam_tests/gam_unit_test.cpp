@@ -78,3 +78,32 @@ TEST_CASE( "SPMD tensor ping-pong", "gam,tensor" ) {
 		}
 	}
 }
+
+TEST_CASE( "SPMD public vector ping-pong", "gam,vector,public" ) {
+	if (gam::cardinality() > 1) {
+		switch (gam::rank()) {
+		case 0:
+		{
+		    auto p = gam::make_private<FAST::gam_vector<int>>();
+
+		    /* populate */
+		    auto lp = p.local();
+		    lp->push_back(1);
+		    lp->push_back(2);
+		    lp->push_back(3);
+		    p.push(1);
+			break;
+		}
+		case 1:
+		{
+			 auto p = gam::pull_public<FAST::gam_vector<int>>(); //from-any just for testing
+
+			    /* test and add */
+			    auto lp = p.local();
+			    assert(lp->size() == 3);
+			    assert(lp->at(1) == 2);
+			break;
+		}
+		}
+	}
+}
