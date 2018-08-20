@@ -16,49 +16,93 @@
 #include "gam.hpp"
 #include "gam_vector.hpp"
 
+#include <ff/farm.hpp>
+#include <ff/node.hpp>
+
+using namespace ff;
+
+template <typename ModelLogic>
+struct W: ff_node {
+
+	int svc_init() {
+		return 0;
+	}
+
+	void *svc(void *task){
+		std::cout << "W(" << get_my_id() << ") got task " << (*(ssize_t*) task) << "\n";
+		return task;
+	}
+
+	int svc_end() {
+		return 0;
+	}
+
+	ModelLogic model_;
+
+};
+
+class E: public ff_node {
+public:
+	E(ff_loadbalancer *const lb):lb(lb) {}
+	int svc_init() {
+		eosreceived=false, numtasks=0;
+		return 0;
+	}
+	void *svc(void *task) {
+		if (lb->get_channel_id() == -1) {
+			++numtasks;
+			return task;
+		}
+		if (--numtasks == 0 && eosreceived) return EOS;
+		return GO_ON;
+	}
+	void eosnotify(ssize_t id) {
+		if (id == -1)  {
+			eosreceived = true;
+			if (numtasks == 0) {
+				printf("BROADCAST\n");
+				fflush(stdout);
+				lb->broadcast_task(EOS);
+			}
+		}
+	}
+private:
+	bool eosreceived;
+	long numtasks;
+protected:
+	ff_loadbalancer *const lb;
+};
+
 namespace FAST {
-
-template< typename Payload >
-using public_vector = vector< gam::public_ptr< Payload > >;
-
-template< typename Payload >
-using in_buffer = vector < gam::public_ptr< public_vector<Payload> > >;
 
 template< typename ModelLogic, typename Payload >
 class MXNetWorkerLogic {
 public:
 
-	gff::token_t svc(gam::public_ptr< public_vector<Payload> > &in, gff::NDOneToAll &c) {
+	MXNetWorkerLogic() : farm(true /* accelerator set */) {}
 
-		model_.next()
-
-		buffer_.push_back(in);
-		if (buffer_.size() < 2)
-			return gff::go_on;
-		else {
-			int sum = std::accumulate(buffer_.begin(), buffer_.end(), 0);
-			return gff::eos;
-		}
+	gff::token_t svc(gam::public_ptr<Payload> &in, gff::NDOneToAll &c) {
+		farm.offload(in);
+		return gff::go_on;
 	}
 
 	void svc_init(gff::NDOneToAll &c) {
-		model_.init();
+		E emitter(farm.getlb());
+		farm.add_emitter(&emitter);
 	}
 
 	void svc_end() {
-		model_.finalize();
 	}
 private:
+	ff_farm<> farm;
 	array<unsigned int,2> idx_;
-	in_buffer<Payload> buffer_;
-	ModelLogic model_;
 };
 
 
 template< typename ModelLogic, typename Payload >
-using MXNetWorkerSync = gff::Filter<gff::NDOneToAll, gff::NDOneToAll,//
-		gam::public_ptr< public_vector<Payload> >, //
-		gam::public_ptr< public_vector<Payload> >, //
+using MXNetWorker = gff::Filter<gff::NDOneToAll, gff::NDOneToAll,//
+		gam::public_ptr< Payload >, //
+		gam::public_ptr< Payload >, //
 		MXNetWorkerLogic<ModelLogic, Payload> >;
 
 } // namespace FAST
