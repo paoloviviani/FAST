@@ -11,15 +11,18 @@
 namespace FAST {
 
 template<typename T>
-struct gam_vector : public std::vector<T> {
+struct gam_vector : public vector<T> {
 	using vsize_t = typename std::vector<T>::size_type;
 	vsize_t size_ = 0;
 
-	gam_vector() = default;
+	explicit gam_vector() = default;
+	using vector<T>::vector;
+
+	gam_vector(const vector<T>& in) : vector<T>(in) {}
 
 	/* ingesting constructor */
 	template<typename StreamInF>
-	gam_vector(StreamInF &&f) {
+	void ingest(StreamInF &&f) {
 		typename std::vector<T>::size_type in_size;
 		f(&in_size, sizeof(vsize_t));
 		this->resize(in_size);

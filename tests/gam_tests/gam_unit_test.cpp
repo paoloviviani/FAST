@@ -81,27 +81,39 @@ TEST_CASE( "SPMD tensor ping-pong", "gam,tensor" ) {
 
 TEST_CASE( "SPMD public vector ping-pong", "gam,vector,public" ) {
 	if (gam::cardinality() > 1) {
+		vector<int> ref = {1,2,3};
 		switch (gam::rank()) {
 		case 0:
 		{
-		    auto p = gam::make_private<FAST::gam_vector<int>>();
+			// check local consistency on public pointer
+			std::shared_ptr<FAST::gam_vector<int>> lp = nullptr;
+			{
+				auto p = gam::make_public<FAST::gam_vector<int>>(ref);
+				lp = p.local();
+				// here end-of-scope triggers the destructor on the original object
+			}
+			assert(*lp == ref);
 
-		    /* populate */
-		    auto lp = p.local();
-		    lp->push_back(1);
-		    lp->push_back(2);
-		    lp->push_back(3);
-		    p.push(1);
+			auto p = gam::make_public<FAST::gam_vector<int>>(ref);
+			p.push(1);
+
+			auto q = gam::make_private<FAST::gam_vector<int>>(ref);
+			q.push(1);
 			break;
 		}
 		case 1:
 		{
-			 auto p = gam::pull_public<FAST::gam_vector<int>>(); //from-any just for testing
+			std::shared_ptr<FAST::gam_vector<int>> lp = nullptr;
+			{
+				auto p = gam::pull_public<FAST::gam_vector<int>>(0);
+				lp = p.local();
+				// here end-of-scope triggers the destructor on the original object
+			}
+			assert(*lp == ref);
 
-			    /* test and add */
-			    auto lp = p.local();
-			    assert(lp->size() == 3);
-			    assert(lp->at(1) == 2);
+			auto q = gam::pull_private<FAST::gam_vector<int>>(0);
+			auto lq = q.local();
+			assert(*lq == ref);
 			break;
 		}
 		}
