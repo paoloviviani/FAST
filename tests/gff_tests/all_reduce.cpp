@@ -12,6 +12,7 @@
 #include <cassert>
 #include <cmath>
 #include "fast.hpp"
+#include <stdlib.h>
 
 #define CATCH_CONFIG_MAIN
 
@@ -39,26 +40,37 @@ public:
 	 * @return a gff token
 	 */
 	gff::token_t svc(gam::public_ptr<int> &in, gff::NDOneToAll &c) {
+		FAST_DEBUG("Out use count = " << out.use_count());
 		auto local_in = in.local();
-		buffer_.push_back(*local_in);
-		if (buffer_.size() < 2)
-			return gff::go_on;
-		else {
-			int sum = std::accumulate(buffer_.begin(), buffer_.end(), 0);
-			REQUIRE(2*NUMBER == sum);
+		auto number = *local_in;
+		in.reset();
+		iter++;
+		FAST_DEBUG("Received number " << number << "  " << iter << " times.");
+		buffer_.push_back(number);
+		if (buffer_.size() == 2) {
+			sum_ = buffer_[0] + buffer_[1];
+			while (out.use_count() > 1) {
+				sleep(100);
+			}
 			return gff::eos;
 		}
+		return gff::go_on;
 	}
 
 	void svc_init(gff::NDOneToAll &c) {
+		out = gam::make_public<int>(NUMBER);
 		c.emit(gam::make_public<int>(NUMBER));
+		FAST_DEBUG("Emitted number " << NUMBER);
 	}
 
 	void svc_end(gff::NDOneToAll &c) {
+		REQUIRE(2*NUMBER == sum_);
 	}
 private:
 	vector< int > buffer_;
-	unsigned int iter_ = 2;
+	int iter = 0;
+	int sum_ = 0;
+	gam::public_ptr<int> out = nullptr;
 };
 
 /*
@@ -81,7 +93,7 @@ typedef gff::Filter<gff::NDOneToAll, gff::NDOneToAll,//
  */
 
 TEST_CASE( "gff allreduce", "gam,gff" ) {
-
+	FAST_LOG_INIT
 	gff::NDOneToAll all;
 
 	for (unsigned i = 0; i < NWORKERS; i++)

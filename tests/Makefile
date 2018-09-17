@@ -36,10 +36,6 @@ endif
 INCLUDES             += -I$(MXNET_INCLUDE_DIR)
 LIBS                 += -L$(MXNET_LIB_DIR) -lmxnet
 
-ifeq ($(TEST_MXNET),1)
-TARGET_OBJ_UNIT      += mxnet_tests/mxnet_unit_test.o
-endif
-
 ifeq ($(USE_GAM),1)
 CCFLAGS              += -DUSE_GAM
 TARGET_OBJ_GAM       = gam_tests/gam_unit_test.o 

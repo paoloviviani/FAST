@@ -60,6 +60,7 @@ public:
 	 */
 	gff::token_t svc(gff::OneToAll &c) {
 		c.emit(gam::make_public<int>(NUMBER));
+		FAST_DEBUG("Emitted number " << NUMBER);
 		return gff::eos;
 	}
 
@@ -99,7 +100,9 @@ public:
 	 */
 	gff::token_t svc(gam::public_ptr<int> &in, gff::NondeterminateMerge &c) {
 		auto local_in = in.local();
-		REQUIRE(NUMBER == *local_in);
+		auto number = *local_in;
+		FAST_DEBUG("Received number " << number);
+		REQUIRE(NUMBER == number);
 		c.emit(gam::make_private<char>((char) std::sqrt(*local_in)));
 		return gff::go_on;
 	}
@@ -138,6 +141,7 @@ public:
 	 */
 	void svc(gam::private_ptr<char> &in) {
 		auto local_in = in.local();
+		FAST_DEBUG("Collector received number " << *local_in);
 		REQUIRE(std::sqrt(NUMBER) == *local_in);
 		sum += *local_in;
 	}
@@ -180,7 +184,7 @@ TEST_CASE( "gff basic broadcast", "gam,gff" ) {
 	 */
 	gff::OneToAll e2w;
 	gff::NondeterminateMerge w2c;
-
+	FAST_LOG_INIT
 	/*
 	 * In this preliminary implementation, a single global network is
 	 * created and nodes can be added only to the global network.
