@@ -69,15 +69,6 @@ private:
 	vector<unsigned int> shape_;
 
 public:
-	/*
-	 * Dedicated functions prototype. Implement in separate files for different back-ends */
-	/**
-	 * Constructor from MxNet NDArray, specified in separate file
-	 * @param t
-	 */
-	Tensor(mxnet::cpp::NDArray & t);
-	/*
-	 * End of dedicated functions */
 
 	/**
 	 *
@@ -87,6 +78,16 @@ public:
 		data_ = gam::make_private<gam_vector<T>>();
 		shape_ = vector<unsigned int>();
 	}
+
+	/*
+	 * Dedicated functions prototype. Implement in separate files for different back-ends */
+	/**
+	 * Constructor from MxNet NDArray, specified in separate file
+	 * @param t
+	 */
+	Tensor(mxnet::cpp::NDArray & t);
+	/*
+	 * End of dedicated functions */
 
 	/**
 	 * Constructor from raw data and shape

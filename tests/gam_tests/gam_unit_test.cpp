@@ -39,11 +39,12 @@ TEST_CASE( "SPMD public vector ping-pong", "gam,vector,public" ) {
 				lp = p.local();
 				// here end-of-scope triggers the destructor on the original object
 			}
-			assert(*lp == ref);
+			REQUIRE(*lp == ref);
 
 			auto p = gam::make_public<FAST::gam_vector<int>>(ref);
+			REQUIRE(p.use_count() == 1);
 			p.push(1);
-			assert(p.use_count() == 2);
+			REQUIRE(p.use_count() == 2);
 			auto q = gam::make_private<FAST::gam_vector<int>>(ref);
 			q.push(1);
 			break;
@@ -56,17 +57,18 @@ TEST_CASE( "SPMD public vector ping-pong", "gam,vector,public" ) {
 				lp = p.local();
 				// here end-of-scope triggers the destructor on the original object
 			}
-			assert(*lp == ref);
+			REQUIRE(*lp == ref);
 
 			auto q = gam::pull_private<FAST::gam_vector<int>>(0);
 			auto lq = q.local();
-			assert(*lq == ref);
+			REQUIRE(*lq == ref);
 			break;
 		}
 		}
 	}
 }
 
-//TEST_CASE("mxnet tensor moving", "gam,tensor,mxnet") {
-//
-//}
+TEST_CASE("mxnet tensor moving", "gam,tensor,mxnet") {
+
+
+}
