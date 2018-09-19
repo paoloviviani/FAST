@@ -40,7 +40,6 @@ public:
 	 * @return a gff token
 	 */
 	gff::token_t svc(gam::public_ptr<int> &in, gff::NDOneToAll &c) {
-		FAST_DEBUG("Out use count = " << out.use_count());
 		auto local_in = in.local();
 		auto number = *local_in;
 		in.reset();

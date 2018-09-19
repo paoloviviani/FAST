@@ -43,7 +43,7 @@ TEST_CASE( "SPMD public vector ping-pong", "gam,vector,public" ) {
 
 			auto p = gam::make_public<FAST::gam_vector<int>>(ref);
 			p.push(1);
-
+			assert(p.use_count() == 2);
 			auto q = gam::make_private<FAST::gam_vector<int>>(ref);
 			q.push(1);
 			break;
@@ -66,3 +66,7 @@ TEST_CASE( "SPMD public vector ping-pong", "gam,vector,public" ) {
 		}
 	}
 }
+
+//TEST_CASE("mxnet tensor moving", "gam,tensor,mxnet") {
+//
+//}
