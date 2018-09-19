@@ -66,7 +66,7 @@ private:
 	 * Tensor object of deep learning framework
 	 */
 	gam::private_ptr<gam_vector<T>> data_;
-	vector<unsigned int> shape_;
+	unsigned long long size_;
 
 public:
 
@@ -76,7 +76,7 @@ public:
 	 */
 	Tensor() {
 		data_ = gam::make_private<gam_vector<T>>();
-		shape_ = vector<unsigned int>();
+		size_ = 0;
 	}
 
 	/*
@@ -90,24 +90,7 @@ public:
 	 * End of dedicated functions */
 
 	/**
-	 * Constructor from raw data and shape
-	 * @param raw_data
-	 * @param shape
-	 */
-	Tensor(const T * raw_data, vector<unsigned int> shape) {
-		size_t size = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<unsigned int>());
-		data_ = gam::make_private<gam_vector<T>>();
-		assert(data_ != nullptr);
-		auto data_local = data_.local();
-		data_local->resize(size);
-		FAST_DEBUG("Created vector with size: " << data_local->size());
-		data_local->assign(raw_data, raw_data + size);
-		data_ = gam::private_ptr<gam_vector<T>>(std::move(data_local));
-		shape_ = shape;
-	}
-
-	/**
-	 * Constructor from raw data and size only
+	 * Constructor from raw data and size
 	 * @param raw_data
 	 * @param shape
 	 */
@@ -116,46 +99,27 @@ public:
 		assert(data_ != nullptr);
 		auto data_local = data_.local();
 		data_local->resize(size);
-		FAST_DEBUG("Created vector with size: " << data_local->size());
 		data_local->assign(raw_data, raw_data + size);
 		data_ = gam::private_ptr<gam_vector<T>>(std::move(data_local));
-		shape_.push_back(size);
+		size_ = size;
 	}
 
-	Tensor(Tensor<T> & t) {
-		size_t size = t.getSize();
+	Tensor(gam_vector<T> & v) {
+		size_ = v.size_
 		data_ = gam::make_private<gam_vector<T>>();
 		assert(data_ != nullptr);
 		auto data_local = data_.local();
-		FAST_DEBUG("Created vector with shape: " << t.getShape());
-		data_local->resize(t.getSize());
-		data_local->assign(data_local->data(),data_local->data() + data_local->size());
+		data_local->resize(size_);
+		data_local->assign(t.get,t.data() + t.getSize());
 		data_ = gam::private_ptr<gam_vector<T>>(std::move(data_local));
 	}
-
-	/**
-	 *
-	 * @return a vector of unsigned integer with the size of each dimension of the tensor
-	 */
-	vector<unsigned int> getShape() const { return shape_; };
-
-	/**
-	 *
-	 */
-	void reShape(vector<unsigned int> shape) {
-		size_t oldsize = std::accumulate(shape_.begin(), shape_.end(), 1, std::multiplies<unsigned int>());
-		size_t newsize = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<unsigned int>());
-		assert(oldsize == newsize);
-		shape_ = shape;
-	};
 
 	/**
 	 *
 	 * @return the total number of elements of the tensor
 	 */
 	size_t getSize() const {
-		auto v = this->getShape();
-		return std::accumulate(v.begin(), v.end(), 1, std::multiplies<unsigned int>());
+		return size_;
 	};
 
 	/**
@@ -186,62 +150,14 @@ public:
 	}
 
 	/**
-	 * return offset of the element at (h, w)
-	 * \param h height position
-	 * \param w width position
-	 * \return offset of two dimensions array
-	 */
-	inline
-	size_t Offset(size_t h = 0, size_t w = 0) const {
-		return (h *shape_[1]) + w;
-	}
-	/**
-	 * return offset of three dimensions array
-	 * \param c channel position
-	 * \param h height position
-	 * \param w width position
-	 * \return offset of three dimensions array
-	 */
-	inline
-	size_t Offset(size_t c, size_t h, size_t w) const {
-		return h * shape_[0] * shape_[2] + w * shape_[0] + c;
-	}
-	/**
 	 * return value of the element at (i)
 	 * \param i position
 	 * \return value of one dimensions array
 	 */
 	inline
-	float at(size_t i) {
+	T at(size_t i) {
 		auto data_local = data_.local();
 		float out = data_local->at(i);
-		data_ = gam::private_ptr<gam_vector<T>>(std::move(data_local));
-		return out;
-	}
-	/**
-	 * return value of the element at (h, w)
-	 * \param h height position
-	 * \param w width position
-	 * \return value of two dimensions array
-	 */
-	inline
-	float at(size_t h, size_t w) {
-		auto data_local = data_.local();
-		float out = data_local->at(Offset(h, w));
-		data_ = gam::private_ptr<gam_vector<T>>(std::move(data_local));
-		return out;
-	}
-	/**
-	 * return value of three dimensions array
-	 * \param c channel position
-	 * \param h height position
-	 * \param w width position
-	 * \return value of three dimensions array
-	 */
-	inline
-	float at(size_t c, size_t h, size_t w) {
-		auto data_local = data_.local();
-		float out = data_local->at(Offset(c, h, w));
 		data_ = gam::private_ptr<gam_vector<T>>(std::move(data_local));
 		return out;
 	}
@@ -252,7 +168,7 @@ std::unique_ptr<Tensor<T>> pull_tensor(uint32_t from){
 	auto p = gam::pull_private<gam_vector<T>>(from);
 	auto p_local = p.local();
 	unsigned int size = p_local->size();
-	return std::unique_ptr<Tensor<T>>(new Tensor<T>(p_local->data(),size));
+	return Tensor<T>(p_local->data(),size);
 }
 
 template<typename T>
@@ -260,7 +176,7 @@ std::unique_ptr<Tensor<T>> pull_tensor(){
 	auto p = gam::pull_private<gam_vector<T>>();
 	auto p_local = p.local();
 	unsigned int size = p_local->size();
-	return std::unique_ptr<Tensor<T>>(new Tensor<T>(p_local->data(),size));
+	return Tensor<T>(p_local->data(),size);
 }
 
 }
