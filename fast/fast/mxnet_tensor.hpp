@@ -15,17 +15,24 @@ namespace FAST {
 
 template <typename T>
 Tensor<T>::Tensor(mxnet::cpp::NDArray & t) {
-	size_t size = t.Size();
+	size_ = t.Size();
 	data_ = gam::make_private<gam_vector<T>>();
 	assert(data_ != nullptr);
 	auto data_local = data_.local();
-	FAST_DEBUG("Created vector with shape: " << t.GetShape());
 	data_local->resize(t.Size());
 	t.SyncCopyToCPU(data_local->data(),t.Size());
 	data_ = gam::private_ptr<gam_vector<T>>(std::move(data_local));
-	shape_ = t.GetShape();
 }
 
+template <typename T>
+void Tensor<T>::append(mxnet::cpp::NDArray & t){
+	size_t append_size = t.Size();
+	auto data_local = data_.local();
+	data_local->resize(size_ + append_size);
+	t.SyncCopyToCPU(data_local->data() + size_,append_size);
+	data_ = gam::private_ptr<gam_vector<T>>(std::move(data_local));
+	size_ += append_size;
+}
 
 } // End FAST namespace
 

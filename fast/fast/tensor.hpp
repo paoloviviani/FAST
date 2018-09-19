@@ -79,6 +79,7 @@ public:
 		size_ = 0;
 	}
 
+#ifdef MXNET_TENSOR
 	/*
 	 * Dedicated functions prototype. Implement in separate files for different back-ends */
 	/**
@@ -86,6 +87,9 @@ public:
 	 * @param t
 	 */
 	Tensor(mxnet::cpp::NDArray & t);
+	void append(mxnet::cpp::NDArray & t);
+#endif
+
 	/*
 	 * End of dedicated functions */
 
@@ -105,12 +109,12 @@ public:
 	}
 
 	Tensor(gam_vector<T> & v) {
-		size_ = v.size_
+		size_ = v.size();
 		data_ = gam::make_private<gam_vector<T>>();
 		assert(data_ != nullptr);
 		auto data_local = data_.local();
 		data_local->resize(size_);
-		data_local->assign(t.get,t.data() + t.getSize());
+		data_local->assign(v.data(),v.data() + size_);
 		data_ = gam::private_ptr<gam_vector<T>>(std::move(data_local));
 	}
 

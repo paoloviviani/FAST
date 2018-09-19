@@ -14,7 +14,9 @@
 #include "fast/gam_vector.hpp"
 
 #include "fast/tensor.hpp"
+#ifdef MXNET_TENSOR
 #include "fast/mxnet_tensor.hpp"
+#endif
 
 //#include "fast/workers/async_complete.hpp"
 

@@ -35,6 +35,7 @@ endif
 #MxNet dependency
 INCLUDES             += -I$(MXNET_INCLUDE_DIR)
 LIBS                 += -L$(MXNET_LIB_DIR) -lmxnet
+CCFLAGS              += -DMXNET_TENSOR
 
 ifeq ($(USE_GAM),1)
 CCFLAGS              += -DUSE_GAM
