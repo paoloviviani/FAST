@@ -79,15 +79,22 @@ public:
 		size_ = 0;
 	}
 
-#ifdef MXNET_TENSOR
 	/*
-	 * Dedicated functions prototype. Implement in separate files for different back-ends */
+	 * Dedicated functions prototype. Implement in separate files for different back-ends
+	 */
+#ifdef MXNET_TENSOR
 	/**
 	 * Constructor from MxNet NDArray, specified in separate file
 	 * @param t
 	 */
 	Tensor(mxnet::cpp::NDArray & t);
+	/**
+	 * Append NDarray to data tensor
+	 * @param t
+	 */
 	void append(mxnet::cpp::NDArray & t);
+
+	mxnet::cpp::NDArray asNDArray(size_t offset, size_t size);
 #endif
 
 	/*

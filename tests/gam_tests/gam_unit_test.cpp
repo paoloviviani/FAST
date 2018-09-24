@@ -20,10 +20,12 @@ Context ctx = Context::cpu();  // Use CPU for training
 
 TEST_CASE( "Gam basic", "gam" ) {
 	FAST_LOG_INIT
+	if (gam::rank() == 1) {
 	auto p = gam::make_private<int>(42);
 	assert(p != nullptr);
 	auto local_p = p.local();
 	REQUIRE(*local_p == 42);
+	}
 }
 
 TEST_CASE( "SPMD public vector ping-pong", "gam,vector,public" ) {
@@ -66,9 +68,4 @@ TEST_CASE( "SPMD public vector ping-pong", "gam,vector,public" ) {
 		}
 		}
 	}
-}
-
-TEST_CASE("mxnet tensor moving", "gam,tensor,mxnet") {
-
-
 }
