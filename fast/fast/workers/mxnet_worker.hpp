@@ -22,55 +22,30 @@
 using namespace ff;
 
 template <typename ModelLogic>
-struct W: ff_node {
-
-	int svc_init() {
-		return 0;
-	}
-
-	void *svc(void *task){
-		std::cout << "W(" << get_my_id() << ") got task " << (*(ssize_t*) task) << "\n";
-		return task;
-	}
-
-	int svc_end() {
-		return 0;
-	}
-
-	ModelLogic model_;
-
+class Ingestor: public ff_node {
+public:
+    void * svc(void * task) {
+    	// copy data to local memory and pass on to next stage
+        return task;
+    }
 };
 
-class E: public ff_node {
+template <typename ModelLogic>
+class Trainer: public ff_node {
 public:
-	E(ff_loadbalancer *const lb):lb(lb) {}
-	int svc_init() {
-		eosreceived=false, numtasks=0;
-		return 0;
-	}
-	void *svc(void *task) {
-		if (lb->get_channel_id() == -1) {
-			++numtasks;
-			return task;
-		}
-		if (--numtasks == 0 && eosreceived) return EOS;
-		return GO_ON;
-	}
-	void eosnotify(ssize_t id) {
-		if (id == -1)  {
-			eosreceived = true;
-			if (numtasks == 0) {
-				printf("BROADCAST\n");
-				fflush(stdout);
-				lb->broadcast_task(EOS);
-			}
-		}
-	}
-private:
-	bool eosreceived;
-	long numtasks;
-protected:
-	ff_loadbalancer *const lb;
+    void * svc(void * task) {
+        // Update weights with received data, pass local gradients to next stage, and go on with local training
+        return task;
+    }
+};
+
+template <typename ModelLogic>
+class Broadcaster: public ff_node {
+public:
+    void * svc(void * task) {
+    	// Copy local gradients in tensor object, and broadcast to neighbors.
+        return task;
+    }
 };
 
 namespace FAST {
@@ -82,19 +57,21 @@ public:
 	MXNetWorkerLogic() : farm(true /* accelerator set */) {}
 
 	gff::token_t svc(gam::public_ptr<Payload> &in, gff::NDOneToAll &c) {
-		farm.offload(in);
+		pipe_.offload(in);
 		return gff::go_on;
 	}
 
 	void svc_init(gff::NDOneToAll &c) {
-		E emitter(farm.getlb());
-		farm.add_emitter(&emitter);
+		pipe_ = ff_pipeline(true /* accelerator flag */);
+		pipe_.add_stage(new Ingestor);
+		pipe_.add_stage(new Trainer);
+		pipe_.add_stage(new Broadcaster);
 	}
 
 	void svc_end() {
 	}
 private:
-	ff_farm<> farm;
+	ff_pipeline pipe_;
 	array<unsigned int,2> idx_;
 };
 
