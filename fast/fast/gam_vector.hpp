@@ -8,17 +8,51 @@
 #ifndef FAST_FAST_GAM_VECTOR_HPP_
 #define FAST_FAST_GAM_VECTOR_HPP_
 
+
+#define tensor_type_check(condition)  static_assert( (condition), "error: incorrect or unsupported tensor type" )
+
+/**
+ * Statically check if type is supported
+ */
+template <typename T>
+struct is_supported {
+	static const bool value = false;
+};
+
+template <>
+struct is_supported<float> {
+	static const bool value = true;
+};
+// Not yet supported
+//template <>
+//struct is_supported<int32_t> {
+//	static const bool value = true;
+//};
+//
+//template <>
+//struct is_supported<int8_t> {
+//	static const bool value = true;
+//};
+//
+//template <>
+//struct is_supported<bool> {
+//	static const bool value = true;
+//};
+
 namespace FAST {
 
 template<typename T>
 struct gam_vector : public vector<T> {
+
+	tensor_type_check(( is_supported<T>::value ));
+
 	using vsize_t = typename std::vector<T>::size_type;
 	vsize_t size_ = 0;
 
 	explicit gam_vector() = default;
 	using vector<T>::vector;
 
-	gam_vector(const vector<T>& in) : vector<T>(in) {}
+	gam_vector(const std::vector<T>& in) : vector<T>(in) {}
 
 	/* ingesting constructor */
 	template<typename StreamInF>
