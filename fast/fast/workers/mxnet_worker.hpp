@@ -22,7 +22,7 @@
 using namespace ff;
 
 template <typename ModelLogic>
-class Ingestor: public ff_node {
+class Loader: public ff_node {
 public:
     void * svc(void * task) {
     	// copy data to local memory and pass on to next stage
@@ -54,7 +54,7 @@ template< typename ModelLogic, typename Payload >
 class MXNetWorkerLogic {
 public:
 
-	MXNetWorkerLogic() : farm(true /* accelerator set */) {}
+	MXNetWorkerLogic() : pipe_(true /* accelerator set */) {}
 
 	gff::token_t svc(gam::public_ptr<Payload> &in, gff::NDOneToAll &c) {
 		pipe_.offload(in);
@@ -62,17 +62,16 @@ public:
 	}
 
 	void svc_init(gff::NDOneToAll &c) {
-		pipe_ = ff_pipeline(true /* accelerator flag */);
-		pipe_.add_stage(new Ingestor);
-		pipe_.add_stage(new Trainer);
-		pipe_.add_stage(new Broadcaster);
+		pipe_.add_stage(new Loader<ModelLogic>);
+		pipe_.add_stage(new Trainer<ModelLogic>);
+		pipe_.add_stage(new Broadcaster<ModelLogic>);
 	}
 
 	void svc_end() {
 	}
 private:
 	ff_pipeline pipe_;
-	array<unsigned int,2> idx_;
+	array<unsigned int,2> idx_; // Index in the 2D grid of workers
 };
 
 

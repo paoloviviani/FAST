@@ -65,7 +65,7 @@ private:
 	/**
 	 * Tensor object of deep learning framework
 	 */
-	gam::private_ptr<gam_vector<T>> data_;
+	gam::public_ptr<gam_vector<T>> data_;
 	unsigned long long size_;
 
 public:
@@ -106,23 +106,23 @@ public:
 	 * @param shape
 	 */
 	Tensor(const float * raw_data, size_t size) {
-		data_ = gam::make_private<gam_vector<T>>();
+		data_ = gam::make_public<gam_vector<T>>();
 		assert(data_ != nullptr);
 		auto data_local = data_.local();
 		data_local->resize(size);
 		data_local->assign(raw_data, raw_data + size);
-		data_ = gam::private_ptr<gam_vector<T>>(std::move(data_local));
+		data_ = gam::public_ptr<gam_vector<T>>(std::move(data_local));
 		size_ = size;
 	}
 
 	Tensor(gam_vector<T> & v) {
 		size_ = v.size();
-		data_ = gam::make_private<gam_vector<T>>();
+		data_ = gam::make_public<gam_vector<T>>();
 		assert(data_ != nullptr);
 		auto data_local = data_.local();
 		data_local->resize(size_);
 		data_local->assign(v.data(),v.data() + size_);
-		data_ = gam::private_ptr<gam_vector<T>>(std::move(data_local));
+		data_ = gam::public_ptr<gam_vector<T>>(std::move(data_local));
 	}
 
 	/**
@@ -140,7 +140,7 @@ public:
 	vector<T> getStdValues() {
 		auto data_local = data_.local();
 		vector<T> out = vector<T>(data_local->begin(),data_local->end());
-		data_ = gam::private_ptr<gam_vector<T>>(std::move(data_local));
+		data_ = gam::public_ptr<gam_vector<T>>(std::move(data_local));
 		return out;
 	}
 
@@ -148,7 +148,7 @@ public:
 	 *
 	 * @return private pointer to tensor data
 	 */
-	gam::private_ptr<gam_vector<T>> getPrivatePtr() {
+	gam::public_ptr<gam_vector<T>> getPrivatePtr() {
 		return std::move(data_);
 	}
 
@@ -169,14 +169,14 @@ public:
 	T at(size_t i) {
 		auto data_local = data_.local();
 		float out = data_local->at(i);
-		data_ = gam::private_ptr<gam_vector<T>>(std::move(data_local));
+		data_ = gam::public_ptr<gam_vector<T>>(std::move(data_local));
 		return out;
 	}
 };
 
 template<typename T>
 std::unique_ptr<Tensor<T>> pull_tensor(uint32_t from){
-	auto p = gam::pull_private<gam_vector<T>>(from);
+	auto p = gam::pull_public<gam_vector<T>>(from);
 	auto p_local = p.local();
 	unsigned int size = p_local->size();
 	return Tensor<T>(p_local->data(),size);
@@ -184,7 +184,7 @@ std::unique_ptr<Tensor<T>> pull_tensor(uint32_t from){
 
 template<typename T>
 std::unique_ptr<Tensor<T>> pull_tensor(){
-	auto p = gam::pull_private<gam_vector<T>>();
+	auto p = gam::pull_public<gam_vector<T>>();
 	auto p_local = p.local();
 	unsigned int size = p_local->size();
 	return Tensor<T>(p_local->data(),size);
