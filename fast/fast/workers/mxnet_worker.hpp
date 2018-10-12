@@ -11,7 +11,6 @@
 #include <array>
 #include <vector>
 #include "fast/fast.hpp"
-#include "mxnet-cpp/MxNetCpp.h"
 
 #include "gff.hpp"
 #include "gam.hpp"
@@ -26,10 +25,9 @@ template < typename T >
 class Loader: public ff_node {
 public:
     void * svc(void * task) {
-		gam::public_ptr< gam_vector<T> > incoming = (gam::public_ptr< gam_vector<T> > *) task;
-		auto grads = incoming.local();
-		ff_send_out((void*)grads->data());
-        return GO_ON;
+		gam::public_ptr< gam_vector<T> > * incoming = (gam::public_ptr< gam_vector<T> > *) task;
+		auto grads = incoming->local();
+        return (void*)&std::move(grads);
     }
 private:
 };
@@ -37,30 +35,28 @@ private:
 template <typename ModelLogic, typename T >
 class Trainer: public ff_minode {
 public:
-    void * svc(void * task) {
-    	// Update weights with received data, pass local gradients to next stage, and go on with local training
-    	if (task == NULL) {
-    		grads = logic.run_batch(NULL);
 
-    	}
-    	else {
-    		grads = logic.run_batch((T*) task);
-    	}
-    	ff_send_out((void*)grads->data());
-        return GO_ON;
+	Trainer(ModelLogic &logic) : logic(logic) {}
+
+	void * svc(void * task) {
+    	// Update weights with received data, pass local gradients to next stage, and go on with local training
+    	std::vector<mxnet::cpp::NDArray> * grads = logic.run_batch((T*) task);
+    	return (void*)grads;
     }
 private:
     ModelLogic logic;
-    std::vector<T> grads;
 };
 
 template < typename T >
 class Broadcaster: public ff_node {
 public:
     void * svc(void * task) {
-    	T * outbound = (T*) task;
-    	// Copy local gradients in tensor object, and broadcast to neighbors.
-        return GO_ON;
+    	std::vector<mxnet::cpp::NDArray> * grads = (std::vector<mxnet::cpp::NDArray> *) task;
+    	gam::public_ptr< gam_vector<T> > out_grads = gam::make_public< gam_vector<T> >();
+    	for (auto item : *grads) {
+    		append(*out_grads, item);
+    	}
+        return (void*)&std::move(out_grads);
     }
 };
 
@@ -70,26 +66,30 @@ template< typename ModelLogic, typename T >
 class MXNetWorkerLogic {
 public:
 
-	MXNetWorkerLogic() : pipe_(true /* accelerator set */) {}
+	MXNetWorkerLogic(unsigned int idx) : pipe_(true /* accelerator set */), idx_(idx) {}
 
 	gff::token_t svc(gam::public_ptr< gam_vector<T> > &in, gff::NDOneToAll &c) {
-		pipe_.offload(&in);
+		void * result = NULL;
+		pipe_.offload((void*)&std::move(in));
+		pipe_.load_result(&result);
+
 		return gff::go_on;
 	}
 
 	void svc_init(gff::NDOneToAll &c) {
-		inner_pipe_.add_stage(new Trainer<ModelLogic, T>);
-		inner_pipe_.wrap_around();
-		pipe_.add_stage(new Loader<T>);
-		pipe_.add_stage(&inner_pipe_);
-		pipe_.add_stage(new Broadcaster<T>);
+		logic_.init;
+		pipe_.add_stage( new Loader<T> );
+		pipe_.add_stage( new Trainer<ModelLogic, T> (logic_) );
+		pipe_.run();
 	}
 
 	void svc_end() {
+		logic_.finalize();
 	}
 private:
-	ff_pipeline pipe_, inner_pipe_;
+	ff_pipeline pipe_;
 	array<unsigned int,2> idx_; // Index in the 2D grid of workers
+	ModelLogic logic_;
 };
 
 

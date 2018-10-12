@@ -34,7 +34,7 @@ Symbol mlp(const vector<int> &layers) {
 	return SoftmaxOutput(outputs.back(), label);
 }
 
-class MXNetWorkerLogic {
+class MXNetModelLogic {
 public:
 
 	gff::token_t svc(gam::public_ptr< FAST::gam_vector<float> > &in, gff::NDOneToAll &c) {
