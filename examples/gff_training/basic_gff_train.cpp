@@ -176,12 +176,11 @@ using MXNetWorker = gff::Filter<gff::NDOneToAll, gff::NDOneToAll,//
 
 
 int main(int argc, char** argv) {
-	vector<unsigned int> grid = {1,2,3,4};
 
-	gff::NDOneToAll one, two;
+	gff::NDOneToAll one, two, three;
 
-	gff::add(MXNetWorker(one,one));
-	gff::add(MXNetWorker(one,two));
+	gff::add(MXNetWorker(three,one));
+	gff::add(MXNetWorker(two,one));
 	gff::add(MXNetWorker(two,three));
 	gff::add(MXNetWorker(one,two));
 
