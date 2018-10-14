@@ -61,14 +61,7 @@ template< typename ModelLogic, typename T >
 class MXNetWorkerLogic {
 public:
 
-	MXNetWorkerLogic(unsigned int idx) : pipe_(true /* accelerator set */), idx_(idx) {
-		gam_vector<T> * ptr = new gam_vector<T>;
-		out_grads = gam::public_ptr<gam_vector<T>>(ptr);
-	}
-
-	~MXNetWorkerLogic() {
-		delete out_grads.local().get();
-	}
+	MXNetWorkerLogic() : pipe_(true /* accelerator set */) {}
 
 	gff::token_t svc(gam::public_ptr< gam_vector<T> > &in, gff::NDOneToAll &c) {
 		auto grads = in.local();
@@ -81,30 +74,25 @@ public:
 	}
 
 	void svc_init(gff::NDOneToAll &c) {
+		gam_vector<T> * ptr = new gam_vector<T>;
+		out_grads = gam::public_ptr<gam_vector<T>>(ptr);
 		logic_.init();
 		pipe_.add_stage( new Trainer<ModelLogic, T> (logic_) );
 		pipe_.add_stage( new SyncToCPU<T>(out_grads.local().get(), ready ) );
 		pipe_.run();
-		pipe_.offload(NULL);
+		c.emit(gam::make_public<gam_vector<T>>(NULL));
 	}
 
 	void svc_end() {
 		logic_.finalize();
+		delete out_grads.local().get();
 	}
 private:
 	ff_pipeline pipe_;
-	array<unsigned int,2> idx_; // Index in the 2D grid of workers
 	gam::public_ptr < gam_vector<T> > out_grads;
 	ModelLogic logic_;
 	bool ready = false;
 };
-
-
-template< typename ModelLogic, typename T >
-using MXNetWorker = gff::Filter<gff::NDOneToAll, gff::NDOneToAll,//
-		gam::public_ptr< gam_vector<T> >, //
-		gam::public_ptr< gam_vector<T> >, //
-		MXNetWorkerLogic<ModelLogic, T> >;
 
 } // namespace FAST
 

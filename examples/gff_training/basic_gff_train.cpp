@@ -2,8 +2,7 @@
 #include <vector>
 #include "mxnet-cpp/MxNetCpp.h"
 #include "fast.hpp"
-#include "gam.hpp"
-#include "gff.hpp"
+#include "fast/workers/mxnet_worker.hpp"
 
 using namespace std;
 using namespace mxnet::cpp;
@@ -170,16 +169,22 @@ private:
 };
 
 
-typedef gff::Filter<gff::NDOneToAll, gff::NDOneToAll,//
-		gam::public_ptr< FAST::gam_vector<float> >, //
-		gam::public_ptr< FAST::gam_vector<float> >, //
-		MXNetWorkerLogic > MXNetWorker;
+using MXNetWorker = gff::Filter<gff::NDOneToAll, gff::NDOneToAll,//
+		gam::public_ptr< gam_vector<float> >, //
+		gam::public_ptr< gam_vector<float> >, //
+		MXNetWorkerLogic<MXNetModelLogic, float> >;
+
 
 int main(int argc, char** argv) {
-	gff::NDOneToAll all;
+	vector<unsigned int> grid = {1,2,3,4};
 
-	for (unsigned i = 0; i < 3; i++)
-		gff::add(MXNetWorker(all,all));
+	gff::NDOneToAll one, two;
+
+	gff::add(MXNetWorker(one,one));
+	gff::add(MXNetWorker(one,two));
+	gff::add(MXNetWorker(two,three));
+	gff::add(MXNetWorker(one,two));
+
 
 	/* execute the network */
 	gff::run();
