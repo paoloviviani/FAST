@@ -21,19 +21,8 @@
 using namespace ff;
 using namespace FAST;
 
-template < typename T >
-class Loader: public ff_node {
-public:
-    void * svc(void * task) {
-		gam::public_ptr< gam_vector<T> > * incoming = (gam::public_ptr< gam_vector<T> > *) task;
-		auto grads = incoming->local();
-        return (void*)&std::move(grads);
-    }
-private:
-};
-
 template <typename ModelLogic, typename T >
-class Trainer: public ff_minode {
+class Trainer: public ff_node {
 public:
 
 	Trainer(ModelLogic &logic) : logic(logic) {}
@@ -48,16 +37,22 @@ private:
 };
 
 template < typename T >
-class Broadcaster: public ff_node {
+class SyncToCPU: public ff_node {
 public:
+
+	SyncToCPU(gam_vector<T> * out_grads, bool & ready) : out_grads(out_grads), ready(ready)  {}
+
     void * svc(void * task) {
     	std::vector<mxnet::cpp::NDArray> * grads = (std::vector<mxnet::cpp::NDArray> *) task;
-    	gam::public_ptr< gam_vector<T> > out_grads = gam::make_public< gam_vector<T> >();
     	for (auto item : *grads) {
     		append(*out_grads, item);
     	}
-        return (void*)&std::move(out_grads);
+    	ready = true;
+        return GO_ON;
     }
+private:
+    gam_vector<T> * out_grads;
+    bool ready;
 };
 
 namespace FAST {
@@ -66,21 +61,31 @@ template< typename ModelLogic, typename T >
 class MXNetWorkerLogic {
 public:
 
-	MXNetWorkerLogic(unsigned int idx) : pipe_(true /* accelerator set */), idx_(idx) {}
+	MXNetWorkerLogic(unsigned int idx) : pipe_(true /* accelerator set */), idx_(idx) {
+		gam_vector<T> * ptr = new gam_vector<T>;
+		out_grads = gam::public_ptr<gam_vector<T>>(ptr);
+	}
+
+	~MXNetWorkerLogic() {
+		delete out_grads.local().get();
+	}
 
 	gff::token_t svc(gam::public_ptr< gam_vector<T> > &in, gff::NDOneToAll &c) {
-		void * result = NULL;
-		pipe_.offload((void*)&std::move(in));
-		pipe_.load_result(&result);
-
+		auto grads = in.local();
+		pipe_.offload(grads->data());
+		if (ready) {
+			c.emit(out_grads);
+		}
+		ready = false;
 		return gff::go_on;
 	}
 
 	void svc_init(gff::NDOneToAll &c) {
-		logic_.init;
-		pipe_.add_stage( new Loader<T> );
+		logic_.init();
 		pipe_.add_stage( new Trainer<ModelLogic, T> (logic_) );
+		pipe_.add_stage( new SyncToCPU<T>(out_grads.local().get(), ready ) );
 		pipe_.run();
+		pipe_.offload(NULL);
 	}
 
 	void svc_end() {
@@ -89,7 +94,9 @@ public:
 private:
 	ff_pipeline pipe_;
 	array<unsigned int,2> idx_; // Index in the 2D grid of workers
+	gam::public_ptr < gam_vector<T> > out_grads;
 	ModelLogic logic_;
+	bool ready = false;
 };
 
 
