@@ -21,6 +21,23 @@
 using namespace ff;
 using namespace FAST;
 
+
+/**
+ * Wrapper struct to pass public pointers to FF pipeline
+ */
+template < typename T >
+struct PublicWrapper {
+	gam::public_ptr < gam_vector<T> > payload;
+};
+
+/**
+ * Nodes of the local pipeline
+ * this pipeline executed in accelerator mode is used
+ * to hide latencies related to:
+ * - copy of data from source
+ * - copy of data to GPU memory
+ * - copy of data from GPU memory
+ */
 template <typename ModelLogic, typename T >
 class Trainer: public ff_node {
 public:
@@ -40,10 +57,11 @@ template < typename T >
 class SyncToCPU: public ff_node {
 public:
 
-	SyncToCPU(gam_vector<T> * out_grads, bool & ready) : out_grads(out_grads), ready(ready)  {}
+	SyncToCPU(PublicWrapper<T> * out, bool & ready) : out_(out), ready(ready)  {}
 
     void * svc(void * task) {
     	std::vector<mxnet::cpp::NDArray> * grads = (std::vector<mxnet::cpp::NDArray> *) task;
+    	auto out_grads = out_->payload.local();
     	for (auto item : *grads) {
     		append(*out_grads, item);
     	}
@@ -51,47 +69,58 @@ public:
         return GO_ON;
     }
 private:
-    gam_vector<T> * out_grads;
+    PublicWrapper<T> * out_;
     bool ready;
 };
 
 namespace FAST {
 
+/**
+ * Actual worker object, to be specialised based on the specific
+ * business logic (included in ModelLogic) and on the specific
+ * data type (float, int, bool)
+ */
 template< typename ModelLogic, typename T >
 class MXNetWorkerLogic {
 public:
 
-	MXNetWorkerLogic() : pipe_(true /* accelerator set */) {}
+	MXNetWorkerLogic() : pipe_(true /* accelerator set */), ready_(false), in_(NULL), out_(NULL) {}
+
+	~MXNetWorkerLogic() {
+		delete in_;
+		delete out_;
+	}
 
 	gff::token_t svc(gam::public_ptr< gam_vector<T> > &in, gff::NDOneToAll &c) {
-		auto grads = in.local();
-		pipe_.offload(grads->data());
-		if (ready) {
-			c.emit(out_grads);
+		in_->payload = in;
+		pipe_.offload((void*)in_);
+		if (ready_) {
+			c.emit(out_->payload);
 		}
-		ready = false;
+		ready_ = false;
 		return gff::go_on;
 	}
 
 	void svc_init(gff::NDOneToAll &c) {
+		in_ = new PublicWrapper<T>();
+		out_ = new PublicWrapper<T>();
 		gam_vector<T> * ptr = new gam_vector<T>;
-		out_grads = gam::public_ptr<gam_vector<T>>(ptr);
 		logic_.init();
 		pipe_.add_stage( new Trainer<ModelLogic, T> (logic_) );
-		pipe_.add_stage( new SyncToCPU<T>(out_grads.local().get(), ready ) );
+		pipe_.add_stage( new SyncToCPU<T>(out_, ready_ ) );
 		pipe_.run();
 		c.emit(gam::make_public<gam_vector<T>>(NULL));
 	}
 
 	void svc_end() {
 		logic_.finalize();
-		delete out_grads.local().get();
 	}
 private:
 	ff_pipeline pipe_;
-	gam::public_ptr < gam_vector<T> > out_grads;
 	ModelLogic logic_;
-	bool ready = false;
+	bool ready_;
+	PublicWrapper<T> * in_;
+	PublicWrapper<T> * out_;
 };
 
 } // namespace FAST

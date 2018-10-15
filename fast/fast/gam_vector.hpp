@@ -23,11 +23,11 @@ template <>
 struct is_supported<float> {
 	static const bool value = true;
 };
-// Not yet supported
-//template <>
-//struct is_supported<int32_t> {
-//	static const bool value = true;
-//};
+
+template <>
+struct is_supported<int32_t> {
+	static const bool value = true;
+};
 //
 //template <>
 //struct is_supported<int8_t> {
