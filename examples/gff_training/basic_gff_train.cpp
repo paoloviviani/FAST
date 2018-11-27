@@ -76,7 +76,6 @@ public:
 				placement += exec->grad_arrays[i].Size();
 				opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 			}
-			placement = 0;
 
 			local_iter++;
 		}
@@ -177,12 +176,22 @@ using MXNetWorker = gff::Filter<gff::NDOneToAll, gff::NDOneToAll,//
 
 int main(int argc, char** argv) {
 
-	gff::NDOneToAll one, two, three;
+	gff::NDMerge to_one, to_two, to_three, to_four;
+	gff::OutBundleBroadcast<gff::NDMerge> one, two, three, four;
 
-	gff::add(MXNetWorker(three,one));
-	gff::add(MXNetWorker(two,one));
-	gff::add(MXNetWorker(two,three));
-	gff::add(MXNetWorker(one,two));
+	one.add_comm(to_two);
+	one.add_comm(to_four);
+	two.add_comm(to_one);
+	two.add_comm(to_three);
+	three.add_comm(to_two);
+	three.add_comm(to_four);
+	four.add_comm(to_three);
+	four.add_comm(to_one);
+
+	gff::add(MXNetWorker(to_one,one));
+	gff::add(MXNetWorker(to_two,two));
+	gff::add(MXNetWorker(to_three,three));
+	gff::add(MXNetWorker(to_four,four));
 
 
 	/* execute the network */

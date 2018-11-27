@@ -10,7 +10,7 @@
 
 #include <array>
 #include <vector>
-#include "fast/fast.hpp"
+#include "fast.hpp"
 
 #include "gff.hpp"
 #include "gam.hpp"
