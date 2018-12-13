@@ -92,7 +92,7 @@ public:
 
 	void svc_init(gff::NDOneToAll &c) {
 		const int image_size = 28;
-		const vector<int> layers{128, 64, 10};
+		const vector<int> layers{32, 32, 10};
 		const int batch_size = BATCH_SIZE;
 		const float learning_rate = 0.001;
 		const float weight_decay = 1e-4;
@@ -168,7 +168,7 @@ private:
 };
 
 
-using MXNetWorker = gff::Filter<gff::NDOneToAll, gff::NDOneToAll,//
+using MXNetWorker = gff::Filter<gff::NDMerge, gff::OutBundleBroadcast<gff::NDMerge>,//
 		gam::public_ptr< gam_vector<float> >, //
 		gam::public_ptr< gam_vector<float> >, //
 		MXNetWorkerLogic<MXNetModelLogic, float> >;
@@ -189,9 +189,9 @@ int main(int argc, char** argv) {
 	four.add_comm(to_one);
 
 	gff::add(MXNetWorker(to_one,one));
-	gff::add(MXNetWorker(to_two,two));
-	gff::add(MXNetWorker(to_three,three));
-	gff::add(MXNetWorker(to_four,four));
+//	gff::add(MXNetWorker(to_two,two));
+//	gff::add(MXNetWorker(to_three,three));
+//	gff::add(MXNetWorker(to_four,four));
 
 
 	/* execute the network */

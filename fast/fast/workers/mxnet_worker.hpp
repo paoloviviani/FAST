@@ -15,7 +15,7 @@
 #include "gff.hpp"
 #include "gam.hpp"
 
-#include <ff/farm.hpp>
+#include <ff/pipeline.hpp>
 #include <ff/node.hpp>
 
 using namespace ff;
