@@ -171,7 +171,7 @@ private:
 typedef gff::Filter<gff::NondeterminateMerge, gff::OutBundleBroadcast<gff::NondeterminateMerge>,//
 		gam::public_ptr< gam_vector<float> >, //
 		gam::public_ptr< gam_vector<float> >, //
-		MXNetWorkerLogic<MXNetModelLogic, float> > MXNetWorker;
+		MXNetModelLogic> MXNetWorker;
 
 
 int main(int argc, char** argv) {
