@@ -36,7 +36,7 @@ Symbol mlp(const vector<int> &layers) {
 class MXNetModelLogic {
 public:
 
-	gff::token_t svc(gam::public_ptr< FAST::gam_vector<float> > &in, gff::NDOneToAll &c) {
+	gff::token_t svc(gam::public_ptr< FAST::gam_vector<float> > &in, gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
 		if (local_epoch == max_epoch)
 			return gff::eos;
 
@@ -90,7 +90,7 @@ public:
 
 	}
 
-	void svc_init(gff::NDOneToAll &c) {
+	void svc_init(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
 		const int image_size = 28;
 		const vector<int> layers{32, 32, 10};
 		const int batch_size = BATCH_SIZE;
@@ -132,7 +132,7 @@ public:
 		}
 	}
 
-	void svc_end(gff::NDOneToAll &c) {
+	void svc_end(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
 		auto val_iter = MXDataIter("MNISTIter")
 			  .SetParam("image", "../data/mnist_data/t10k-images-idx3-ubyte")
 			  .SetParam("label", "../data/mnist_data/t10k-labels-idx1-ubyte")
@@ -168,16 +168,16 @@ private:
 };
 
 
-using MXNetWorker = gff::Filter<gff::NDMerge, gff::OutBundleBroadcast<gff::NDMerge>,//
+typedef gff::Filter<gff::NondeterminateMerge, gff::OutBundleBroadcast<gff::NondeterminateMerge>,//
 		gam::public_ptr< gam_vector<float> >, //
 		gam::public_ptr< gam_vector<float> >, //
-		MXNetWorkerLogic<MXNetModelLogic, float> >;
+		MXNetWorkerLogic<MXNetModelLogic, float> > MXNetWorker;
 
 
 int main(int argc, char** argv) {
 
-	gff::NDMerge to_one, to_two, to_three, to_four;
-	gff::OutBundleBroadcast<gff::NDMerge> one, two, three, four;
+	gff::NondeterminateMerge to_one, to_two, to_three, to_four;
+	gff::OutBundleBroadcast<gff::NondeterminateMerge> one, two, three, four;
 
 	one.add_comm(to_two);
 	one.add_comm(to_four);
@@ -189,9 +189,9 @@ int main(int argc, char** argv) {
 	four.add_comm(to_one);
 
 	gff::add(MXNetWorker(to_one,one));
-//	gff::add(MXNetWorker(to_two,two));
-//	gff::add(MXNetWorker(to_three,three));
-//	gff::add(MXNetWorker(to_four,four));
+	gff::add(MXNetWorker(to_two,two));
+	gff::add(MXNetWorker(to_three,three));
+	gff::add(MXNetWorker(to_four,four));
 
 
 	/* execute the network */
