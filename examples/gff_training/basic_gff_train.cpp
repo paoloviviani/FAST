@@ -176,22 +176,19 @@ typedef gff::Filter<gff::NondeterminateMerge, gff::OutBundleBroadcast<gff::Nonde
 
 int main(int argc, char** argv) {
 
-	gff::NondeterminateMerge to_one, to_two, to_three, to_four;
-	gff::OutBundleBroadcast<gff::NondeterminateMerge> one, two, three, four;
+	gff::NondeterminateMerge to_one, to_two, to_three;
+	gff::OutBundleBroadcast<gff::NondeterminateMerge> one, two, three;
 
 	one.add_comm(to_two);
-	one.add_comm(to_four);
+	one.add_comm(to_three);
 	two.add_comm(to_one);
 	two.add_comm(to_three);
 	three.add_comm(to_two);
-	three.add_comm(to_four);
-	four.add_comm(to_three);
-	four.add_comm(to_one);
+	three.add_comm(to_one);
 
 	gff::add(MXNetWorker(to_one,one));
 	gff::add(MXNetWorker(to_two,two));
 	gff::add(MXNetWorker(to_three,three));
-	gff::add(MXNetWorker(to_four,four));
 
 
 	/* execute the network */
