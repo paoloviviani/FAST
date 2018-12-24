@@ -66,14 +66,15 @@ public:
 			placement = 0;
 
 			c.emit(gam::public_ptr< FAST::gam_vector<float> >(std::move(grad_store)));
-			if (in != NULL) {
-				auto recv_grad = in.local();
+			auto recv_grad = in.local();
+			if (recv_grad->size() > 0) {
 				auto recv_ptr = recv_grad->data();
 
 				for (size_t i = 0; i < arg_names.size(); ++i) {
 					if (arg_names[i] == "X" || arg_names[i] == "label") continue;
 					exec->grad_arrays[i] = NDArray(&recv_ptr[placement],Shape(exec->grad_arrays[i].GetShape()),ctx);
 					placement += exec->grad_arrays[i].Size();
+					FAST_DEBUG("Updating with received grads");
 					opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 				}
 			}
@@ -130,7 +131,37 @@ public:
 			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
 			grad_size += exec->grad_arrays[i].Size();
 		}
-		c.emit(gam::public_ptr< FAST::gam_vector<float> >(NULL));
+
+		if (train_iter.Next()) {
+					FAST_INFO("Epoch: " << local_epoch << " iter: " << local_iter);
+					auto data_batch = train_iter.GetDataBatch();
+					// Set data and label
+					data_batch.data.CopyTo(&args["X"]);
+					data_batch.label.CopyTo(&args["label"]);
+
+					// Compute gradients
+					exec->Forward(true);
+					exec->Backward();
+					train_acc.Update(data_batch.label, exec->outputs[0]);
+					FAST_INFO("Batch processed")
+					// Update parameters
+					size_t placement = 0;
+					auto grad_store = gam::make_private<FAST::gam_vector<float>>(grad_size);
+					auto grad_local = grad_store.local();
+
+					for (size_t i = 0; i < arg_names.size(); ++i) {
+						if (arg_names[i] == "X" || arg_names[i] == "label") continue;
+						std::copy(exec->grad_arrays[i].GetData(), exec->grad_arrays[i].GetData()+exec->grad_arrays[i].Size(), //
+								grad_local->begin()+placement);
+						placement += exec->grad_arrays[i].Size();
+						opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
+					}
+					placement = 0;
+
+					c.emit(gam::public_ptr< FAST::gam_vector<float> >(std::move(grad_store)));
+					FAST_INFO("Training accuracy: " << train_acc.Get());
+					local_iter++;
+				}
 	}
 
 	void svc_end(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
