@@ -39,7 +39,7 @@ public:
 	gff::token_t svc(gam::public_ptr< FAST::gam_vector<float> > &in, gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
 		if (local_epoch == max_epoch)
 			return gff::eos;
-
+		FAST_INFO("Starting Training")
 		if (train_iter.Next()) {
 			FAST_INFO("Epoch: " << local_epoch << " iter: " << local_iter)
 			auto data_batch = train_iter.GetDataBatch();
@@ -51,7 +51,7 @@ public:
 			exec->Forward(true);
 			exec->Backward();
 			train_acc.Update(data_batch.label, exec->outputs[0]);
-
+			FAST_INFO("Batch processed")
 			// Update parameters
 			size_t placement = 0;
 			auto grad_store = gam::make_private<FAST::gam_vector<float>>(grad_size);
@@ -68,13 +68,15 @@ public:
 
 			c.emit(gam::public_ptr< FAST::gam_vector<float> >(std::move(grad_store)));
 			auto recv_grad = in.local();
-			auto recv_ptr = recv_grad->data();
+			if (recv_grad->size() != 0) {
+				auto recv_ptr = recv_grad->data();
 
-			for (size_t i = 0; i < arg_names.size(); ++i) {
-				if (arg_names[i] == "X" || arg_names[i] == "label") continue;
-				exec->grad_arrays[i] = NDArray(&recv_ptr[placement],Shape(exec->grad_arrays[i].GetShape()),ctx);
-				placement += exec->grad_arrays[i].Size();
-				opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
+				for (size_t i = 0; i < arg_names.size(); ++i) {
+					if (arg_names[i] == "X" || arg_names[i] == "label") continue;
+					exec->grad_arrays[i] = NDArray(&recv_ptr[placement],Shape(exec->grad_arrays[i].GetShape()),ctx);
+					placement += exec->grad_arrays[i].Size();
+					opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
+				}
 			}
 
 			local_iter++;
@@ -97,6 +99,7 @@ public:
 		const float learning_rate = 0.001;
 		const float weight_decay = 1e-4;
 
+		FAST_INFO("SVC Init: Start data iter")
 		train_iter.SetParam("image", "../data/mnist_data/train-images-idx3-ubyte")
 				  .SetParam("label", "../data/mnist_data/train-labels-idx1-ubyte")
 				  .SetParam("batch_size", batch_size)
@@ -111,7 +114,7 @@ public:
 		args["label"] = NDArray(Shape(batch_size), ctx);
 		// Let MXNet infer shapes other parameters such as weights
 		net.InferArgsMap(ctx, &args, args);
-
+		FAST_INFO("Args map inferred")
 		// Initialize all parameters with uniform distribution U(-0.01, 0.01)
 		auto initializer = Uniform(0.01);
 		for (auto& arg : args) {
@@ -130,6 +133,7 @@ public:
 			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
 			grad_size += exec->grad_arrays[i].Size();
 		}
+		c.emit(gam::public_ptr< FAST::gam_vector<float> >());
 	}
 
 	void svc_end(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
@@ -175,6 +179,7 @@ typedef gff::Filter<gff::NondeterminateMerge, gff::OutBundleBroadcast<gff::Nonde
 
 
 int main(int argc, char** argv) {
+	FAST_LOG_INIT
 
 	gff::NondeterminateMerge to_one, to_two, to_three;
 	gff::OutBundleBroadcast<gff::NondeterminateMerge> one, two, three;
@@ -190,7 +195,7 @@ int main(int argc, char** argv) {
 	gff::add(MXNetWorker(to_two,two));
 	gff::add(MXNetWorker(to_three,three));
 
-
+	FAST_INFO("Created network")
 	/* execute the network */
 	gff::run();
 
