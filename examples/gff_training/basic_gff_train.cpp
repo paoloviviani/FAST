@@ -39,9 +39,8 @@ public:
 	gff::token_t svc(gam::public_ptr< FAST::gam_vector<float> > &in, gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
 		if (local_epoch == max_epoch)
 			return gff::eos;
-		FAST_INFO("Starting Training")
 		if (train_iter.Next()) {
-			FAST_INFO("Epoch: " << local_epoch << " iter: " << local_iter)
+			FAST_INFO("Epoch: " << local_epoch << " iter: " << local_iter);
 			auto data_batch = train_iter.GetDataBatch();
 			// Set data and label
 			data_batch.data.CopyTo(&args["X"]);
@@ -67,8 +66,8 @@ public:
 			placement = 0;
 
 			c.emit(gam::public_ptr< FAST::gam_vector<float> >(std::move(grad_store)));
-			auto recv_grad = in.local();
-			if (recv_grad->size() != 0) {
+			if (in != NULL) {
+				auto recv_grad = in.local();
 				auto recv_ptr = recv_grad->data();
 
 				for (size_t i = 0; i < arg_names.size(); ++i) {
@@ -78,7 +77,7 @@ public:
 					opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 				}
 			}
-
+			FAST_INFO("Training accuracy: " << train_acc.Get());
 			local_iter++;
 		}
 		else {
@@ -99,12 +98,11 @@ public:
 		const float learning_rate = 0.001;
 		const float weight_decay = 1e-4;
 
-		FAST_INFO("SVC Init: Start data iter")
-		train_iter.SetParam("image", "../data/mnist_data/train-images-idx3-ubyte")
-				  .SetParam("label", "../data/mnist_data/train-labels-idx1-ubyte")
-				  .SetParam("batch_size", batch_size)
-				  .SetParam("flat", 1)
-				  .CreateDataIter();
+		train_iter.SetParam("image", "../mnist_data/train-images-idx3-ubyte")
+						  .SetParam("label", "../mnist_data/train-labels-idx1-ubyte")
+						  .SetParam("batch_size", batch_size)
+						  .SetParam("flat", 1)
+						  .CreateDataIter();
 
 		net = mlp(layers);
 
@@ -114,7 +112,7 @@ public:
 		args["label"] = NDArray(Shape(batch_size), ctx);
 		// Let MXNet infer shapes other parameters such as weights
 		net.InferArgsMap(ctx, &args, args);
-		FAST_INFO("Args map inferred")
+
 		// Initialize all parameters with uniform distribution U(-0.01, 0.01)
 		auto initializer = Uniform(0.01);
 		for (auto& arg : args) {
@@ -122,9 +120,8 @@ public:
 			initializer(arg.first, &arg.second);
 		}
 
-		opt = OptimizerRegistry::Find("sgd");
-		opt->SetParam("rescale_grad", 1.0/batch_size)
-			->SetParam("lr", learning_rate);
+		opt = OptimizerRegistry::Find("adam");
+		opt->SetParam("lr", learning_rate);
 		exec = net.SimpleBind(ctx, args);
 		arg_names = net.ListArguments();
 
@@ -133,13 +130,13 @@ public:
 			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
 			grad_size += exec->grad_arrays[i].Size();
 		}
-		c.emit(gam::public_ptr< FAST::gam_vector<float> >());
+		c.emit(gam::public_ptr< FAST::gam_vector<float> >(NULL));
 	}
 
 	void svc_end(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
 		auto val_iter = MXDataIter("MNISTIter")
-			  .SetParam("image", "../data/mnist_data/t10k-images-idx3-ubyte")
-			  .SetParam("label", "../data/mnist_data/t10k-labels-idx1-ubyte")
+			  .SetParam("image", "../mnist_data/t10k-images-idx3-ubyte")
+			  .SetParam("label", "../mnist_data/t10k-labels-idx1-ubyte")
 			  .SetParam("batch_size", BATCH_SIZE)
 			  .SetParam("flat", 1)
 			  .CreateDataIter();
@@ -167,7 +164,7 @@ private:
 	vector<string> arg_names;
 	Accuracy train_acc;
 	int local_epoch = 0, local_iter = 0;
-	const int max_epoch = 2;
+	const int max_epoch = 10;
 	unsigned int grad_size;
 };
 
