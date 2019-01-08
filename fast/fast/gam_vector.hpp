@@ -42,7 +42,7 @@ struct is_supported<int32_t> {
 namespace FAST {
 
 template<typename T>
-struct gam_vector : public vector<T> {
+struct gam_vector : public std::vector<T> {
 
 	tensor_type_check(( is_supported<T>::value ));
 
@@ -52,7 +52,7 @@ struct gam_vector : public vector<T> {
 	explicit gam_vector() = default;
 	using vector<T>::vector;
 
-	gam_vector(const std::vector<T>& in) : vector<T>(in) {}
+	gam_vector(const std::vector<T>& in) : std::vector<T>(in) {}
 
 	/* ingesting constructor */
 	template<typename StreamInF>

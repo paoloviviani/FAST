@@ -39,13 +39,13 @@ public:
 	 * @param c is the output channel (could be a template for simplicity)
 	 * @return a gff token
 	 */
-	gff::token_t svc(gam::public_ptr<int> &in, gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
+	gff::token_t svc(gam::public_ptr< FAST::gam_vector<float> > &in, gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
 		auto local_in = in.local();
-		auto number = *local_in;
+		auto vec = *local_in;
 		in.reset();
 		iter++;
-		FAST_DEBUG("Received number " << number << "  " << iter << " times.");
-		buffer_.push_back(number);
+		FAST_DEBUG("Received vector " << number << "  " << iter << " times.");
+		buffer_.push_back(vec);
 		if (buffer_.size() == 2) {
 			sum_ = buffer_[0] + buffer_[1];
 			while (out.use_count() > 1) {
@@ -57,19 +57,22 @@ public:
 	}
 
 	void svc_init(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
-		out = gam::make_public<int>(NUMBER);
-		c.emit(gam::make_public<int>(NUMBER));
-		FAST_DEBUG("Emitted number " << NUMBER);
+		out = gam::make_public<FAST::gam_vector<float>>();
+		auto local_out = out.local();
+		local_out->push_back(NUMBER);
+		local_out->push_back(NUMBER);
+		c.emit(out);
+		FAST_DEBUG("Emitted vector " << *local_out);
 	}
 
 	void svc_end(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
-		REQUIRE(2*NUMBER == sum_);
+		REQUIRE(2*NUMBER == sum_.at(0));
 	}
 private:
-	vector< int > buffer_;
+	vector< FAST::gam_vector<float> > buffer_;
 	int iter = 0;
-	int sum_ = 0;
-	gam::public_ptr<int> out = nullptr;
+	FAST::gam_vector<float> sum_ = {0.,0.};
+	gam::public_ptr< FAST::gam_vector<float> > out = nullptr;
 };
 
 /*
@@ -81,7 +84,7 @@ private:
  * - the gff logic
  */
 typedef gff::Filter<gff::NondeterminateMerge, gff::OutBundleBroadcast<gff::NondeterminateMerge>,//
-		gam::public_ptr<int>, gam::public_ptr<int>, //
+		gam::public_ptr< FAST::gam_vector<float> >, 	gam::public_ptr< FAST::gam_vector<float> >, //
 		WorkerLogicAllReduce> WorkerAllReduce;
 /*
  *******************************************************************************

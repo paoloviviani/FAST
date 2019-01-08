@@ -8,10 +8,10 @@
 #ifndef FAST_FAST_HPP_
 #define FAST_FAST_HPP_
 
+#include "fast/gam_vector.hpp"
+
 #include "fast/logger.hpp"
 #include "fast/fast_utils.hpp"
-
-#include "fast/gam_vector.hpp"
 
 #ifdef MXNET_TENSOR
 #include "fast/mxnet_tensor.hpp"
