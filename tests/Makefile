@@ -20,7 +20,7 @@ CFLAGS               = -std=c++11
 LDFLAGS              = 
 LIBS                 = -lpthread
 
-INCLUDES             = -I$(FAST_ROOT)/fast -I$(FAST_ROOT)/tests/catch2 -I$(FAST_ROOT)/3rdparty/fastflow/ff/d/gff -I$(FAST_ROOT)/3rdparty/gam/gam/include -I$(FAST_ROOT)/3rdparty/armadillo
+INCLUDES             = -I$(FAST_ROOT)/fast -I$(FAST_ROOT)/tests/catch2 -I$(FAST_ROOT)/3rdparty/fastflow/ff/d/gff -I$(FAST_ROOT)/3rdparty/gam/include
 EXECS                = unit_test gam_unit_test gff_farm gff_all_reduce gff_all_reduce_multi
 TARGET_OBJ_UNIT      = basic_unit_tests/basic_unit_test.o
 TEST_DRIVER_OBJ      = catch2/test_driver.o

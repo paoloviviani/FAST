@@ -47,7 +47,8 @@ public:
 		FAST_DEBUG("Received vector " << number << "  " << iter << " times.");
 		buffer_.push_back(vec);
 		if (buffer_.size() == 2) {
-			sum_ = buffer_[0] + buffer_[1];
+			for (int i = 0; i < buffer_[0].size(); i++)
+				sum_ = buffer_.at(0).at(i) + buffer_.at(1).at(i);
 			while (out.use_count() > 1) {
 				sleep(100);
 			}

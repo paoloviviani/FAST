@@ -8,7 +8,6 @@
 #ifndef FAST_FAST_GAM_VECTOR_HPP_
 #define FAST_FAST_GAM_VECTOR_HPP_
 
-
 #define tensor_type_check(condition)  static_assert( (condition), "error: incorrect or unsupported tensor type" )
 
 /**
@@ -50,7 +49,7 @@ struct gam_vector : public std::vector<T> {
 	vsize_t size_ = 0;
 
 	explicit gam_vector() = default;
-	using vector<T>::vector;
+	using std::vector<T>::vector;
 
 	gam_vector(const std::vector<T>& in) : std::vector<T>(in) {}
 
