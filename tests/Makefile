@@ -21,7 +21,7 @@ LDFLAGS              =
 LIBS                 = -lpthread
 
 INCLUDES             = -I$(FAST_ROOT)/fast -I$(FAST_ROOT)/tests/catch2 -I$(FAST_ROOT)/3rdparty/fastflow/ff/d/gff -I$(FAST_ROOT)/3rdparty/gam/include
-EXECS                = unit_test gam_unit_test gff_farm gff_all_reduce gff_all_reduce_multi
+EXECS                = unit_test gam_unit_test gff_farm gff_all_reduce gff_all_reduce_multi gff_all_reduce_vector
 TARGET_OBJ_UNIT      = basic_unit_tests/basic_unit_test.o
 TEST_DRIVER_OBJ      = catch2/test_driver.o
 
@@ -43,7 +43,10 @@ TARGET_OBJ_GAM       = gam_tests/gam_unit_test.o
 TARGET_OBJ_GFF_FARM  = gff_tests/basic_farm.o
 TARGET_OBJ_GFF_ALL   = gff_tests/all_reduce.o
 TARGET_OBJ_GFF_MULTI = gff_tests/all_reduce_multi.o
+TARGET_OBJ_GFF_VECT = gff_tests/all_reduce_vector.o
 endif
+
+TARGET_OBJ = $(TARGET_OBJ_UNIT) $(TARGET_OBJ_GAM)  $(TARGET_OBJ_GFF_FARM) $(TARGET_OBJ_GFF_ALL) $(TARGET_OBJ_GFF_MULTI) $(TEST_DRIVER_OBJ)
 
 .PHONY: all clean cleanall
 .SUFFIXES: .c .cpp .o
@@ -65,6 +68,8 @@ gff_all_reduce: $(TARGET_OBJ_GFF_ALL) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
 gff_all_reduce_multi: $(TARGET_OBJ_GFF_MULTI) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
+gff_all_reduce_vector: $(TARGET_OBJ_GFF_VECT) $(TEST_DRIVER_OBJ)
+	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
 
 cleanbtr:
 	rm -rf *.btr
@@ -73,5 +78,5 @@ clean:
 
 cleanall: clean
 	rm -rf bin/$(EXECS)
-	rm -rf $(TARGET_OBJ_UNIT) $(TARGET_OBJ_GAM) $(TEST_DRIVER_OBJ) *.d *.btr
+	rm -rf $(TARGET_OBJ) *.d *.btr
 

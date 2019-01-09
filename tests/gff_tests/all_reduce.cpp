@@ -49,7 +49,7 @@ public:
 		if (buffer_.size() == 2) {
 			sum_ = buffer_[0] + buffer_[1];
 			while (out.use_count() > 1) {
-				sleep(100);
+				sleep(1);
 			}
 			return gff::eos;
 		}

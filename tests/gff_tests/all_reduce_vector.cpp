@@ -44,13 +44,13 @@ public:
 		auto vec = *local_in;
 		in.reset();
 		iter++;
-		FAST_DEBUG("Received vector " << number << "  " << iter << " times.");
+		FAST_DEBUG("Received vector " << vec << "  " << iter << " times.");
 		buffer_.push_back(vec);
 		if (buffer_.size() == 2) {
 			for (int i = 0; i < buffer_[0].size(); i++)
-				sum_ = buffer_.at(0).at(i) + buffer_.at(1).at(i);
+				sum_.at(i) = buffer_.at(0).at(i) + buffer_.at(1).at(i);
 			while (out.use_count() > 1) {
-				sleep(100);
+				sleep(1);
 			}
 			return gff::eos;
 		}
@@ -58,12 +58,12 @@ public:
 	}
 
 	void svc_init(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
-		out = gam::make_public<FAST::gam_vector<float>>();
-		auto local_out = out.local();
-		local_out->push_back(NUMBER);
-		local_out->push_back(NUMBER);
+		FAST::gam_vector<float> local_out;
+		local_out.push_back(NUMBER);
+		local_out.push_back(NUMBER);
+		out = gam::make_public<FAST::gam_vector<float>>(local_out);
 		c.emit(out);
-		FAST_DEBUG("Emitted vector " << *local_out);
+		FAST_DEBUG("Emitted vector " << local_out);
 	}
 
 	void svc_end(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
