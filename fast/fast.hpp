@@ -8,7 +8,7 @@
 #ifndef FAST_FAST_HPP_
 #define FAST_FAST_HPP_
 
-#include "gam/gam.hpp"
+#include "gam.hpp"
 
 #include "fast/gam_vector.hpp"
 #include "fast/logger.hpp"
