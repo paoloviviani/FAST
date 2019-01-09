@@ -50,7 +50,7 @@ public:
 			for (int i = 0; i < buffer_[0].size(); i++)
 				sum_.at(i) = buffer_.at(0).at(i) + buffer_.at(1).at(i);
 			while (out.use_count() > 1) {
-				sleep(1);
+				sleep(0.01);
 			}
 			return gff::eos;
 		}
