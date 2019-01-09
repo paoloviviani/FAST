@@ -93,6 +93,8 @@ typedef gff::Filter<gff::NDOneToAll, gff::NDOneToAll,//
 
 TEST_CASE( "gff allreduce", "gam,gff" ) {
 	FAST_LOG_INIT
+	FAST_INFO("TEST name: "<< Catch::getResultCapture().getCurrentTestName());
+
 	gff::NDOneToAll all;
 
 	for (unsigned i = 0; i < NWORKERS; i++)

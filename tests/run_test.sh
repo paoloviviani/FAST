@@ -14,9 +14,8 @@ else
 export GAM_RUN_LOCAL=$FAST_ROOT/bin/gamrun-local
 fi
 
-$GAM_RUN_LOCAL -v -n 1 -l $GAM_LOCALHOST ./bin/unit_test
-$GAM_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/gam_unit_test
-$GAM_RUN_LOCAL -v -n 6 -l $GAM_LOCALHOST ./bin/gff_farm
+#$GAM_RUN_LOCAL -v -n 1 -l $GAM_LOCALHOST ./bin/unit_test
+#$GAM_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/gam_unit_test
+#$GAM_RUN_LOCAL -v -n 5 -l $GAM_LOCALHOST ./bin/gff_farm
 $GAM_RUN_LOCAL -v -n 3 -l $GAM_LOCALHOST ./bin/gff_all_reduce
-sleep 10
 $GAM_RUN_LOCAL -v -n 3 -l $GAM_LOCALHOST ./bin/gff_all_reduce_multi

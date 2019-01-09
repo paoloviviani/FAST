@@ -17,7 +17,7 @@
 
 using namespace std;
 
-#define NWORKERS    4
+#define NWORKERS    3
 #define NUMBER      25
 
 /*
@@ -185,6 +185,8 @@ TEST_CASE( "gff basic broadcast", "gam,gff" ) {
 	gff::OneToAll e2w;
 	gff::NondeterminateMerge w2c;
 	FAST_LOG_INIT
+	FAST_INFO("TEST name: "<< Catch::getResultCapture().getCurrentTestName());
+
 	/*
 	 * In this preliminary implementation, a single global network is
 	 * created and nodes can be added only to the global network.

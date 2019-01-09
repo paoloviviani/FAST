@@ -41,7 +41,7 @@ ifeq ($(USE_GAM),1)
 CCFLAGS              += -DUSE_GAM
 TARGET_OBJ_GAM       = gam_tests/gam_unit_test.o 
 TARGET_OBJ_GFF_FARM  = gff_tests/basic_farm.o
-TARGET_OBJ_GFF_ALL   = gff_tests/all_reduce.o gff_tests/all_reduce_multi.o
+TARGET_OBJ_GFF_ALL   = gff_tests/all_reduce.o
 TARGET_OBJ_GFF_MULTI = gff_tests/all_reduce_multi.o
 endif
 

@@ -13,7 +13,8 @@
 
 
 TEST_CASE( "logger test", "logger" ){
-	FAST_ERROR(Catch::getResultCapture().getCurrentTestName())
+	FAST_LOG_INIT
+	FAST_INFO("TEST name: "<< Catch::getResultCapture().getCurrentTestName());
 	int i = 100;
 	FAST_DEBUG("Example of DEBUG message with integer value, " << i)
 	FAST_INFO("Example of INFO message with integer value, " << i)
