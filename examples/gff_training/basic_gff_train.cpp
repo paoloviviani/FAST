@@ -7,7 +7,7 @@
 using namespace std;
 using namespace mxnet::cpp;
 
-#define BATCH_SIZE 1
+#define BATCH_SIZE 32
 
 Context ctx = Context::cpu();  // Use CPU for training
 
@@ -101,17 +101,17 @@ public:
 		const float learning_rate = 0.001;
 		const float weight_decay = 1e-4;
 
-//		train_iter.SetParam("image", "../mnist_data/train-images-idx3-ubyte")
-//						  .SetParam("label", "../mnist_data/train-labels-idx1-ubyte")
-//						  .SetParam("batch_size", batch_size)
-//						  .SetParam("flat", 1)
-//						  .CreateDataIter();
+		train_iter.SetParam("image", "../mnist_data/train-images-idx3-ubyte")
+						  .SetParam("label", "../mnist_data/train-labels-idx1-ubyte")
+						  .SetParam("batch_size", batch_size)
+						  .SetParam("flat", 1)
+						  .CreateDataIter();
 		// Fake train iterator with smaller validation data
-		train_iter.SetParam("image", "../mnist_data/t10k-images-idx3-ubyte")
-			  .SetParam("label", "../mnist_data/t10k-labels-idx1-ubyte")
-			  .SetParam("batch_size", BATCH_SIZE)
-			  .SetParam("flat", 1)
-			  .CreateDataIter();
+//		train_iter.SetParam("image", "../mnist_data/t10k-images-idx3-ubyte")
+//			  .SetParam("label", "../mnist_data/t10k-labels-idx1-ubyte")
+//			  .SetParam("batch_size", BATCH_SIZE)
+//			  .SetParam("flat", 1)
+//			  .CreateDataIter();
 
 		net = mlp(layers);
 
