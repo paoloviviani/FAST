@@ -1,7 +1,6 @@
 FAST_ROOT			=	../..
 #error, info, debug
 DEBUG				=	info
-MXNET_INCLUDE_DIR		=	$(FAST_ROOT)/3rdparty/mxnet/include
-MXNET_LIB_DIR			=	$(FAST_ROOT)/3rdparty/mxnet/lib
-LIBFABRIC_LIB_DIR		=	
+MXNET_ROOT			=	$(FAST_ROOT)/3rdparty/mxnet
+LIBFABRIC_ROOT		=	
 USE_GAM				=	1

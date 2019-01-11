@@ -25,18 +25,18 @@ EXECS                = basic_gff_train
 TARGET_OBJ           = basic_gff_train.o
 
 #Libfabric dependency
-ifeq ($(LIBFABRIC_LIB_DIR),)
+ifeq ($(LIBFABRIC_ROOT),)
 LIBS                 += -lfabric
 else
-LIBS                 += -L$(LIBFABRIC_LIB_DIR) -lfabric
+LIBS                 += -L$(LIBFABRIC_ROOT)/lib -lfabric
 endif
-ifneq ($(LIBFABRIC_INCLUDE_DIR),)
-INCLUDES             += -I$(LIBFABRIC_INCLUDE_DIR)
+ifneq ($(LIBFABRIC_ROOT),)
+INCLUDES             += -I$(LIBFABRIC_ROOT)/include
 endif
 
 #MxNet dependency
-INCLUDES             += -I$(MXNET_INCLUDE_DIR)
-LIBS                 += -L$(MXNET_LIB_DIR) -lmxnet
+INCLUDES             += -I$(MXNET_ROOT)/include
+LIBS                 += -L$(MXNET_ROOT)/lib -lmxnet
 CCFLAGS              += -DUSE_GAM
 
 .PHONY: all clean cleanall
