@@ -8,6 +8,7 @@ using namespace std;
 using namespace mxnet::cpp;
 
 #define BATCH_SIZE 32
+#define NEIGHBORS 2
 
 Context ctx = Context::cpu();  // Use CPU for training
 
@@ -39,6 +40,9 @@ public:
 	gff::token_t svc(gam::public_ptr< FAST::gam_vector<float> > &in, gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
 		if (local_epoch == max_epoch)
 			return gff::eos;
+
+		auto grad_local = grad_store_.local();
+
 		if (train_iter.Next()) {
 			FAST_INFO("Epoch: " << local_epoch << " iter: " << local_iter);
 			auto data_batch = train_iter.GetDataBatch();
@@ -53,29 +57,29 @@ public:
 			FAST_INFO("Batch processed")
 
 			// Update parameters
-			size_t placement = 0;
-			grad_store_ = gam::make_public<FAST::gam_vector<float>>(grad_size);
-			auto grad_local = grad_store_.local();
+			size_t offset = 0;
 
 			for (size_t i = 0; i < arg_names.size(); ++i) {
 				if (arg_names[i] == "X" || arg_names[i] == "label") continue;
-//				exec->grad_arrays[i].SyncCopyToCPU(grad_local->data()+placement , exec->grad_arrays[i].Size());
-				placement += exec->grad_arrays[i].Size();
+				exec->grad_arrays[i].SyncCopyToCPU(grad_local->data()+offset , exec->grad_arrays[i].Size());
+				offset += exec->grad_arrays[i].Size();
 				opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 			}
-			placement = 0;
+			offset = 0;
 			FAST_DEBUG("Before emit")
-			c.emit(gam::public_ptr< FAST::gam_vector<float> >(grad_store_));
+			c.emit(grad_store_);
 			FAST_DEBUG("Before receive")
-			auto recv_grad = in.local();
-			FAST_DEBUG("After receive")
-			if (recv_grad->size() > 0) {
+
+			if (local_epoch == 0 && local_iter < NEIGHBORS) {
+
+				auto recv_grad = in.local();
+				FAST_DEBUG("After receive")
 				auto recv_ptr = recv_grad->data();
 
 				for (size_t i = 0; i < arg_names.size(); ++i) {
 					if (arg_names[i] == "X" || arg_names[i] == "label") continue;
-					exec->grad_arrays[i] = NDArray(&recv_ptr[placement],Shape(exec->grad_arrays[i].GetShape()),ctx);
-					placement += exec->grad_arrays[i].Size();
+					exec->grad_arrays[i] = NDArray(&recv_ptr[offset],Shape(exec->grad_arrays[i].GetShape()),ctx);
+					offset += exec->grad_arrays[i].Size();
 					FAST_DEBUG("Updating with received grads");
 					opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 				}
@@ -102,10 +106,10 @@ public:
 		const float weight_decay = 1e-4;
 
 		train_iter.SetParam("image", "../mnist_data/train-images-idx3-ubyte")
-						  .SetParam("label", "../mnist_data/train-labels-idx1-ubyte")
-						  .SetParam("batch_size", batch_size)
-						  .SetParam("flat", 1)
-						  .CreateDataIter();
+			  .SetParam("label", "../mnist_data/train-labels-idx1-ubyte")
+			  .SetParam("batch_size", batch_size)
+			  .SetParam("flat", 1)
+			  .CreateDataIter();
 		// Fake train iterator with smaller validation data
 //		train_iter.SetParam("image", "../mnist_data/t10k-images-idx3-ubyte")
 //			  .SetParam("label", "../mnist_data/t10k-labels-idx1-ubyte")
@@ -141,39 +145,43 @@ public:
 		}
 		FAST_DEBUG(grad_size);
 
-		if (train_iter.Next()) {
-					FAST_INFO("Epoch: " << local_epoch << " iter: " << local_iter);
-					auto data_batch = train_iter.GetDataBatch();
-					// Set data and label
-					data_batch.data.CopyTo(&args["X"]);
-					data_batch.label.CopyTo(&args["label"]);
+		grad_store_ = gam::make_public<FAST::gam_vector<float>>(grad_size);
 
-					// Compute gradients
-					exec->Forward(true);
-					exec->Backward();
-					train_acc.Update(data_batch.label, exec->outputs[0]);
-					FAST_INFO("Batch processed")
-					// Update parameters
-					size_t placement = 0;
-					grad_store_ = gam::make_public<FAST::gam_vector<float>>(grad_size);
-					auto grad_local = grad_store_.local();
+		c.emit(grad_store_);
 
-					for (size_t i = 0; i < arg_names.size(); ++i) {
-						if (arg_names[i] == "X" || arg_names[i] == "label") continue;
-
-						std::copy(exec->grad_arrays[i].GetData(), exec->grad_arrays[i].GetData()+exec->grad_arrays[i].Size(), //
-								grad_local->begin()+placement);
-						FAST_DEBUG(arg_names[i] << "  " << placement << "  " << exec->grad_arrays[i].Size() )
-						placement += exec->grad_arrays[i].Size();
-						opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
-						FAST_DEBUG(" ")
-					}
-					placement = 0;
-					FAST_DEBUG(" ")
-					c.emit(gam::public_ptr< FAST::gam_vector<float> >(grad_store_));
-					FAST_INFO("Training accuracy: " << train_acc.Get());
-					local_iter++;
-				}
+//		if (train_iter.Next()) {
+//					FAST_INFO("Epoch: " << local_epoch << " iter: " << local_iter);
+//					auto data_batch = train_iter.GetDataBatch();
+//					// Set data and label
+//					data_batch.data.CopyTo(&args["X"]);
+//					data_batch.label.CopyTo(&args["label"]);
+//
+//					// Compute gradients
+//					exec->Forward(true);
+//					exec->Backward();
+//					train_acc.Update(data_batch.label, exec->outputs[0]);
+//					FAST_INFO("Batch processed")
+//					// Update parameters
+//					size_t offset = 0;
+//
+//					auto grad_local = grad_store_.local();
+//
+//					for (size_t i = 0; i < arg_names.size(); ++i) {
+//						if (arg_names[i] == "X" || arg_names[i] == "label") continue;
+//
+//						std::copy(exec->grad_arrays[i].GetData(), exec->grad_arrays[i].GetData()+exec->grad_arrays[i].Size(), //
+//								grad_local->begin()+offset);
+//						FAST_DEBUG(arg_names[i] << "  " << offset << "  " << exec->grad_arrays[i].Size() )
+//						offset += exec->grad_arrays[i].Size();
+//						opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
+//						FAST_DEBUG(" ")
+//					}
+//					offset = 0;
+//					FAST_DEBUG(" ")
+//					c.emit(gam::public_ptr< FAST::gam_vector<float> >(grad_store_));
+//					FAST_INFO("Training accuracy: " << train_acc.Get());
+//					local_iter++;
+//				}
 	}
 
 	void svc_end(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
