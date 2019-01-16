@@ -18,7 +18,6 @@
 #include <ff/pipeline.hpp>
 #include <ff/node.hpp>
 
-using namespace ff;
 using namespace FAST;
 
 
@@ -39,21 +38,32 @@ struct PublicWrapper {
  * - copy of data from GPU/CPU memory to public ptr
  */
 template <typename ModelLogic, typename T >
-class InputStage: public ff_node {
+class InputStage: public ff::ff_node {
 public:
 
 	InputStage(ModelLogic &logic) : logic(logic) {}
 
     void * svc(void * task) {
 
+		auto recv_ptr = (PublicWrapper<T> *)task->payload->local();
+		auto data_ptr = recv_ptr->data();
+
+		for (size_t i = 0; i < arg_names.size(); ++i) {
+			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
+			exec->grad_arrays[i] = NDArray(&recv_ptr[offset],Shape(exec->grad_arrays[i].GetShape()),ctx);
+			offset += exec->grad_arrays[i].Size();
+			FAST_DEBUG("Updating with received grads");
+			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
+		}
 
         return GO_ON;
     }
 private:
+    ModelLogic logic;
 };
 
 template <typename ModelLogic, typename T >
-class TrainerStage: public ff_node {
+class TrainerStage: public ff::ff_node {
 public:
 
 	TrainerStage(ModelLogic &logic) : logic(logic) {}
@@ -68,7 +78,7 @@ private:
 };
 
 template < typename T >
-class OutputStage: public ff_node {
+class OutputStage: public ff::ff_node {
 public:
 
 	OutputStage(PublicWrapper<T> * out) : out_(out) {}
@@ -135,7 +145,7 @@ public:
 		logic_.finalize();
 	}
 private:
-	ff_pipeline global_, training_;
+	ff::ff_pipeline global_, training_;
 	ModelLogic logic_;
 	PublicWrapper<T> * in_;
 	Tidx index_;

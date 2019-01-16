@@ -15,21 +15,46 @@
 namespace FAST {
 
 template <typename T>
-void insert(gam_vector<T> & in, mxnet::cpp::NDArray & t){
+void appendToVec(gam_vector<T> & vec, mxnet::cpp::NDArray & t){
 	size_t append_size = t.Size();
-	t.SyncCopyToCPU(in.data() + in.size(),append_size);
+	vec.resize(vec.size() + append_size);
+	t.SyncCopyToCPU(vec.data() + vec.size(),append_size);
 }
 
 template <typename T>
-void append(gam_vector<T> & in, mxnet::cpp::NDArray & t){
-	size_t append_size = t.Size();
-	in.resize(in.size() + append_size);
-	t.SyncCopyToCPU(in.data() + in.size(),append_size);
+void vecToNDArray(gam_vector<T> & vec, mxnet::cpp::NDArray & t, size_t offset, size_t size, //
+					const mxnet::cpp::Context & ctx=mxnet::cpp::Context::cpu() ) {
+	t.SyncCopyFromCPU(vec.data() + offset, size);
 }
 
 template <typename T>
-void extract(gam_vector<T> & in, mxnet::cpp::NDArray & t, size_t pos, size_t size, const mxnet::cpp::Context & ctx) {
-	t.SyncCopyFromCPU(in.data() + pos, size);
+void NDVecToVec(std::vector<mxnet::cpp::NDArray> grad_arrays, vector<string> arg_names, gam_vector<T> & vec, //
+				string inp="X", string out="label") {
+
+	size_t grad_size = 0;
+	for (size_t i = 0; i < arg_names.size(); ++i) {
+		if (arg_names[i] == inp || arg_names[i] == out) continue;
+		grad_size += grad_arrays[i].Size();
+	}
+	vec.resize(grad_size);
+	for (size_t i = 0; i < arg_names.size(); ++i) {
+		if (arg_names[i] == inp || arg_names[i] == out) continue;
+		appendToVec(vec, grad_arrays[i]);
+	}
+
+}
+
+template <typename T>
+void VecToNDVec(gam_vector<T> & vec, std::vector<mxnet::cpp::NDArray> grad_arrays, vector<string> arg_names, //
+				string inp="X", string out="label", const mxnet::cpp::Context & ctx=mxnet::cpp::Context::cpu()) {
+
+	size_t offset = 0;
+	for (size_t i = 0; i < arg_names.size(); ++i) {
+		if (arg_names[i] == inp || arg_names[i] == out) continue;
+		grad_arrays[i] = NDArray(vec.data() + offset, mxnet::cpp::Shape(grad_arrays[i].GetShape()), ctx);
+		offset += grad_arrays[i].Size();
+	}
+
 }
 
 } // End FAST namespace
