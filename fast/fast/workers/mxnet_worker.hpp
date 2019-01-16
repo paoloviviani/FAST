@@ -130,7 +130,7 @@ template < typename T >
 class OutputStage: public ff::ff_node {
 public:
 
-	OutputStage(PublicWrapper<T> * out) : out_(out) {}
+	OutputStage(P) : {}
 
 	void * svc(void * task) {
 		std::vector<mxnet::cpp::NDArray> * grads = (std::vector<mxnet::cpp::NDArray> *) task;
@@ -181,7 +181,7 @@ public:
 		global_ = new ff::ff_pipeline(true);
 		training_ = new ff::ff_pipeline(true);
 
-		gam_vector<T> * ptr = new gam_vector<T>;
+		gam_vector<T> * ptr = new gam_vector<T>(0);
 		logic_.init();
 		global_.add_stage( new InputStage<ModelLogic, T> (logic_) );
 		training_->add_stage( new TrainerStage<ModelLogic, T> (logic_) );
@@ -193,8 +193,9 @@ public:
 		training_->cleanup_nodes();
 
 		global_.run();
-		//set Grad size at first iteration
-		//		c.emit(gam::make_public<gam_vector<T>>(NULL));
+
+		auto dummy_out = gam::public_ptr(ptr, [](gam_vector<T> * ptr){delete ptr;});
+		c.emit(dummy_out);
 	}
 
 	void svc_end() {
