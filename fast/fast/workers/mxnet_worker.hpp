@@ -97,35 +97,33 @@ private:
 	void eosnotify(ssize_t id) {
 	    FAST_DEBUG("> [internal_in_stage] got EOS id=" << id << "\n");
 	    if (id == 0) {
-	      // got EOS from input - forward END_OF_INPUT message
+	    	// got EOS from input - forward END_OF_INPUT message
 	    	FAST_DEBUG("> [internal_in_stage] sending END_OF_INPUT\n");
-	      this->ff_send_out(END_OF_INPUT);
+	    	this->ff_send_out(END_OF_INPUT);
 	    } else {
-	      // got EOS from feedback - forward downstream to trigger termination
+	    	// got EOS from feedback - forward downstream to trigger termination
 	    	FAST_DEBUG("> [internal_in_stage] sending EOS\n");
-	      this->ff_send_out(ff::FF_EOS);
-	      // got both EOSs - node will be terminated here
+	    	this->ff_send_out(ff::FF_EOS);
+	    	// got both EOSs - node will be terminated here
 	    }
-	  }
+	}
 };
 
 class InternalAuxStage : public ff::ff_monode {
-  void *svc(void *in) {
-    if (in != END_OF_INPUT) {
-      printf("> [internal_out_stage] got %p\n", in);
-      // sleep to emulate some work
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
-      // send a NEXT_ITERATION message to the feedback channel
-      ff_send_out_to(NEXT_ITERATION, 0);
-      // forward the input pointer downstream
-      ff_send_out_to(in, 1);
-    } else {
-      printf("> [internal_out_stage] got END_OF_INPUT\n");
-      // send EOS to the feedback channel
-      ff_send_out_to(ff::FF_EOS, 0);
-    }
-    return ff::FF_GO_ON;
-  }
+	void * svc(void * in) {
+		if (in != END_OF_INPUT) {
+			FAST_DEBUG("> [internal_out_stage] got " << id << "\n");
+			// send a NEXT_ITERATION message to the feedback channel
+			ff_send_out_to(NEXT_ITERATION, 0);
+			// forward the input pointer downstream
+			ff_send_out_to(in, 1);
+		} else {
+			FAST_DEBUG("> [internal_out_stage] got END_OF_INPUT\n");
+			// send EOS to the feedback channel
+			ff_send_out_to(ff::FF_EOS, 0);
+		}
+		return ff::FF_GO_ON;
+	}
 };
 
 template < typename T >
@@ -159,19 +157,17 @@ template< typename ModelLogic, typename T, typename Tidx >
 class MXNetWorkerLogic {
 public:
 
-	MXNetWorkerLogic(Tidx index) : training_(true /* accelerator set */), global_(true /* accelerator set */),//
-	in_(NULL), index_(index), grad_size_(0) {}
+	MXNetWorkerLogic(Tidx index) : training_(NULL), global_(NULL), index_(index), grad_size_(0) {}
 
 	~MXNetWorkerLogic() {
-		delete in_;
+		delete global_, training_;
 	}
 
-	gff::token_t svc(gam::public_ptr< gam_vector<T> > &in, gff::NDOneToAll &c) {
-		in_->payload = in;
+	gff::token_t svc(gam::public_ptr< gam_vector<T> > &in, gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
 
 		gam_vector<T> * out = new gam_vector<T>(0);
 
-		global_.offload((void*)in_);
+		global_.offload((void*)in->payload);
 		global_.load_result(out);
 
 		auto public_out = gam::public_ptr(out, [](gam_vector<T> * ptr){delete ptr;});
@@ -180,13 +176,22 @@ public:
 		return gff::go_on;
 	}
 
-	void svc_init(gff::NDOneToAll &c) {
-		in_ = new PublicWrapper<T>();
+	void svc_init(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
+
+		global_ = new ff::ff_pipeline(true);
+		training_ = new ff::ff_pipeline(true);
+
 		gam_vector<T> * ptr = new gam_vector<T>;
 		logic_.init();
 		global_.add_stage( new InputStage<ModelLogic, T> (logic_) );
-		global_.add_stage( new TrainerStage<ModelLogic, T> (logic_) );
+		training_->add_stage( new TrainerStage<ModelLogic, T> (logic_) );
+		training_->add_stage( new InternalAuxStage() );
+		training_->wrap_around();
 		global_.add_stage( new OutputStage<T>( ) );
+
+		global_.cleanup_nodes();
+		training_->cleanup_nodes();
+
 		global_.run();
 		//set Grad size at first iteration
 		//		c.emit(gam::make_public<gam_vector<T>>(NULL));
@@ -196,9 +201,9 @@ public:
 		logic_.finalize();
 	}
 private:
-	ff::ff_pipeline global_, training_;
+	ff::ff_pipeline global_;
+	ff::ff_pipeline * training_;
 	ModelLogic logic_;
-	PublicWrapper<T> * in_;
 	Tidx index_;
 	size_t grad_size_;
 };
