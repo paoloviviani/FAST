@@ -18,15 +18,17 @@
 #include <ff/pipeline.hpp>
 #include <ff/node.hpp>
 
-using namespace FAST;
-
-
 /**
  * Wrapper struct to pass public pointers to FF pipeline
  */
 template < typename T >
 struct PublicWrapper {
-	gam::public_ptr < gam_vector<T> > payload;
+	gam::public_ptr < FAST::gam_vector<T> > payload;
+};
+
+template < typename T >
+struct VectorWrapper {
+	std::vector<T> payload;
 };
 
 /**
@@ -41,40 +43,49 @@ template <typename ModelLogic, typename T >
 class InputStage: public ff::ff_node {
 public:
 
-	InputStage(ModelLogic &logic) : logic(logic) {}
+	InputStage(ModelLogic &logic) : logic_(logic), buffer_(NULL) {}
 
-    void * svc(void * task) {
+	void * svc(void * task) {
 
-		auto recv_ptr = (PublicWrapper<T> *)task->payload->local();
-		auto data_ptr = recv_ptr->data();
-
-		for (size_t i = 0; i < arg_names.size(); ++i) {
-			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
-			exec->grad_arrays[i] = NDArray(&recv_ptr[offset],Shape(exec->grad_arrays[i].GetShape()),ctx);
-			offset += exec->grad_arrays[i].Size();
-			FAST_DEBUG("Updating with received grads");
-			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
+		auto recv_ptr = (PublicWrapper<T> *)task->payload.local();
+		FAST::accumToNDVec( *recv_ptr, buffer_->payload, logic_.model.ListArguments(), "X", "label", mxnet::cpp::Context::cpu() );
+		if ( /* channel empty */) {
+			this->ff_send_out((void *)buffer_);
+			buffer_ = new VectorWrapper<mxnet::cpp::NDArray>;
+			FAST::buildNDVec( buffer_->payload, logic_.exec->grad_arrays, logic_.model.ListArguments(), "X", "label", mxnet::cpp::Context::cpu() );
 		}
+		return GO_ON;
+	}
 
-        return GO_ON;
-    }
+	int svc_init() {
+		buffer_ = new VectorWrapper<mxnet::cpp::NDArray>;
+		FAST::buildNDVec( buffer_->payload, logic_.exec->grad_arrays, logic_.model.ListArguments(), "X", "label", mxnet::cpp::Context::cpu() );
+		return 0;
+	}
 private:
-    ModelLogic logic;
+	ModelLogic logic_;
+	VectorWrapper<mxnet::cpp::NDArray> * buffer_;
 };
 
 template <typename ModelLogic, typename T >
-class TrainerStage: public ff::ff_node {
+class TrainerStage: public ff::ff_minode {
 public:
 
-	TrainerStage(ModelLogic &logic) : logic(logic) {}
+	TrainerStage(ModelLogic &logic) : logic_(logic) {}
 
 	void * svc(void * task) {
-    	// Update weights with received data, pass local gradients to next stage, and go on with local training
-    	std::vector<mxnet::cpp::NDArray> * grads = logic.run_batch((T*) task);
-    	return (void*)grads;
-    }
+		VectorWrapper<mxnet::cpp::NDArray> * out_grads = new VectorWrapper<mxnet::cpp::NDArray>;
+		if (this->get_channel_id() == -1) {
+			auto grad_arrays = (VectorWrapper<T>  *) task->payload;
+			out_grads->payload = logic_.run_batch((PublicWrapper<T>  *) task);
+			delete (VectorWrapper<T>  *)task;
+			return (void*)out_grads;
+		}
+		out_grads->payload = logic_.run_batch((PublicWrapper<T>  *) task);
+		return ff::FF_GO_ON;
+	}
 private:
-    ModelLogic logic;
+	ModelLogic logic_;
 };
 
 template < typename T >
@@ -83,18 +94,18 @@ public:
 
 	OutputStage(PublicWrapper<T> * out) : out_(out) {}
 
-    void * svc(void * task) {
-    	std::vector<mxnet::cpp::NDArray> * grads = (std::vector<mxnet::cpp::NDArray> *) task;
-    	auto out_grads = out_->payload.local();
-    	for (auto item : *grads) {
-    		append(*out_grads, item);
-    	}
-    	ready = true;
-        return GO_ON;
-    }
+	void * svc(void * task) {
+		std::vector<mxnet::cpp::NDArray> * grads = (std::vector<mxnet::cpp::NDArray> *) task;
+		auto out_grads = out_->payload.local();
+		for (auto item : *grads) {
+			append(*out_grads, item);
+		}
+		ready = true;
+		return GO_ON;
+	}
 private:
-    PublicWrapper<T> * out_;
-    bool ready;
+	PublicWrapper<T> * out_;
+	bool ready;
 };
 
 namespace FAST {
@@ -109,7 +120,7 @@ class MXNetWorkerLogic {
 public:
 
 	MXNetWorkerLogic(Tidx index) : training_(true /* accelerator set */), global_(true /* accelerator set */),//
-		in_(NULL), index_(index), grad_size_(0) {}
+	in_(NULL), index_(index), grad_size_(0) {}
 
 	~MXNetWorkerLogic() {
 		delete in_;
@@ -138,7 +149,7 @@ public:
 		global_.add_stage( new OutputStage<T>( ) );
 		global_.run();
 		//set Grad size at first iteration
-//		c.emit(gam::make_public<gam_vector<T>>(NULL));
+		//		c.emit(gam::make_public<gam_vector<T>>(NULL));
 	}
 
 	void svc_end() {

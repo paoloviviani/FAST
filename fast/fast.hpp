@@ -16,6 +16,7 @@
 
 #ifdef MXNET_TENSOR
 #include "fast/mxnet_tensor.hpp"
+#include "fast/workers/mxnet_worker.hpp"
 #endif
 
 #endif /* FAST_FAST_HPP_ */
