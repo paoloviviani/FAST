@@ -56,7 +56,7 @@ public:
 
 		auto recv_ptr = (PublicWrapper<T> *)task->payload.local();
 		FAST::accumToNDVec( *recv_ptr, buffer_->payload, logic_.model.ListArguments(), "X", "label", mxnet::cpp::Context::cpu() );
-		if ( /* channel empty */) {
+		if (this->get_out_buffer()->empty()) {
 			this->ff_send_out((void *)buffer_);
 			buffer_ = new VectorWrapper<mxnet::cpp::NDArray>;
 			FAST::buildNDVec( buffer_->payload, logic_.exec->grad_arrays, logic_.model.ListArguments(), "X", "label", mxnet::cpp::Context::cpu() );
