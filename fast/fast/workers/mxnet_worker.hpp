@@ -19,7 +19,13 @@
 #include <ff/node.hpp>
 
 /**
- * Wrapper struct to pass public pointers to FF pipeline
+ * Fastflow auxiliary stuff
+ */
+static auto NEXT_ITERATION = (void *)((uint64_t)ff::FF_TAG_MIN + 1);
+static auto END_OF_INPUT = ff::FF_TAG_MIN;
+
+/**
+ * Wrapper structs to pass objects to FF pipeline
  */
 template < typename T >
 struct PublicWrapper {
@@ -37,6 +43,7 @@ struct VectorWrapper {
  * to hide latencies related to:
  * - copy of data from public ptr to GPU/CPU memory
  * - training loop
+ * - auxiliary node
  * - copy of data from GPU/CPU memory to public ptr
  */
 template <typename ModelLogic, typename T >
@@ -86,6 +93,39 @@ public:
 	}
 private:
 	ModelLogic logic_;
+
+	void eosnotify(ssize_t id) {
+	    FAST_DEBUG("> [internal_in_stage] got EOS id=" << id << "\n");
+	    if (id == 0) {
+	      // got EOS from input - forward END_OF_INPUT message
+	    	FAST_DEBUG("> [internal_in_stage] sending END_OF_INPUT\n");
+	      this->ff_send_out(END_OF_INPUT);
+	    } else {
+	      // got EOS from feedback - forward downstream to trigger termination
+	    	FAST_DEBUG("> [internal_in_stage] sending EOS\n");
+	      this->ff_send_out(ff::FF_EOS);
+	      // got both EOSs - node will be terminated here
+	    }
+	  }
+};
+
+class InternalAuxStage : public ff::ff_monode {
+  void *svc(void *in) {
+    if (in != END_OF_INPUT) {
+      printf("> [internal_out_stage] got %p\n", in);
+      // sleep to emulate some work
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      // send a NEXT_ITERATION message to the feedback channel
+      ff_send_out_to(NEXT_ITERATION, 0);
+      // forward the input pointer downstream
+      ff_send_out_to(in, 1);
+    } else {
+      printf("> [internal_out_stage] got END_OF_INPUT\n");
+      // send EOS to the feedback channel
+      ff_send_out_to(ff::FF_EOS, 0);
+    }
+    return ff::FF_GO_ON;
+  }
 };
 
 template < typename T >
