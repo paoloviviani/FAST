@@ -24,6 +24,9 @@
 static auto NEXT_ITERATION = (void *)((uint64_t)ff::FF_TAG_MIN + 1);
 static auto END_OF_INPUT = ff::FF_TAG_MIN;
 
+namespace FAST {
+
+
 /**
  * Wrapper structs to pass objects to FF pipeline
  */
@@ -34,7 +37,11 @@ struct PublicWrapper {
 
 template < typename T >
 struct VectorWrapper {
-	std::vector<T> payload;
+	FAST::gam_vector<T> payload;
+};
+
+struct ArgsVectorWrapper {
+	std::vector<mxnet::cpp::NDArray> payload;
 };
 
 /**
@@ -54,24 +61,24 @@ public:
 
 	void * svc(void * task) {
 
-		auto recv_ptr = (PublicWrapper<T> *)task->payload.local();
+		auto recv_ptr = ((PublicWrapper<T> *)task)->payload.local();
 		FAST::accumToNDVec( *recv_ptr, buffer_->payload, logic_.model.ListArguments(), "X", "label", mxnet::cpp::Context::cpu() );
 		if (this->get_out_buffer()->empty()) {
 			this->ff_send_out((void *)buffer_);
-			buffer_ = new VectorWrapper<mxnet::cpp::NDArray>;
+			buffer_ = new ArgsVectorWrapper;
 			FAST::buildNDVec( buffer_->payload, logic_.exec->grad_arrays, logic_.model.ListArguments(), "X", "label", mxnet::cpp::Context::cpu() );
 		}
 		return GO_ON;
 	}
 
 	int svc_init() {
-		buffer_ = new VectorWrapper<mxnet::cpp::NDArray>;
+		buffer_ = new ArgsVectorWrapper;
 		FAST::buildNDVec( buffer_->payload, logic_.exec->grad_arrays, logic_.model.ListArguments(), "X", "label", mxnet::cpp::Context::cpu() );
 		return 0;
 	}
 private:
 	ModelLogic logic_;
-	VectorWrapper<mxnet::cpp::NDArray> * buffer_;
+	ArgsVectorWrapper * buffer_;
 };
 
 template <typename ModelLogic, typename T >
@@ -81,14 +88,15 @@ public:
 	TrainerStage(ModelLogic &logic) : logic_(logic) {}
 
 	void * svc(void * task) {
-		VectorWrapper<mxnet::cpp::NDArray> * out_grads = new VectorWrapper<mxnet::cpp::NDArray>;
+		ArgsVectorWrapper * out_grads = new ArgsVectorWrapper;
 		if (this->get_channel_id() == -1) {
-			auto grad_arrays = (VectorWrapper<T>  *) task->payload;
-			out_grads->payload = logic_.run_batch((PublicWrapper<T>  *) task);
-			delete (VectorWrapper<T>  *)task;
+			auto grad_arrays = ((ArgsVectorWrapper  *)task)->payload;
+			logic_.run_batch(grad_arrays, out_grads->payload );
+			delete (ArgsVectorWrapper  *)task;
 			return (void*)out_grads;
 		}
-		out_grads->payload = logic_.run_batch((PublicWrapper<T>  *) task);
+
+		logic_.run_batch(std::vector<mxnet::cpp::NDArray>(0), out_grads->payload);
 		return ff::FF_GO_ON;
 	}
 private:
@@ -112,7 +120,7 @@ private:
 class InternalAuxStage : public ff::ff_monode {
 	void * svc(void * in) {
 		if (in != END_OF_INPUT) {
-			FAST_DEBUG("> [internal_out_stage] got " << id << "\n");
+			FAST_DEBUG("> [internal_out_stage] got " << in << "\n");
 			// send a NEXT_ITERATION message to the feedback channel
 			ff_send_out_to(NEXT_ITERATION, 0);
 			// forward the input pointer downstream
@@ -130,8 +138,6 @@ template < typename T >
 class OutputStage: public ff::ff_node {
 public:
 
-	OutputStage(P) : {}
-
 	void * svc(void * task) {
 		std::vector<mxnet::cpp::NDArray> * grads = (std::vector<mxnet::cpp::NDArray> *) task;
 		auto out_grads = out_->payload.local();
@@ -146,31 +152,25 @@ private:
 	bool ready;
 };
 
-namespace FAST {
-
 /**
  * Actual worker object, to be specialised based on the specific
  * business logic (included in ModelLogic) and on the specific
  * data type (float, int, bool)
  */
-template< typename ModelLogic, typename T, typename Tidx >
+template< typename ModelLogic, typename T>
 class MXNetWorkerLogic {
 public:
 
-	MXNetWorkerLogic(Tidx index) : training_(NULL), global_(NULL), index_(index), grad_size_(0) {}
-
-	~MXNetWorkerLogic() {
-		delete global_, training_;
-	}
-
 	gff::token_t svc(gam::public_ptr< gam_vector<T> > &in, gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
 
-		gam_vector<T> * out = new gam_vector<T>(0);
+		VectorWrapper<T> * out = new VectorWrapper<T>;
+		PublicWrapper<T> * inp = new PublicWrapper<T>();
+		inp->payload = in;
 
-		global_.offload((void*)in->payload);
-		global_.load_result(out);
+		global_->offload( (void*)inp );
+		global_->load_result( (void*)out);
 
-		auto public_out = gam::public_ptr(out, [](gam_vector<T> * ptr){delete ptr;});
+		auto public_out = gam::public_ptr< gam_vector<T> >(out, [](gam_vector<T> * ptr){delete ptr;});
 
 		c.emit(public_out);
 		return gff::go_on;
@@ -183,29 +183,29 @@ public:
 
 		gam_vector<T> * ptr = new gam_vector<T>(0);
 		logic_.init();
-		global_.add_stage( new InputStage<ModelLogic, T> (logic_) );
+		global_->add_stage( new InputStage<ModelLogic, T> (logic_) );
 		training_->add_stage( new TrainerStage<ModelLogic, T> (logic_) );
 		training_->add_stage( new InternalAuxStage() );
 		training_->wrap_around();
-		global_.add_stage( new OutputStage<T>( ) );
+		global_->add_stage( new OutputStage<T>( ) );
 
-		global_.cleanup_nodes();
+		global_->cleanup_nodes();
 		training_->cleanup_nodes();
 
-		global_.run();
+		global_->run();
 
-		auto dummy_out = gam::public_ptr(ptr, [](gam_vector<T> * ptr){delete ptr;});
+		auto dummy_out = gam::public_ptr< gam_vector<T> >(ptr, [](gam_vector<T> * ptr){delete ptr;});
+
 		c.emit(dummy_out);
 	}
 
-	void svc_end() {
+	void svc_end(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
 		logic_.finalize();
 	}
 private:
-	ff::ff_pipeline global_;
+	ff::ff_pipeline * global_;
 	ff::ff_pipeline * training_;
 	ModelLogic logic_;
-	Tidx index_;
 	size_t grad_size_;
 };
 
