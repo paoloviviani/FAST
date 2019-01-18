@@ -55,7 +55,7 @@ TARGET_OBJ = $(TARGET_OBJ_UNIT) $(TARGET_OBJ_GAM)  $(TARGET_OBJ_GFF_FARM) $(TARG
 all: $(EXECS)
 
 #objects
-%.o: %.cpp $(FAST_ROOT)/fast/fast/*.hpp
+%.o: %.cpp $(FAST_ROOT)/fast/fast/*.hpp $(FAST_ROOT)/fast/fast/workers/*.hpp 
 	$(CXX) $(INCLUDES) $(CCFLAGS) $(CFLAGS) $(OPTIMIZE_FLAGS) -c -o $@ $<
 
 #basic unit test executable
