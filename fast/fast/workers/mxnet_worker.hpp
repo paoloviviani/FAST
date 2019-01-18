@@ -67,14 +67,14 @@ public:
 		if (this->get_out_buffer()->empty()) {
 			this->ff_send_out((void *)buffer_);
 			buffer_ = new ArgsVectorWrapper();
-			FAST::buildNDVec( buffer_->payload, logic_.exec->grad_arrays, logic_.model.ListArguments(), "X", "label", mxnet::cpp::Context::cpu() );
+			FAST::buildNDVec( buffer_->payload, logic_.exec->grad_arrays, logic_.net.ListArguments(), "X", "label", mxnet::cpp::Context::cpu() );
 		}
 		return GO_ON;
 	}
 
 	int svc_init() {
 		buffer_ = new ArgsVectorWrapper();
-		FAST::buildNDVec( buffer_->payload, logic_.exec->grad_arrays, logic_.model.ListArguments(), "X", "label", mxnet::cpp::Context::cpu() );
+		FAST::buildNDVec( buffer_->payload, logic_.exec->grad_arrays, logic_.net.ListArguments(), "X", "label", mxnet::cpp::Context::cpu() );
 		return 0;
 	}
 private:
@@ -144,7 +144,7 @@ public:
 
 		auto args_vec = ((ArgsVectorWrapper  *)task)->payload;
 		gam_vector<T> * out = new gam_vector<T>(0);
-		NDVecToVec(args_vec, logic_.model.ListArguments(), *out, "X", "label");
+		NDVecToVec(args_vec, logic_.net.ListArguments(), *out, "X", "label");
 		return out;
 	}
 
@@ -170,7 +170,7 @@ public:
 		global_->offload( (void*)inp );
 		global_->load_result( &outptr );
 
-		auto public_out = gam::public_ptr< gam_vector<T> >(out, [](gam_vector<T> * ptr){delete ptr;});
+		auto public_out = gam::public_ptr< gam_vector<T> >((gam_vector<T> *)outptr, [](gam_vector<T> * ptr){delete ptr;});
 
 		c.emit(public_out);
 		return gff::go_on;
