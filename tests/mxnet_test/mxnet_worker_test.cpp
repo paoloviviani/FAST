@@ -77,12 +77,14 @@ public:
 
 
 	void run_batch(std::vector<mxnet::cpp::NDArray> &in, std::vector<mxnet::cpp::NDArray> &out) {
-		for (size_t i = 0; i < arg_names.size(); ++i) {
-			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
-			LG << out;
-			LG << in;
-			out[i] = in[i] + 1.;
-			LG << out;
+		if (in.size() > 0) {
+			for (size_t i = 0; i < arg_names.size(); ++i) {
+				if (arg_names[i] == "X" || arg_names[i] == "label") continue;
+				LG << out;
+				LG << in;
+				out[i] = in[i] + 1.;
+				LG << out;
+			}
 		}
 	}
 

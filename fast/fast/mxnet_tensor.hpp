@@ -64,7 +64,7 @@ void accumToNDVec(gam_vector<T> & vec, std::vector<mxnet::cpp::NDArray> & grad_a
 	size_t offset = 0;
 	for (size_t i = 0; i < arg_names.size(); ++i) {
 		if (arg_names[i] == inp || arg_names[i] == out) continue;
-		grad_arrays[i] += NDArray(vec.data() + offset, mxnet::cpp::Shape(grad_arrays[i].GetShape()), ctx);
+		grad_arrays[i] += mxnet::cpp::NDArray(vec.data() + offset, mxnet::cpp::Shape(grad_arrays[i].GetShape()), ctx);
 		offset += grad_arrays[i].Size();
 	}
 

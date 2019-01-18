@@ -18,14 +18,13 @@
 #include <ff/pipeline.hpp>
 #include <ff/node.hpp>
 
+namespace FAST {
+
 /**
  * Fastflow auxiliary stuff
  */
 static auto NEXT_ITERATION = (void *)((uint64_t)ff::FF_TAG_MIN + 1);
 static auto END_OF_INPUT = ff::FF_TAG_MIN;
-
-namespace FAST {
-
 
 /**
  * Wrapper structs to pass objects to FF pipeline
@@ -57,19 +56,23 @@ template <typename ModelLogic, typename T >
 class InputStage: public ff::ff_node {
 public:
 
-	InputStage(ModelLogic &logic) : logic_(logic), buffer_(NULL) {}
-
 	void * svc(void * task) {
 
 		auto recv_ptr = ((PublicWrapper<T> *)task)->payload.local();
-		FAST::accumToNDVec( *recv_ptr, buffer_->payload, logic_.model.ListArguments(), "X", "label", mxnet::cpp::Context::cpu() );
-		delete task;
+		delete (PublicWrapper<T> *)task;
+
+		if (recv_ptr->size() == 0)
+			return ff::FF_GO_ON;
+		// TO-DO propagate dummy trigger
+
+		FAST::accumToNDVec( *recv_ptr, buffer_->payload, logic_.net.ListArguments(), "X", "label", mxnet::cpp::Context::cpu() );
+
 		if (this->get_out_buffer()->empty()) {
 			this->ff_send_out((void *)buffer_);
 			buffer_ = new ArgsVectorWrapper();
 			FAST::buildNDVec( buffer_->payload, logic_.exec->grad_arrays, logic_.net.ListArguments(), "X", "label", mxnet::cpp::Context::cpu() );
 		}
-		return GO_ON;
+		return ff::FF_GO_ON;
 	}
 
 	int svc_init() {
@@ -79,26 +82,25 @@ public:
 	}
 private:
 	ModelLogic logic_;
-	ArgsVectorWrapper * buffer_;
+	ArgsVectorWrapper * buffer_ = nullptr;
 };
 
 template <typename ModelLogic, typename T >
 class TrainerStage: public ff::ff_minode {
 public:
 
-	TrainerStage(ModelLogic &logic) : logic_(logic) {}
-
 	void * svc(void * task) {
 		ArgsVectorWrapper * out_grads = new ArgsVectorWrapper();
 		if (this->get_channel_id() == -1) {
-			auto grad_arrays = ((ArgsVectorWrapper  *)task)->payload;
-			logic_.run_batch(grad_arrays, out_grads->payload );
+			// got a pointer from the input stage
+			logic_.run_batch(((ArgsVectorWrapper  *)task)->payload, out_grads->payload );
 			delete (ArgsVectorWrapper  *)task;
 			return (void*)out_grads;
 		}
 
-		logic_.run_batch(std::vector<mxnet::cpp::NDArray>(0), out_grads->payload);
-		return ff::FF_GO_ON;
+		auto grad_arrays = std::vector<mxnet::cpp::NDArray>(0);
+		logic_.run_batch(grad_arrays, out_grads->payload);
+		return (void*)out_grads;
 	}
 private:
 	ModelLogic logic_;
@@ -138,14 +140,13 @@ class InternalAuxStage : public ff::ff_monode {
 template <typename ModelLogic, typename T >
 class OutputStage: public ff::ff_node {
 public:
-	OutputStage(ModelLogic &logic) : logic_(logic) {}
 
 	void * svc(void * task) {
 
-		auto args_vec = ((ArgsVectorWrapper  *)task)->payload;
 		gam_vector<T> * out = new gam_vector<T>(0);
-		NDVecToVec(args_vec, logic_.net.ListArguments(), *out, "X", "label");
-		return out;
+		NDVecToVec(((ArgsVectorWrapper  *)task)->payload, logic_.net.ListArguments(), *out, "X", "label");
+		delete (ArgsVectorWrapper  *)task;
+		return (void*)out;
 	}
 
 private:
@@ -163,14 +164,14 @@ public:
 
 	gff::token_t svc(gam::public_ptr< gam_vector<T> > &in, gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
 
-		void * outptr = NULL;
+		gam_vector<T> * outptr = nullptr;
 		PublicWrapper<T> * inp = new PublicWrapper<T>();
 		inp->payload = in;
 
 		global_->offload( (void*)inp );
-		global_->load_result( &outptr );
+		global_->load_result( &((void*)outptr) );
 
-		auto public_out = gam::public_ptr< gam_vector<T> >((gam_vector<T> *)outptr, [](gam_vector<T> * ptr){delete ptr;});
+		auto public_out = gam::public_ptr< gam_vector<T> >(outptr, [](gam_vector<T> * ptr){delete ptr;});
 
 		c.emit(public_out);
 		return gff::go_on;
@@ -179,9 +180,10 @@ public:
 	void svc_init(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
 
 		global_ = new ff::ff_pipeline(true);
-		training_ = new ff::ff_pipeline(true);
+		training_ = new ff::ff_pipeline();
 
 		gam_vector<T> * ptr = new gam_vector<T>(0);
+
 		logic_.init();
 		global_->add_stage( new InputStage<ModelLogic, T>(logic_) );
 		training_->add_stage( new TrainerStage<ModelLogic, T>(logic_) );
@@ -200,7 +202,13 @@ public:
 	}
 
 	void svc_end(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
+
+		global_->offload(ff::FF_EOS);
 		logic_.finalize();
+		if (global_)
+			delete global_;
+		if (training_)
+			delete training_;
 	}
 private:
 	ff::ff_pipeline * global_;
