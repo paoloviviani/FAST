@@ -166,14 +166,18 @@ public:
 
 	gff::token_t svc(gam::public_ptr< gam_vector<T> > &in, gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
 
-		gam_vector<T> * outptr = nullptr;
+		gam_vector<T> * outvec = nullptr;
+		void * outptr = (void*)outvec;
 		PublicWrapper<T> * inp = new PublicWrapper<T>();
 		inp->payload = in;
 
 		global_->offload( (void*)inp );
-		global_->load_result( &((void*)outptr) );
+		global_->load_result( &outptr );
 
-		auto public_out = gam::public_ptr< gam_vector<T> >(outptr, [](gam_vector<T> * ptr){delete ptr;});
+		if (outvec->size() == 0)
+			return gff::eos;
+
+		auto public_out = gam::public_ptr< gam_vector<T> >(outvec, [](gam_vector<T> * ptr){delete ptr;});
 
 		c.emit(public_out);
 		return gff::go_on;
@@ -187,11 +191,11 @@ public:
 		gam_vector<T> * ptr = new gam_vector<T>(0);
 
 		logic_.init();
-		global_->add_stage( new InputStage<ModelLogic, T>(logic_) );
-		training_->add_stage( new TrainerStage<ModelLogic, T>(logic_) );
+		global_->add_stage( new InputStage<ModelLogic, T>() );
+		training_->add_stage( new TrainerStage<ModelLogic, T>() );
 		training_->add_stage( new InternalAuxStage() );
 		training_->wrap_around();
-		global_->add_stage( new OutputStage<ModelLogic, T>(logic_) );
+		global_->add_stage( new OutputStage<ModelLogic, T>() );
 
 		global_->cleanup_nodes();
 		training_->cleanup_nodes();
