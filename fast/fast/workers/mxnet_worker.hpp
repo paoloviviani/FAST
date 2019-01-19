@@ -10,7 +10,6 @@
 
 #include <array>
 #include <vector>
-#include "fast.hpp"
 
 #include "gff.hpp"
 #include "gam.hpp"
@@ -61,7 +60,9 @@ public:
 		auto recv_ptr = ((PublicWrapper<T> *)task)->payload.local();
 		delete (PublicWrapper<T> *)task;
 
+		FAST_DEBUG("Internal pipeline input got pointer")
 		if (recv_ptr->size() == 0) {
+			FAST_DEBUG("Input stage got trigger pointer")
 			this->ff_send_out( (void*)nullptr );
 			return ff::FF_GO_ON;
 		}
@@ -69,6 +70,7 @@ public:
 		FAST::accumToNDVec( *recv_ptr, buffer_->payload, logic_.net.ListArguments(), "X", "label", mxnet::cpp::Context::cpu() );
 
 		if (this->get_out_buffer()->empty()) {
+			FAST_DEBUG("Input stage push gradients")
 			this->ff_send_out((void *)buffer_);
 			buffer_ = new ArgsVectorWrapper();
 			FAST::buildNDVec( buffer_->payload, logic_.exec->grad_arrays, logic_.net.ListArguments(), "X", "label", mxnet::cpp::Context::cpu() );
@@ -77,8 +79,11 @@ public:
 	}
 
 	int svc_init() {
+		FAST_DEBUG("Internal pipeline input init stage")
 		buffer_ = new ArgsVectorWrapper();
+		// CRASHES here
 		FAST::buildNDVec( buffer_->payload, logic_.exec->grad_arrays, logic_.net.ListArguments(), "X", "label", mxnet::cpp::Context::cpu() );
+		FAST_DEBUG("Internal pipeline input initialized")
 		return 0;
 	}
 private:
@@ -94,6 +99,7 @@ public:
 		ArgsVectorWrapper * out_grads = new ArgsVectorWrapper();
 		if (this->get_channel_id() == -1 && task != nullptr) {
 			// got a pointer from the input stage
+			FAST_DEBUG("Trainer stage got gradients")
 			logic_.update(((ArgsVectorWrapper  *)task)->payload);
 			logic_.run_batch(out_grads->payload );
 			delete (ArgsVectorWrapper  *)task;
@@ -101,6 +107,7 @@ public:
 		}
 
 		// Got a pointer from the feedback channel
+		FAST_DEBUG("Trainer stage got go on")
 		logic_.run_batch(out_grads->payload );
 		return (void*)out_grads;
 	}
@@ -144,7 +151,7 @@ class OutputStage: public ff::ff_node {
 public:
 
 	void * svc(void * task) {
-
+		FAST_DEBUG("Output stage got gradients")
 		gam_vector<T> * out = new gam_vector<T>(0);
 		NDVecToVec(((ArgsVectorWrapper  *)task)->payload, logic_.net.ListArguments(), *out, "X", "label");
 		delete (ArgsVectorWrapper  *)task;
@@ -190,7 +197,10 @@ public:
 
 		gam_vector<T> * ptr = new gam_vector<T>(0);
 
+		FAST_DEBUG("Initializing model logic")
 		logic_.init();
+
+		FAST_DEBUG("Creating internal pipeline")
 		global_->add_stage( new InputStage<ModelLogic, T>() );
 		training_->add_stage( new TrainerStage<ModelLogic, T>() );
 		training_->add_stage( new InternalAuxStage() );
@@ -200,6 +210,7 @@ public:
 		global_->cleanup_nodes();
 		training_->cleanup_nodes();
 
+		FAST_DEBUG("Launching internal pipeline")
 		global_->run();
 
 		auto dummy_out = gam::public_ptr< gam_vector<T> >(ptr, [](gam_vector<T> * ptr){delete ptr;});

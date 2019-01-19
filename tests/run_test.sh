@@ -20,4 +20,4 @@ fi
 #$GAM_RUN_LOCAL -v -n 3 -l $GAM_LOCALHOST ./bin/gff_all_reduce
 #$GAM_RUN_LOCAL -v -n 3 -l $GAM_LOCALHOST ./bin/gff_all_reduce_multi
 #$GAM_RUN_LOCAL -v -n 3 -l $GAM_LOCALHOST ./bin/gff_all_reduce_vector
-$GAM_RUN_LOCAL -v -n 3 -l $GAM_LOCALHOST ./bin/mxnet_worker_test
+$GAM_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/mxnet_worker_test

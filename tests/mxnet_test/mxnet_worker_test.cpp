@@ -83,6 +83,9 @@ public:
 			exec->grad_arrays[i] += 1.;
 			LG << exec->grad_arrays[i];
 			exec->grad_arrays[i].CopyTo(&out[i]);
+			if (iter_ == 10)
+				out = std::vector<mxnet::cpp::NDArray>(0);
+			iter_++;
 		}
 	}
 
@@ -107,6 +110,7 @@ public:
 	Optimizer* opt;
 	Executor * exec;
 	vector<string> arg_names;
+	size_t iter_ = 0;
 
 };
 
