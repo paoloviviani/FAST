@@ -61,9 +61,10 @@ public:
 		auto recv_ptr = ((PublicWrapper<T> *)task)->payload.local();
 		delete (PublicWrapper<T> *)task;
 
-		if (recv_ptr->size() == 0)
+		if (recv_ptr->size() == 0) {
+			this->ff_send_out( (void*)nullptr );
 			return ff::FF_GO_ON;
-		// TO-DO propagate dummy trigger
+		}
 
 		FAST::accumToNDVec( *recv_ptr, buffer_->payload, logic_.net.ListArguments(), "X", "label", mxnet::cpp::Context::cpu() );
 
@@ -91,15 +92,16 @@ public:
 
 	void * svc(void * task) {
 		ArgsVectorWrapper * out_grads = new ArgsVectorWrapper();
-		if (this->get_channel_id() == -1) {
+		if (this->get_channel_id() == -1 && task != nullptr) {
 			// got a pointer from the input stage
-			logic_.run_batch(((ArgsVectorWrapper  *)task)->payload, out_grads->payload );
+			logic_.update(((ArgsVectorWrapper  *)task)->payload);
+			logic_.run_batch(out_grads->payload );
 			delete (ArgsVectorWrapper  *)task;
 			return (void*)out_grads;
 		}
 
-		auto grad_arrays = std::vector<mxnet::cpp::NDArray>(0);
-		logic_.run_batch(grad_arrays, out_grads->payload);
+		// Got a pointer from the feedback channel
+		logic_.run_batch(out_grads->payload );
 		return (void*)out_grads;
 	}
 private:

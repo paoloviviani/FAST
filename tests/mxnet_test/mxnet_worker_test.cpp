@@ -76,14 +76,24 @@ public:
 	}
 
 
-	void run_batch(std::vector<mxnet::cpp::NDArray> &in, std::vector<mxnet::cpp::NDArray> &out) {
+	void run_batch(std::vector<mxnet::cpp::NDArray> &out) {
+		for (size_t i = 0; i < arg_names.size(); ++i) {
+			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
+			LG << exec->grad_arrays[i];
+			exec->grad_arrays[i] += 1.;
+			LG << exec->grad_arrays[i];
+			exec->grad_arrays[i].CopyTo(&out[i]);
+		}
+	}
+
+	void update(std::vector<mxnet::cpp::NDArray> &in) {
 		if (in.size() > 0) {
 			for (size_t i = 0; i < arg_names.size(); ++i) {
 				if (arg_names[i] == "X" || arg_names[i] == "label") continue;
-				LG << out;
+				LG << exec->grad_arrays[i];
 				LG << in;
-				out[i] = in[i] + 1.;
-				LG << out;
+				exec->grad_arrays[i] += in[i];
+				LG << exec->grad_arrays[i];
 			}
 		}
 	}
