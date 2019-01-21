@@ -64,9 +64,11 @@ public:
 				FAST_DEBUG("Sent trigger pointer to trainer stage")
 				first_push_ = false;
 			}
+			FAST_DEBUG("DEBUG")
 			return ff::FF_GO_ON;
 		}
 
+		FAST_DEBUG("Input stage got real pointer")
 		FAST::accumToNDVec( *recv_ptr, buffer_, logic_.net.ListArguments(), "X", "label", mxnet::cpp::Context::cpu() );
 
 		if (this->get_out_buffer()->empty()) {
@@ -142,7 +144,8 @@ class InternalAuxStage : public ff::ff_monode {
 			// send a NEXT_ITERATION message to the feedback channel
 			ff_send_out_to(NEXT_ITERATION, 0);
 			// forward the input pointer downstream
-			ff_send_out_to(in, 1);
+			if ( ((NDAvector  *)in)->size() > 0 )
+				ff_send_out_to(in, 1);
 		} else {
 			FAST_DEBUG("> [internal_out_stage] got END_OF_INPUT\n");
 			// send EOS to the feedback channel
@@ -162,6 +165,8 @@ public:
 		gam_vector<T> * out = new gam_vector<T>(0);
 		NDVecToVec( in_ptr, logic_.arg_names, *out, "X", "label");
 		delete in_ptr;
+		FAST_DEBUG("Output stage serialized gradients of size " << out->size());
+
 		return (void*)out;
 	}
 
@@ -180,20 +185,32 @@ public:
 
 	gff::token_t svc(gam::public_ptr< gam_vector<T> > &in, gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
 
+		FAST_DEBUG("GAM svc got pointer")
+
 		gam_vector<T> * outvec = nullptr;
 		void * outptr = (void*)outvec;
 		PublicWrapper<T> * inp = new PublicWrapper<T>();
 		inp->payload = in;
 
+		FAST_DEBUG("GAM svc offloading")
+
 		global_->offload( (void*)inp );
+		FAST_DEBUG("GAM svc offloaded")
 		global_->load_result( &outptr );
 
+		FAST_DEBUG("GAM svc got results")
+
+		FAST_DEBUG(outvec->size())
 		if (outvec->size() == 0)
 			return gff::eos;
 
+		FAST_DEBUG("GAM svc preparing results")
 		auto public_out = gam::public_ptr< gam_vector<T> >(outvec, [](gam_vector<T> * ptr){delete ptr;});
+		FAST_DEBUG("GAM svc prepared results")
 
 		c.emit(public_out);
+		FAST_DEBUG("GAM svc emitted results")
+
 		return gff::go_on;
 	}
 
@@ -206,7 +223,6 @@ public:
 
 		FAST_DEBUG("Initializing model logic")
 		logic_.init();
-		FAST_DEBUG(logic_.arg_names);
 		FAST_DEBUG("Initialized model logic")
 
 
