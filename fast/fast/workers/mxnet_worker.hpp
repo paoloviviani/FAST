@@ -10,6 +10,7 @@
 
 #include <array>
 #include <vector>
+#include <map>
 
 #include "gff.hpp"
 #include "gam.hpp"
@@ -33,14 +34,7 @@ struct PublicWrapper {
 	gam::public_ptr < FAST::gam_vector<T> > payload;
 };
 
-template < typename T >
-struct VectorWrapper {
-	FAST::gam_vector<T> payload;
-};
-
-struct ArgsVectorWrapper {
-	std::vector<mxnet::cpp::NDArray> payload;
-};
+typedef std::vector<mxnet::cpp::NDArray> NDAvector;
 
 /**
  * Nodes of the local pipeline
@@ -63,32 +57,42 @@ public:
 		FAST_DEBUG("Internal pipeline input got pointer")
 		if (recv_ptr->size() == 0) {
 			FAST_DEBUG("Input stage got trigger pointer")
-			this->ff_send_out( (void*)nullptr );
+			if (first_push_) {
+				auto tmp_ptr = new NDAvector(0);
+				FAST_DEBUG("Created trigger pointer for trainer stage")
+				this->ff_send_out( (void*)tmp_ptr );
+				FAST_DEBUG("Sent trigger pointer to trainer stage")
+				first_push_ = false;
+			}
 			return ff::FF_GO_ON;
 		}
 
-		FAST::accumToNDVec( *recv_ptr, buffer_->payload, logic_.net.ListArguments(), "X", "label", mxnet::cpp::Context::cpu() );
+		FAST::accumToNDVec( *recv_ptr, buffer_, logic_.net.ListArguments(), "X", "label", mxnet::cpp::Context::cpu() );
 
 		if (this->get_out_buffer()->empty()) {
 			FAST_DEBUG("Input stage push gradients")
 			this->ff_send_out((void *)buffer_);
-			buffer_ = new ArgsVectorWrapper();
-			FAST::buildNDVec( buffer_->payload, logic_.exec->grad_arrays, logic_.net.ListArguments(), "X", "label", mxnet::cpp::Context::cpu() );
+			buffer_ = new NDAvector(0);
+			FAST::buildNDVec( buffer_, logic_.grad_shapes_, logic_.arg_names, "X", "label", mxnet::cpp::Context::cpu() );
 		}
 		return ff::FF_GO_ON;
 	}
 
 	int svc_init() {
 		FAST_DEBUG("Internal pipeline input init stage")
-		buffer_ = new ArgsVectorWrapper();
-		// CRASHES here
-		FAST::buildNDVec( buffer_->payload, logic_.exec->grad_arrays, logic_.net.ListArguments(), "X", "label", mxnet::cpp::Context::cpu() );
-		FAST_DEBUG("Internal pipeline input initialized")
+		buffer_ = new NDAvector(0);
+		FAST_DEBUG("Internal pipeline input init stage DEBUG")
+
+		FAST_DEBUG("Internal pipeline input init stage DEBUG 1")
+
+		FAST::buildNDVec( buffer_, logic_.grad_shapes_, logic_.arg_names, "X", "label", mxnet::cpp::Context::cpu() );
+		FAST_DEBUG("Built NDVec");
 		return 0;
 	}
 private:
 	ModelLogic logic_;
-	ArgsVectorWrapper * buffer_ = nullptr;
+	NDAvector * buffer_;
+	bool first_push_ = true;
 };
 
 template <typename ModelLogic, typename T >
@@ -96,19 +100,21 @@ class TrainerStage: public ff::ff_minode {
 public:
 
 	void * svc(void * task) {
-		ArgsVectorWrapper * out_grads = new ArgsVectorWrapper();
-		if (this->get_channel_id() == -1 && task != nullptr) {
+		FAST_DEBUG("Trainer stage svc")
+		NDAvector * in_ptr = (NDAvector  *)task;
+		NDAvector * out_grads = new NDAvector(0);
+		if (this->get_channel_id() == -1 && in_ptr->size() != 0) {
 			// got a pointer from the input stage
-			FAST_DEBUG("Trainer stage got gradients")
-			logic_.update(((ArgsVectorWrapper  *)task)->payload);
-			logic_.run_batch(out_grads->payload );
-			delete (ArgsVectorWrapper  *)task;
+			FAST_DEBUG("Trainer stage got gradients");
+			logic_.update( *in_ptr );
+			logic_.run_batch( *out_grads );
+			delete in_ptr;
 			return (void*)out_grads;
 		}
 
 		// Got a pointer from the feedback channel
 		FAST_DEBUG("Trainer stage got go on")
-		logic_.run_batch(out_grads->payload );
+		logic_.run_batch(*out_grads );
 		return (void*)out_grads;
 	}
 private:
@@ -151,10 +157,11 @@ class OutputStage: public ff::ff_node {
 public:
 
 	void * svc(void * task) {
-		FAST_DEBUG("Output stage got gradients")
+		FAST_DEBUG("Output stage got gradients");
+		NDAvector * in_ptr = (NDAvector  *)task;
 		gam_vector<T> * out = new gam_vector<T>(0);
-		NDVecToVec(((ArgsVectorWrapper  *)task)->payload, logic_.net.ListArguments(), *out, "X", "label");
-		delete (ArgsVectorWrapper  *)task;
+		NDVecToVec( in_ptr, logic_.arg_names, *out, "X", "label");
+		delete in_ptr;
 		return (void*)out;
 	}
 
@@ -199,12 +206,16 @@ public:
 
 		FAST_DEBUG("Initializing model logic")
 		logic_.init();
+		FAST_DEBUG(logic_.arg_names);
+		FAST_DEBUG("Initialized model logic")
+
 
 		FAST_DEBUG("Creating internal pipeline")
 		global_->add_stage( new InputStage<ModelLogic, T>() );
 		training_->add_stage( new TrainerStage<ModelLogic, T>() );
 		training_->add_stage( new InternalAuxStage() );
 		training_->wrap_around();
+		global_->add_stage(training_);
 		global_->add_stage( new OutputStage<ModelLogic, T>() );
 
 		global_->cleanup_nodes();
@@ -231,7 +242,6 @@ private:
 	ff::ff_pipeline * global_;
 	ff::ff_pipeline * training_;
 	ModelLogic logic_;
-	size_t grad_size_;
 };
 
 } // namespace FAST

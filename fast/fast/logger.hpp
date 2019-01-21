@@ -16,8 +16,6 @@
 #include <mutex>
 #include <cassert>
 
-using namespace std;
-
 /*
  * error reporting facilities
  */
