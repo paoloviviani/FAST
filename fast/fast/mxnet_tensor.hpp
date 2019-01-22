@@ -28,61 +28,63 @@ void vecToNDArray(gam_vector<T> * vec, mxnet::cpp::NDArray & t, size_t offset, s
 }
 
 template <typename T>
-void NDVecToVec(std::vector<mxnet::cpp::NDArray> * grad_arrays, const std::vector<std::string> arg_names, gam_vector<T> & vec, //
+void NDVecToVec(std::vector<mxnet::cpp::NDArray> & grad_arrays, const std::vector<std::string> arg_names, gam_vector<T> & vec, //
 		std::string inp="X", std::string out="label") {
 
 	size_t grad_size = 0;
 	for (size_t i = 0; i < arg_names.size(); i++) {
 		if (arg_names[i] == inp || arg_names[i] == out) continue;
-		grad_size += grad_arrays->at(i).Size();
+		grad_size += grad_arrays[i].Size();
 	}
 	vec.resize(grad_size);
 	for (size_t i = 0; i < arg_names.size(); i++) {
 		if (arg_names[i] == inp || arg_names[i] == out) continue;
-		appendToVec(vec, grad_arrays->at(i));
+		appendToVec(vec, grad_arrays[i]);
 	}
 
 }
 
 template <typename T>
-void vecToNDVec(gam_vector<T> & vec, std::vector<mxnet::cpp::NDArray> * grad_arrays, const std::vector<std::string> arg_names, //
+void vecToNDVec(gam_vector<T> & vec, std::vector<mxnet::cpp::NDArray> & grad_arrays, const std::vector<std::string> arg_names, //
 		std::string inp="X", std::string out="label", const mxnet::cpp::Context & ctx=mxnet::cpp::Context::cpu()) {
 
 	size_t offset = 0;
 	for (size_t i = 0; i < arg_names.size(); i++) {
 		if (arg_names[i] == inp || arg_names[i] == out) continue;
 		vecToNDArray(vec, grad_arrays[i], offset, ctx);
-		offset += grad_arrays->at(i).Size();
+		offset += grad_arrays[i].Size();
 	}
 
 }
 
 template <typename T>
-void accumToNDVec(gam_vector<T> & vec, std::vector<mxnet::cpp::NDArray> * grad_arrays, const std::vector<std::string> arg_names, //
+void accumToNDVec(gam_vector<T> & vec, std::vector<mxnet::cpp::NDArray> & grad_arrays, const std::vector<std::string> arg_names, //
 				string inp="X", string out="label", const mxnet::cpp::Context & ctx=mxnet::cpp::Context::cpu()) {
 
 	size_t offset = 0;
 	for (size_t i = 0; i < arg_names.size(); i++) {
 		if (arg_names[i] == inp || arg_names[i] == out) continue;
-		grad_arrays->at(i) += mxnet::cpp::NDArray(vec.data() + offset, mxnet::cpp::Shape(grad_arrays->at(i).GetShape()), ctx);
-		offset += grad_arrays->at(i).Size();
+		grad_arrays[i] += mxnet::cpp::NDArray(vec.data() + offset, mxnet::cpp::Shape(grad_arrays[i].GetShape()), ctx);
+		offset += grad_arrays[i].Size();
 	}
 
 }
 
-void buildNDVec(std::vector<mxnet::cpp::NDArray> * grad_arrays, const std::vector< std::vector<mx_uint> > grad_shapes, //
-		const std::vector<std::string> arg_names, std::string inp="X", std::string out="label", const mxnet::cpp::Context & ctx=mxnet::cpp::Context::cpu()) {
-	FAST_DEBUG("DEBUG buildNDVec")
+void buildNDVec(std::vector<mxnet::cpp::NDArray> & grad_arrays, const std::vector<mxnet::cpp::NDArray> & exec_grads, //
+		const std::vector<std::string> arg_names, const std::string inp="X", const std::string out="label", //
+		const mxnet::cpp::Context & ctx=mxnet::cpp::Context::cpu()) {
+	FAST_DEBUG(arg_names)
+	FAST_DEBUG(arg_names.size())
 	size_t offset = 0;
 	for (size_t i = 0; i < arg_names.size(); i++) {
 		if (arg_names[i] == inp || arg_names[i] == out) continue;
-		FAST_DEBUG("SIZE: " << grad_arrays->size())
-		grad_arrays->push_back( mxnet::cpp::NDArray(mxnet::cpp::Shape(grad_shapes.at(i)), ctx) );
-		FAST_DEBUG("SIZE: " << grad_arrays->size())
-		grad_arrays->back() = 0;
-		FAST_DEBUG("DEBUG 2")
-		offset += grad_arrays->back().Size();
-		FAST_DEBUG("DEBUG 3")
+		FAST_DEBUG(arg_names[i])
+		FAST_DEBUG("SIZE: " << grad_arrays.size())
+		FAST_DEBUG(exec_grads[i].GetShape())
+		grad_arrays.push_back( mxnet::cpp::NDArray(mxnet::cpp::Shape(exec_grads[i].GetShape()), ctx) );
+		FAST_DEBUG("SIZE: " << grad_arrays.size())
+		grad_arrays.back() = 0;
+		offset += grad_arrays.back().Size();
 	}
 
 }

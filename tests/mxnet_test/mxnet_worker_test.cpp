@@ -72,7 +72,6 @@ public:
 		args["label"] = 1.;
 		exec->Forward(true);
 		exec->Backward();
-		grad_shapes_ = this->getShapes();
 		FAST_DEBUG("Logic initialized")
 		for (size_t i = 0; i < arg_names.size(); ++i) {
 			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
@@ -118,26 +117,11 @@ public:
 
 	}
 
-	vector< vector<mx_uint> > getShapes() const {
-		vector< vector<mx_uint> > ret;
-		for (size_t i = 0; i < arg_names.size(); ++i) {
-			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
-			ret.push_back( exec->grad_arrays[i].GetShape() );
-		}
-		return ret;
-	}
-
-	vector<string> listArguments() const {
-		return arg_names;
-	}
-
-
 	Symbol net;
 	std::map<string, NDArray> args;
 	Optimizer* opt;
 	Executor * exec;
 	vector<string> arg_names;
-	vector< vector<mx_uint> > grad_shapes_;
 	size_t iter_ = 0;
 	bool ended = false;
 

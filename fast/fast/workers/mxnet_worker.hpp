@@ -70,13 +70,13 @@ public:
 		}
 
 		FAST_DEBUG("Input stage got real pointer")
-		FAST::accumToNDVec( *recv_ptr, buffer_, logic_->arg_names, "X", "label", mxnet::cpp::Context::cpu() );
+		FAST::accumToNDVec( *recv_ptr, *buffer_, logic_->arg_names, "X", "label", mxnet::cpp::Context::cpu() );
 
 		if (this->get_out_buffer()->empty()) {
 			FAST_DEBUG("Input stage push gradients")
 			this->ff_send_out((void *)buffer_);
 			buffer_ = new NDAvector(0);
-			FAST::buildNDVec( buffer_, logic_->grad_shapes_, logic_->arg_names, "X", "label", mxnet::cpp::Context::cpu() );
+			FAST::buildNDVec( *buffer_, logic_->exec->grad_arrays, logic_->arg_names, "X", "label", mxnet::cpp::Context::cpu() );
 		}
 		return ff::FF_GO_ON;
 	}
@@ -85,8 +85,7 @@ public:
 		FAST_DEBUG("Internal pipeline input init stage")
 		buffer_ = new NDAvector(0);
 		FAST_DEBUG(logic_->arg_names)
-		FAST_DEBUG(logic_->grad_shapes_)
-		FAST::buildNDVec( buffer_, logic_->grad_shapes_, logic_->arg_names, "X", "label", mxnet::cpp::Context::cpu() );
+		FAST::buildNDVec( *buffer_, logic_->exec->grad_arrays, logic_->arg_names, "X", "label", mxnet::cpp::Context::cpu() );
 		FAST_DEBUG("Built NDVec");
 		return 0;
 	}
@@ -168,7 +167,7 @@ public:
 		FAST_DEBUG("Output stage got gradients");
 		NDAvector * in_ptr = (NDAvector  *)task;
 		gam_vector<T> * out = new gam_vector<T>(0);
-		NDVecToVec( in_ptr, logic_->arg_names, *out, "X", "label");
+		NDVecToVec( *in_ptr, logic_->arg_names, *out, "X", "label");
 		delete in_ptr;
 		FAST_DEBUG("Output stage serialized gradients of size " << out->size());
 
