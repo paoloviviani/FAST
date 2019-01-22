@@ -66,7 +66,6 @@ public:
 				FAST_DEBUG("Sent trigger pointer to trainer stage")
 				first_push_ = false;
 			}
-			FAST_DEBUG("DEBUG")
 			return ff::FF_GO_ON;
 		}
 
@@ -85,10 +84,8 @@ public:
 	int svc_init() {
 		FAST_DEBUG("Internal pipeline input init stage")
 		buffer_ = new NDAvector(0);
-		FAST_DEBUG("Internal pipeline input init stage DEBUG")
-
-		FAST_DEBUG("Internal pipeline input init stage DEBUG 1")
-
+		FAST_DEBUG(logic_->arg_names)
+		FAST_DEBUG(logic_->grad_shapes_)
 		FAST::buildNDVec( buffer_, logic_->grad_shapes_, logic_->arg_names, "X", "label", mxnet::cpp::Context::cpu() );
 		FAST_DEBUG("Built NDVec");
 		return 0;

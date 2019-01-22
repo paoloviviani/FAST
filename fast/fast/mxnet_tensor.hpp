@@ -32,12 +32,12 @@ void NDVecToVec(std::vector<mxnet::cpp::NDArray> * grad_arrays, const std::vecto
 		std::string inp="X", std::string out="label") {
 
 	size_t grad_size = 0;
-	for (size_t i = 0; i < arg_names.size(); ++i) {
+	for (size_t i = 0; i < arg_names.size(); i++) {
 		if (arg_names[i] == inp || arg_names[i] == out) continue;
 		grad_size += grad_arrays->at(i).Size();
 	}
 	vec.resize(grad_size);
-	for (size_t i = 0; i < arg_names.size(); ++i) {
+	for (size_t i = 0; i < arg_names.size(); i++) {
 		if (arg_names[i] == inp || arg_names[i] == out) continue;
 		appendToVec(vec, grad_arrays->at(i));
 	}
@@ -49,7 +49,7 @@ void vecToNDVec(gam_vector<T> & vec, std::vector<mxnet::cpp::NDArray> * grad_arr
 		std::string inp="X", std::string out="label", const mxnet::cpp::Context & ctx=mxnet::cpp::Context::cpu()) {
 
 	size_t offset = 0;
-	for (size_t i = 0; i < arg_names.size(); ++i) {
+	for (size_t i = 0; i < arg_names.size(); i++) {
 		if (arg_names[i] == inp || arg_names[i] == out) continue;
 		vecToNDArray(vec, grad_arrays[i], offset, ctx);
 		offset += grad_arrays->at(i).Size();
@@ -62,7 +62,7 @@ void accumToNDVec(gam_vector<T> & vec, std::vector<mxnet::cpp::NDArray> * grad_a
 				string inp="X", string out="label", const mxnet::cpp::Context & ctx=mxnet::cpp::Context::cpu()) {
 
 	size_t offset = 0;
-	for (size_t i = 0; i < arg_names.size(); ++i) {
+	for (size_t i = 0; i < arg_names.size(); i++) {
 		if (arg_names[i] == inp || arg_names[i] == out) continue;
 		grad_arrays->at(i) += mxnet::cpp::NDArray(vec.data() + offset, mxnet::cpp::Shape(grad_arrays->at(i).GetShape()), ctx);
 		offset += grad_arrays->at(i).Size();
@@ -72,14 +72,17 @@ void accumToNDVec(gam_vector<T> & vec, std::vector<mxnet::cpp::NDArray> * grad_a
 
 void buildNDVec(std::vector<mxnet::cpp::NDArray> * grad_arrays, const std::vector< std::vector<mx_uint> > grad_shapes, //
 		const std::vector<std::string> arg_names, std::string inp="X", std::string out="label", const mxnet::cpp::Context & ctx=mxnet::cpp::Context::cpu()) {
-	FAST_ERROR("DEBUG buildNDVec")
+	FAST_DEBUG("DEBUG buildNDVec")
 	size_t offset = 0;
-	for (size_t i = 0; i < arg_names.size(); ++i) {
+	for (size_t i = 0; i < arg_names.size(); i++) {
 		if (arg_names[i] == inp || arg_names[i] == out) continue;
-		FAST_DEBUG("DEBUG " << i )
+		FAST_DEBUG("SIZE: " << grad_arrays->size())
 		grad_arrays->push_back( mxnet::cpp::NDArray(mxnet::cpp::Shape(grad_shapes.at(i)), ctx) );
-		grad_arrays->at(i) = 0;
-		offset += grad_arrays->at(i).Size();
+		FAST_DEBUG("SIZE: " << grad_arrays->size())
+		grad_arrays->back() = 0;
+		FAST_DEBUG("DEBUG 2")
+		offset += grad_arrays->back().Size();
+		FAST_DEBUG("DEBUG 3")
 	}
 
 }

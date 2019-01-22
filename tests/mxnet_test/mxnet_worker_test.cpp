@@ -94,8 +94,10 @@ public:
 			LG << exec->grad_arrays[i];
 			FAST_DEBUG(exec->grad_arrays[i])
 			exec->grad_arrays[i].CopyTo(&out[i]);
-			if (iter_ == 10)
+			if (iter_ == 10) {
 				out = std::vector<mxnet::cpp::NDArray>(0);
+				ended = true;
+			}
 			iter_++;
 		}
 	}
@@ -137,6 +139,7 @@ public:
 	vector<string> arg_names;
 	vector< vector<mx_uint> > grad_shapes_;
 	size_t iter_ = 0;
+	bool ended = false;
 
 };
 
