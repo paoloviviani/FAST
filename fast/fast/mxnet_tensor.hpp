@@ -73,16 +73,10 @@ void accumToNDVec(gam_vector<T> & vec, std::vector<mxnet::cpp::NDArray> & grad_a
 void buildNDVec(std::vector<mxnet::cpp::NDArray> & grad_arrays, const std::vector<mxnet::cpp::NDArray> & exec_grads, //
 		const std::vector<std::string> arg_names, const std::string inp="X", const std::string out="label", //
 		const mxnet::cpp::Context & ctx=mxnet::cpp::Context::cpu()) {
-	FAST_DEBUG(arg_names)
-	FAST_DEBUG(arg_names.size())
 	size_t offset = 0;
 	for (size_t i = 0; i < arg_names.size(); i++) {
 		if (arg_names[i] == inp || arg_names[i] == out) continue;
-		FAST_DEBUG(arg_names[i])
-		FAST_DEBUG("SIZE: " << grad_arrays.size())
-		FAST_DEBUG(exec_grads[i].GetShape())
 		grad_arrays.push_back( mxnet::cpp::NDArray(mxnet::cpp::Shape(exec_grads[i].GetShape()), ctx) );
-		FAST_DEBUG("SIZE: " << grad_arrays.size())
 		grad_arrays.back() = 0;
 		offset += grad_arrays.back().Size();
 	}

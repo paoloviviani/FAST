@@ -73,30 +73,17 @@ public:
 		exec->Forward(true);
 		exec->Backward();
 		FAST_DEBUG("Logic initialized")
-		for (size_t i = 0; i < arg_names.size(); ++i) {
-			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
-				LG << exec->grad_arrays[i];
-		}
-		FAST_DEBUG("LOGIC:  " << arg_names)
-
-
 	}
 
 
-	void run_batch(std::vector<mxnet::cpp::NDArray> &out) {
+	void run_batch(bool * out) {
 		FAST_DEBUG("LOGIC: run batch")
 		FAST_DEBUG(arg_names)
 		for (size_t i = 0; i < arg_names.size(); ++i) {
 			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
-			LG << exec->grad_arrays[i];
 			exec->grad_arrays[i] += 1.;
-			LG << exec->grad_arrays[i];
-			FAST_DEBUG(exec->grad_arrays[i])
-			exec->grad_arrays[i].CopyTo(&out[i]);
-			if (iter_ == 10) {
-				out = std::vector<mxnet::cpp::NDArray>(0);
-				ended = true;
-			}
+			if (iter_ == 10)
+				out = true;
 			iter_++;
 		}
 	}
@@ -105,10 +92,7 @@ public:
 		if (in.size() > 0) {
 			for (size_t i = 0; i < arg_names.size(); ++i) {
 				if (arg_names[i] == "X" || arg_names[i] == "label") continue;
-				LG << exec->grad_arrays[i];
-				LG << in;
 				exec->grad_arrays[i] += in[i];
-				LG << exec->grad_arrays[i];
 			}
 		}
 	}
@@ -123,8 +107,6 @@ public:
 	Executor * exec;
 	vector<string> arg_names;
 	size_t iter_ = 0;
-	bool ended = false;
-
 };
 
 typedef gff::Filter<gff::NondeterminateMerge, gff::OutBundleBroadcast<gff::NondeterminateMerge>,//

@@ -104,22 +104,22 @@ public:
 	void * svc(void * task) {
 		FAST_DEBUG("Trainer stage svc")
 		NDAvector * in_ptr = (NDAvector  *)task;
-		NDAvector * out_grads = new NDAvector(0);
+		bool * out = new bool(false);
 		if (this->get_channel_id() == -1 && in_ptr->size() != 0) {
 			// got a pointer from the input stage
 			FAST_DEBUG("Trainer stage got gradients");
 			logic_->update( *in_ptr );
-			logic_->run_batch( *out_grads );
+			logic_->run_batch(out);
 			delete in_ptr;
-			return (void*)out_grads;
+			return (void*)out;
 		}
 
 		// Got a pointer from the feedback channel
 		FAST_DEBUG("Trainer stage got go on")
-		logic_->run_batch(*out_grads );
+		logic_->run_batch( out );
 		FAST_DEBUG(out_grads->size());
 
-		return (void*)out_grads;
+		return (void*)out;
 	}
 private:
 	ModelLogic * logic_;
