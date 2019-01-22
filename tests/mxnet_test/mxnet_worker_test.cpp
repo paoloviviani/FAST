@@ -67,7 +67,6 @@ public:
 		opt->SetParam("lr", 0.001);
 		exec = net.SimpleBind(ctx, args);
 		arg_names = net.ListArguments();
-
 		//Dummy init grads
 		args["X"] = 1.;
 		args["label"] = 1.;
@@ -79,16 +78,21 @@ public:
 			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
 				LG << exec->grad_arrays[i];
 		}
+		FAST_DEBUG("LOGIC:  " << arg_names)
+
 
 	}
 
 
 	void run_batch(std::vector<mxnet::cpp::NDArray> &out) {
+		FAST_DEBUG("LOGIC: run batch")
+		FAST_DEBUG(arg_names)
 		for (size_t i = 0; i < arg_names.size(); ++i) {
 			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
 			LG << exec->grad_arrays[i];
 			exec->grad_arrays[i] += 1.;
 			LG << exec->grad_arrays[i];
+			FAST_DEBUG(exec->grad_arrays[i])
 			exec->grad_arrays[i].CopyTo(&out[i]);
 			if (iter_ == 10)
 				out = std::vector<mxnet::cpp::NDArray>(0);
