@@ -57,9 +57,8 @@ public:
 		auto recv_ptr = ((PublicWrapper<T> *)task)->payload.local();
 		delete (PublicWrapper<T> *)task;
 
-		FAST_DEBUG("Internal pipeline input got pointer")
 		if (recv_ptr->size() == 0) {
-			FAST_DEBUG("Input stage got trigger pointer")
+			FAST_DEBUG("(INPUT STAGE): got trigger pointer")
 			if (first_push_) {
 				auto tmp_ptr = new NDAvector(0);
 				FAST_DEBUG("Created trigger pointer for trainer stage")
@@ -70,11 +69,12 @@ public:
 			return ff::FF_GO_ON;
 		}
 
-		FAST_DEBUG("Input stage got real pointer")
+		FAST_DEBUG("(INPUT STAGE): got real pointer of size " << (*recv_ptr).size())
 		FAST::accumToNDVec( *recv_ptr, *buffer_, logic_->arg_names, "X", "label", mxnet::cpp::Context::cpu() );
+		FAST_DEBUG("(INPUT STAGE): accumulated gradients")
 
 		if (this->get_out_buffer()->empty()) {
-			FAST_DEBUG("Input stage push gradients")
+			FAST_DEBUG("(INPUT STAGE): push gradients")
 			this->ff_send_out((void *)buffer_);
 			buffer_ = new NDAvector(0);
 			FAST::buildNDVec( *buffer_, logic_->exec->grad_arrays, logic_->arg_names, "X", "label", mxnet::cpp::Context::cpu() );
@@ -83,11 +83,11 @@ public:
 	}
 
 	int svc_init() {
-		FAST_DEBUG("Internal pipeline input init stage")
+		FAST_DEBUG("(INPUT STAGE): init stage")
 		buffer_ = new NDAvector(0);
 		FAST_DEBUG(logic_->arg_names)
 		FAST::buildNDVec( *buffer_, logic_->exec->grad_arrays, logic_->arg_names, "X", "label", mxnet::cpp::Context::cpu() );
-		FAST_DEBUG("Built NDVec");
+		FAST_DEBUG("(INPUT STAGE): Built NDVec");
 		return 0;
 	}
 private:
@@ -103,35 +103,36 @@ public:
 	TrainerStage(ModelLogic * logic) : logic_(logic) {}
 
 	void * svc(void * task) {
-		FAST_DEBUG("Trainer stage svc")
 		NDAvector * in_ptr = (NDAvector  *)task;
 		bool * out = new bool(false);
 		if (this->get_channel_id() == -1 && in_ptr->size() != 0) {
 			// got a pointer from the input stage
-			FAST_DEBUG("Trainer stage got gradients");
+			FAST_DEBUG("(TRAINER STAGE): got gradients");
 			logic_->update( *in_ptr );
 			logic_->run_batch(out);
 			delete in_ptr;
+			FAST_DEBUG("(TRAINER STAGE): executed batch from gradients");
 			return (void*)out;
 		}
 
 		// Got a pointer from the feedback channel
-		FAST_DEBUG("Trainer stage got go on")
+		FAST_DEBUG("(TRAINER STAGE): got feedback go on");
 		logic_->run_batch( out );
+		FAST_DEBUG("(TRAINER STAGE): executed batch from feedback");
 		return (void*)out;
 	}
 private:
 	ModelLogic * logic_;
 
 	void eosnotify(ssize_t id) {
-	    FAST_DEBUG("> [internal_in_stage] got EOS id=" << id);
+	    FAST_DEBUG("(TRAINER STAGE): > [internal_in_stage] got EOS id=" << id);
 	    if (id == 0) {
 	    	// got EOS from input - forward END_OF_INPUT message
-	    	FAST_DEBUG("> [internal_in_stage] sending END_OF_INPUT");
+	    	FAST_DEBUG("(TRAINER STAGE): > [internal_in_stage] sending END_OF_INPUT");
 	    	this->ff_send_out(END_OF_INPUT);
 	    } else {
 	    	// got EOS from feedback - forward downstream to trigger termination
-	    	FAST_DEBUG("> [internal_in_stage] sending EOS");
+	    	FAST_DEBUG("(TRAINER STAGE): > [internal_in_stage] sending EOS");
 	    	this->ff_send_out(ff::FF_EOS);
 	    	// got both EOSs - node will be terminated here
 	    }
@@ -142,13 +143,13 @@ class InternalAuxStage : public ff::ff_monode {
 	void * svc(void * in) {
 		if (in != END_OF_INPUT) {
 			bool * out = (bool *)in;
-			FAST_DEBUG("> [internal_out_stage] got " << in);
+			FAST_DEBUG("(AUX STAGE): > [internal_out_stage] got " << in);
 			// send a NEXT_ITERATION message to the feedback channel
 			ff_send_out_to(NEXT_ITERATION, 0);
 			// forward the input pointer downstream
 			ff_send_out_to(out, 1);
 		} else {
-			FAST_DEBUG("> [internal_out_stage] got END_OF_INPUT");
+			FAST_DEBUG("(AUX STAGE): > [internal_out_stage] got END_OF_INPUT");
 			// send EOS to the feedback channel
 			ff_send_out_to(ff::FF_EOS, 0);
 		}
@@ -163,14 +164,14 @@ public:
 	OutputStage(ModelLogic * logic) : logic_(logic) {}
 
 	void * svc(void * task) {
-		FAST_DEBUG("Output stage got gradients");
+		FAST_DEBUG("(OUTPUT STAGE): got gradients");
 		bool * in = (bool  *)task;
 		gam_vector<T> * out = new gam_vector<T>(0);
 		if (*in == true)
 			return (void*)out;
 		NDVecToVec( logic_->exec->grad_arrays, logic_->arg_names, *out, "X", "label");
 		delete in;
-		FAST_DEBUG("Output stage serialized gradients of size " << out->size());
+		FAST_DEBUG("(OUTPUT STAGE): serialized gradient\n" << *out);
 
 		return (void*)out;
 	}

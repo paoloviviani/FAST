@@ -52,7 +52,7 @@ public:
 		Context ctx = Context::cpu();  // Use CPU for training
 
 		args["X"] = NDArray(Shape(1, 2), ctx);
-		args["label"] = NDArray(Shape(1), ctx);
+		args["label"] = NDArray(Shape(1,1), ctx);
 		// Let MXNet infer shapes other parameters such as weights
 		net.InferArgsMap(ctx, &args, args);
 
@@ -69,23 +69,28 @@ public:
 		arg_names = net.ListArguments();
 		//Dummy init grads
 		args["X"] = 1.;
-		args["label"] = 1.;
+		args["label"] = 0.5;
 		exec->Forward(true);
 		exec->Backward();
+		for (size_t i = 0; i < arg_names.size(); ++i) {
+			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
+			FAST_DEBUG("(LOGIC INIT): gradients initial values = " << exec->grad_arrays[i])
+		}
 		FAST_DEBUG("Logic initialized")
 	}
 
 
 	void run_batch(bool * out) {
-		FAST_DEBUG("LOGIC: run batch")
-		FAST_DEBUG(arg_names)
+		FAST_DEBUG("(LOGIC): run batch, iteration = " << iter_)
 		for (size_t i = 0; i < arg_names.size(); ++i) {
 			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
 			exec->grad_arrays[i] += 1.;
+			FAST_DEBUG("(LOGIC): updated gradients = " << exec->grad_arrays[i])
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			if (iter_ == 10)
 				*out = true; // Terminate
-			iter_++;
 		}
+		iter_++;
 	}
 
 	void update(std::vector<mxnet::cpp::NDArray> &in) {
@@ -106,7 +111,7 @@ public:
 	Optimizer* opt;
 	Executor * exec;
 	vector<string> arg_names;
-	size_t iter_ = 0;
+	unsigned int iter_ = 0;
 };
 
 typedef gff::Filter<gff::NondeterminateMerge, gff::OutBundleBroadcast<gff::NondeterminateMerge>,//
