@@ -83,7 +83,7 @@ public:
 			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
 			exec->grad_arrays[i] += 1.;
 			if (iter_ == 10)
-				out = true;
+				*out = true; // Terminate
 			iter_++;
 		}
 	}

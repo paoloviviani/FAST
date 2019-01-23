@@ -11,6 +11,7 @@
 #include <array>
 #include <vector>
 #include <map>
+#include <chrono>
 
 #include "gff.hpp"
 #include "gam.hpp"
@@ -117,22 +118,20 @@ public:
 		// Got a pointer from the feedback channel
 		FAST_DEBUG("Trainer stage got go on")
 		logic_->run_batch( out );
-		FAST_DEBUG(out_grads->size());
-
 		return (void*)out;
 	}
 private:
 	ModelLogic * logic_;
 
 	void eosnotify(ssize_t id) {
-	    FAST_DEBUG("> [internal_in_stage] got EOS id=" << id << "\n");
+	    FAST_DEBUG("> [internal_in_stage] got EOS id=" << id);
 	    if (id == 0) {
 	    	// got EOS from input - forward END_OF_INPUT message
-	    	FAST_DEBUG("> [internal_in_stage] sending END_OF_INPUT\n");
+	    	FAST_DEBUG("> [internal_in_stage] sending END_OF_INPUT");
 	    	this->ff_send_out(END_OF_INPUT);
 	    } else {
 	    	// got EOS from feedback - forward downstream to trigger termination
-	    	FAST_DEBUG("> [internal_in_stage] sending EOS\n");
+	    	FAST_DEBUG("> [internal_in_stage] sending EOS");
 	    	this->ff_send_out(ff::FF_EOS);
 	    	// got both EOSs - node will be terminated here
 	    }
@@ -142,14 +141,14 @@ private:
 class InternalAuxStage : public ff::ff_monode {
 	void * svc(void * in) {
 		if (in != END_OF_INPUT) {
-			FAST_DEBUG("> [internal_out_stage] got " << in << "\n");
+			bool * out = (bool *)in;
+			FAST_DEBUG("> [internal_out_stage] got " << in);
 			// send a NEXT_ITERATION message to the feedback channel
 			ff_send_out_to(NEXT_ITERATION, 0);
 			// forward the input pointer downstream
-			if ( ((NDAvector  *)in)->size() > 0 )
-				ff_send_out_to(in, 1);
+			ff_send_out_to(out, 1);
 		} else {
-			FAST_DEBUG("> [internal_out_stage] got END_OF_INPUT\n");
+			FAST_DEBUG("> [internal_out_stage] got END_OF_INPUT");
 			// send EOS to the feedback channel
 			ff_send_out_to(ff::FF_EOS, 0);
 		}
@@ -165,10 +164,12 @@ public:
 
 	void * svc(void * task) {
 		FAST_DEBUG("Output stage got gradients");
-		NDAvector * in_ptr = (NDAvector  *)task;
+		bool * in = (bool  *)task;
 		gam_vector<T> * out = new gam_vector<T>(0);
-		NDVecToVec( *in_ptr, logic_->arg_names, *out, "X", "label");
-		delete in_ptr;
+		if (*in == true)
+			return (void*)out;
+		NDVecToVec( logic_->exec->grad_arrays, logic_->arg_names, *out, "X", "label");
+		delete in;
 		FAST_DEBUG("Output stage serialized gradients of size " << out->size());
 
 		return (void*)out;
@@ -189,31 +190,28 @@ public:
 
 	gff::token_t svc(gam::public_ptr< gam_vector<T> > &in, gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
 
-		FAST_DEBUG("GAM svc got pointer")
+		FAST_DEBUG("(MXNET WORKER): svc got pointer")
 
-		gam_vector<T> * outvec = nullptr;
-		void * outptr = (void*)outvec;
+		void * outptr = nullptr;
 		PublicWrapper<T> * inp = new PublicWrapper<T>();
 		inp->payload = in;
 
-		FAST_DEBUG("GAM svc offloading")
-
 		global_->offload( (void*)inp );
-		FAST_DEBUG("GAM svc offloaded")
+		FAST_DEBUG("(MXNET WORKER): svc offloaded")
+
 		global_->load_result( &outptr );
+		gam_vector<T> * outvec = (gam_vector<T> *)outptr;
+		FAST_DEBUG("(MXNET WORKER): svc got results")
 
-		FAST_DEBUG("GAM svc got results")
-
-		FAST_DEBUG(outvec->size())
+		FAST_DEBUG("(MXNET WORKER): results size: " << outvec->size())
 		if (outvec->size() == 0)
 			return gff::eos;
 
-		FAST_DEBUG("GAM svc preparing results")
 		auto public_out = gam::public_ptr< gam_vector<T> >(outvec, [](gam_vector<T> * ptr){delete ptr;});
-		FAST_DEBUG("GAM svc prepared results")
+		FAST_DEBUG("(MXNET WORKER): svc prepared results")
 
 		c.emit(public_out);
-		FAST_DEBUG("GAM svc emitted results")
+		FAST_DEBUG("(MXNET WORKER): svc emitted results")
 
 		return gff::go_on;
 	}
@@ -225,12 +223,11 @@ public:
 
 		gam_vector<T> * ptr = new gam_vector<T>(0);
 
-		FAST_DEBUG("Initializing model logic")
+		FAST_DEBUG("(MXNET WORKER): Initializing model logic")
 		logic_.init();
-		FAST_DEBUG("Initialized model logic")
+		FAST_DEBUG("(MXNET WORKER): Initialized model logic")
 
-
-		FAST_DEBUG("Creating internal pipeline")
+		FAST_DEBUG("(MXNET WORKER): Creating pipeline")
 		global_->add_stage( new InputStage<ModelLogic, T>(&logic_) );
 		training_->add_stage( new TrainerStage<ModelLogic, T>(&logic_) );
 		training_->add_stage( new InternalAuxStage() );
@@ -241,17 +238,18 @@ public:
 		global_->cleanup_nodes();
 		training_->cleanup_nodes();
 
-		FAST_DEBUG("Launching internal pipeline")
+		FAST_DEBUG("(MXNET WORKER): Launching pipeline")
 		global_->run();
 
 		auto dummy_out = gam::public_ptr< gam_vector<T> >(ptr, [](gam_vector<T> * ptr){delete ptr;});
-
+		FAST_DEBUG("(MXNET WORKER): Emitting trigger")
 		c.emit(dummy_out);
 	}
 
 	void svc_end(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
-
+		FAST_DEBUG("(MXNET WORKER): Offloading EOS task")
 		global_->offload(ff::FF_EOS);
+		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 		logic_.finalize();
 		if (global_)
 			delete global_;
