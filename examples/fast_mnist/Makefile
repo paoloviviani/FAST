@@ -1,4 +1,4 @@
-include ../config.mk
+include ../../config.mk
 
 OPTIMIZE_FLAGS       = -O3 -DLOGLEVEL_INFO -g0
 ifeq ($(DEBUG),debug)
@@ -52,6 +52,8 @@ all: $(EXECS)
 
 #objects
 %.o: %.cpp $(FAST_ROOT)/fast/fast/*.hpp
+	echo $(FAST_ROOT)
+
 	$(CXX) $(INCLUDES) $(CCFLAGS) $(CFLAGS) $(OPTIMIZE_FLAGS) -c -o $@ $<
 
 #basic unit test executable

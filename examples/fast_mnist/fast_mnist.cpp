@@ -18,8 +18,6 @@
 
 using namespace mxnet::cpp;
 
-#define CATCH_CONFIG_MAIN
-
 Context ctx = Context::cpu();  // Use CPU for training
 
 Symbol mlp(const vector<int> &layers) {
@@ -47,12 +45,23 @@ Symbol mlp(const vector<int> &layers) {
 class ModelLogic {
 public:
 	void init() {
-		net = mlp({2,2,1});
+		const int image_size = 28;
+		const vector<int> layers{128, 64, 32, 10};
+		const int batch_size = 32;
+		const float learning_rate = 0.001;
+
+		net = mlp(layers);
 
 		Context ctx = Context::cpu();  // Use CPU for training
 
-		args["X"] = NDArray(Shape(1, 2), ctx);
-		args["label"] = NDArray(Shape(1,1), ctx);
+		train_iter.SetParam("image", "../mnist_data/train-images-idx3-ubyte")
+			  .SetParam("label", "../mnist_data/train-labels-idx1-ubyte")
+			  .SetParam("batch_size", batch_size)
+			  .SetParam("flat", 1)
+			  .CreateDataIter();
+
+		args["X"] = NDArray(Shape(batch_size, image_size*image_size), ctx);
+		args["label"] = NDArray(Shape(batch_size), ctx);
 		// Let MXNet infer shapes other parameters such as weights
 		net.InferArgsMap(ctx, &args, args);
 
@@ -64,32 +73,44 @@ public:
 		}
 
 		opt = OptimizerRegistry::Find("adam");
-		opt->SetParam("lr", 0.001);
+		opt->SetParam("lr", learning_rate);
 		exec = net.SimpleBind(ctx, args);
 		arg_names = net.ListArguments();
-		//Dummy init grads
-		args["X"] = 1.;
-		args["label"] = 0.5;
-		exec->Forward(true);
-		exec->Backward();
-		for (size_t i = 0; i < arg_names.size(); ++i) {
-			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
-			FAST_DEBUG("(LOGIC INIT): gradients initial values = " << exec->grad_arrays[i])
-		}
+
 		FAST_DEBUG("Logic initialized")
 	}
 
 
 	void run_batch() {
-		FAST_DEBUG("(LOGIC): run batch, iteration = " << iter_)
+		FAST_DEBUG("(LOGIC): run batch, iteration = " << iter_);
+
+		if (!train_iter.Next()) {
+			epoch_++;
+			train_iter.Reset();
+		    train_acc.Reset();
+			iter_ = 0;
+			if (epoch_ == 10){
+					max_epoch_reached = true; // Terminate
+					return;
+			}
+		}
+
+		auto data_batch = train_iter.GetDataBatch();
+		// Set data and label
+		data_batch.data.CopyTo(&args["X"]);
+		data_batch.label.CopyTo(&args["label"]);
+
+		// Compute gradients
+		exec->Forward(true);
+		exec->Backward();
+		train_acc.Update(data_batch.label, exec->outputs[0]);
+		// Update parameters
 		for (size_t i = 0; i < arg_names.size(); ++i) {
 			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
-			exec->grad_arrays[i] += 1.;
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 		}
+
 		iter_++;
-		if (iter_ == 10)
-			max_epoch_reached = true; // Terminate
 	}
 
 	void update(std::vector<mxnet::cpp::NDArray> &in) {
@@ -97,7 +118,7 @@ public:
 			int ii = 0;
 			for (size_t i = 0; i < arg_names.size(); ++i) {
 				if (arg_names[i] == "X" || arg_names[i] == "label") continue;
-				exec->grad_arrays[i] += in[ii];
+				opt->Update(i, exec->arg_arrays[i], in[ii]);
 				ii++;
 			}
 			FAST_DEBUG("(LOGIC UPDATE): updated")
@@ -114,7 +135,10 @@ public:
 	Executor * exec;
 	vector<string> arg_names;
 	unsigned int iter_ = 0;
+	unsigned int epoch_ = 0;
 	bool max_epoch_reached = false;
+	MXDataIter train_iter = MXDataIter("MNISTIter");
+	Accuracy train_acc;
 };
 
 typedef gff::Filter<gff::NondeterminateMerge, gff::OutBundleBroadcast<gff::NondeterminateMerge>,//
@@ -129,9 +153,8 @@ typedef gff::Filter<gff::NondeterminateMerge, gff::OutBundleBroadcast<gff::Nonde
  *******************************************************************************
  */
 
-TEST_CASE( "Tensor passing basic", "gam,gff,multi,mxnet" ) {
+int main(int argc, char** argv) {
 	FAST_LOG_INIT
-	FAST_INFO("TEST name: "<< Catch::getResultCapture().getCurrentTestName());
 
 	gff::NondeterminateMerge to_one, to_two;
 	gff::OutBundleBroadcast<gff::NondeterminateMerge> one, two;
@@ -144,5 +167,7 @@ TEST_CASE( "Tensor passing basic", "gam,gff,multi,mxnet" ) {
 
 	/* execute the network */
 	gff::run();
+
+	return 0;
 
 }

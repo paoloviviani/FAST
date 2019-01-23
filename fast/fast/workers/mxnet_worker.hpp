@@ -85,7 +85,6 @@ public:
 	int svc_init() {
 		FAST_DEBUG("(INPUT STAGE): init stage")
 		buffer_ = new NDAvector(0);
-		FAST_DEBUG(logic_->arg_names)
 		FAST::buildNDVec( *buffer_, logic_->exec->grad_arrays, logic_->arg_names, "X", "label", mxnet::cpp::Context::cpu() );
 		FAST_DEBUG("(INPUT STAGE): Built NDVec");
 		return 0;
@@ -168,7 +167,7 @@ public:
 		FAST_DEBUG("(OUTPUT STAGE): got gradients");
 		gam_vector<T> * out = new gam_vector<T>(0);
 		NDVecToVec( logic_->exec->grad_arrays, logic_->arg_names, *out, "X", "label");
-		FAST_DEBUG("(OUTPUT STAGE): serialized gradient\n" << *out);
+		FAST_DEBUG("(OUTPUT STAGE): serialized gradient");
 
 		return (void*)out;
 	}

@@ -1,4 +1,4 @@
-FAST_ROOT			=	$(abspath $(lastword $(MAKEFILE_LIST)))
+FAST_ROOT			=	../..
 #error, info, debug
 DEBUG				=	debug
 MXNET_ROOT			=	$(FAST_ROOT)/3rdparty/mxnet

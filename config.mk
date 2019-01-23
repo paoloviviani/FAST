@@ -1,4 +1,4 @@
-FAST_ROOT			=	..
+FAST_ROOT			=	$(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 #error, info, debug
 DEBUG				=	debug
 MXNET_INCLUDE_DIR		=	$(FAST_ROOT)/3rdparty/mxnet/include
