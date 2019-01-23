@@ -114,6 +114,7 @@ public:
 	}
 
 	void update(std::vector<mxnet::cpp::NDArray> &in) {
+		FAST_DEBUG("(LOGIC UPDATE): updating")
 		if (in.size() > 0) {
 			int ii = 0;
 			for (size_t i = 0; i < arg_names.size(); ++i) {
