@@ -33,6 +33,7 @@ INCLUDES             += -I$(LIBFABRIC_ROOT)/include
 endif
 
 #MxNet dependency
+MXNET_INCLUDE_DIR		=	$(FAST_ROOT)/3rdparty/mxnet/include
 INCLUDES             += -I$(MXNET_INCLUDE_DIR)
 LIBS                 += -L$(MXNET_LIB_DIR) -lmxnet
 CCFLAGS              += -DMXNET_TENSOR

@@ -35,6 +35,7 @@ EXECS                = basic_gff_train
 TARGET_OBJ           = basic_gff_train.o
 
 #MxNet dependency
+MXNET_INCLUDE_DIR		=	$(FAST_ROOT)/3rdparty/mxnet/include
 INCLUDES             += -I$(MXNET_ROOT)/include
 LIBS                 += -L$(MXNET_ROOT)/lib -lmxnet
 CCFLAGS              += -DUSE_GAM
