@@ -34,18 +34,20 @@ void NDVecToVec(std::vector<mxnet::cpp::NDArray> & grad_arrays, const std::vecto
 
 	size_t grad_size = 0;
 	for (size_t i = 0; i < grad_arrays.size(); i++) {
+		if (arg_names[i] == inp || arg_names[i] == out) continue;
 		grad_size += grad_arrays[i].Size();
 	}
 	vec.reserve(grad_size);
 	for (size_t i = 0; i < grad_arrays.size(); i++) {
+		if (arg_names[i] == inp || arg_names[i] == out) continue;
 		appendToVec(vec, grad_arrays[i]);
 	}
 
 }
 
 template <typename T>
-void vecToNDVec(gam_vector<T> & vec, std::vector<mxnet::cpp::NDArray> & grad_arrays, const std::vector<std::string> arg_names, //
-		std::string inp="X", std::string out="label", const mxnet::cpp::Context & ctx=mxnet::cpp::Context::cpu()) {
+void vecToNDVec(gam_vector<T> & vec, std::vector<mxnet::cpp::NDArray> & grad_arrays, //
+		const mxnet::cpp::Context & ctx=mxnet::cpp::Context::cpu()) {
 
 	size_t offset = 0;
 	for (size_t i = 0; i < grad_arrays.size(); i++) {
@@ -56,8 +58,8 @@ void vecToNDVec(gam_vector<T> & vec, std::vector<mxnet::cpp::NDArray> & grad_arr
 }
 
 template <typename T>
-void accumToNDVec(gam_vector<T> & vec, std::vector<mxnet::cpp::NDArray> & grad_arrays, const std::vector<std::string> arg_names, //
-				string inp="X", string out="label", const mxnet::cpp::Context & ctx=mxnet::cpp::Context::cpu()) {
+void accumToNDVec(gam_vector<T> & vec, std::vector<mxnet::cpp::NDArray> & grad_arrays, //
+		const mxnet::cpp::Context & ctx=mxnet::cpp::Context::cpu()) {
 
 	size_t offset = 0;
 	for (size_t i = 0; i < grad_arrays.size(); i++) {
@@ -70,6 +72,7 @@ void accumToNDVec(gam_vector<T> & vec, std::vector<mxnet::cpp::NDArray> & grad_a
 void buildNDVec(std::vector<mxnet::cpp::NDArray> & grad_arrays, const std::vector<mxnet::cpp::NDArray> & exec_grads, //
 		const std::vector<std::string> arg_names, const std::string inp="X", const std::string out="label", //
 		const mxnet::cpp::Context & ctx=mxnet::cpp::Context::cpu()) {
+
 	for (size_t i = 0; i < arg_names.size(); i++) {
 		if (arg_names[i] == inp || arg_names[i] == out) continue;
 		grad_arrays.push_back( mxnet::cpp::NDArray(mxnet::cpp::Shape(exec_grads[i].GetShape()), ctx) );

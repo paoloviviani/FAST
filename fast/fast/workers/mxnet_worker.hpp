@@ -70,7 +70,7 @@ public:
 		}
 
 		FAST_DEBUG("(INPUT STAGE): got real pointer of size " << (*recv_ptr).size())
-		FAST::accumToNDVec( *recv_ptr, *buffer_, logic_->arg_names, "X", "label", mxnet::cpp::Context::cpu() );
+		FAST::accumToNDVec( *recv_ptr, *buffer_, mxnet::cpp::Context::cpu() );
 		FAST_DEBUG("(INPUT STAGE): accumulated gradients")
 
 		if (this->get_out_buffer()->empty()) {
@@ -109,6 +109,7 @@ public:
 			// got a pointer from the input stage
 			FAST_DEBUG("(TRAINER STAGE): got gradients");
 			logic_->update( *in_ptr );
+			FAST_DEBUG("(TRAINER STAGE): updated");
 			logic_->run_batch(out);
 			delete in_ptr;
 			FAST_DEBUG("(TRAINER STAGE): executed batch from gradients");

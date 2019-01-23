@@ -85,7 +85,6 @@ public:
 		for (size_t i = 0; i < arg_names.size(); ++i) {
 			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
 			exec->grad_arrays[i] += 1.;
-			FAST_DEBUG("(LOGIC): updated gradients = " << exec->grad_arrays[i])
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			if (iter_ == 10)
 				*out = true; // Terminate
@@ -95,10 +94,13 @@ public:
 
 	void update(std::vector<mxnet::cpp::NDArray> &in) {
 		if (in.size() > 0) {
+			int ii = 0;
 			for (size_t i = 0; i < arg_names.size(); ++i) {
 				if (arg_names[i] == "X" || arg_names[i] == "label") continue;
-				exec->grad_arrays[i] += in[i];
+				exec->grad_arrays[i] += in[ii];
+				ii++;
 			}
+			FAST_DEBUG("(LOGIC UPDATE): updated")
 		}
 	}
 
