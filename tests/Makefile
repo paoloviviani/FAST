@@ -1,4 +1,4 @@
-include config.mk
+include ../config.mk
 
 OPTIMIZE_FLAGS       = -O3 -DLOGLEVEL_INFO -g0
 ifeq ($(DEBUG),debug)

@@ -104,23 +104,23 @@ public:
 
 	void * svc(void * task) {
 		NDAvector * in_ptr = (NDAvector  *)task;
-		bool * out = new bool(false);
+		bool * trigger = new bool(true);
 		if (this->get_channel_id() == -1 && in_ptr->size() != 0) {
 			// got a pointer from the input stage
 			FAST_DEBUG("(TRAINER STAGE): got gradients");
 			logic_->update( *in_ptr );
 			FAST_DEBUG("(TRAINER STAGE): updated");
-			logic_->run_batch(out);
+			logic_->run_batch();
 			delete in_ptr;
 			FAST_DEBUG("(TRAINER STAGE): executed batch from gradients");
-			return (void*)out;
+			return (void*)trigger;
 		}
 
 		// Got a pointer from the feedback channel
 		FAST_DEBUG("(TRAINER STAGE): got feedback go on");
-		logic_->run_batch( out );
+		logic_->run_batch();
 		FAST_DEBUG("(TRAINER STAGE): executed batch from feedback");
-		return (void*)out;
+		return (void*)trigger;
 	}
 private:
 	ModelLogic * logic_;
@@ -143,12 +143,11 @@ private:
 class InternalAuxStage : public ff::ff_monode {
 	void * svc(void * in) {
 		if (in != END_OF_INPUT) {
-			bool * out = (bool *)in;
 			FAST_DEBUG("(AUX STAGE): > [internal_out_stage] got " << in);
 			// send a NEXT_ITERATION message to the feedback channel
 			ff_send_out_to(NEXT_ITERATION, 0);
 			// forward the input pointer downstream
-			ff_send_out_to(out, 1);
+			ff_send_out_to(in, 1);
 		} else {
 			FAST_DEBUG("(AUX STAGE): > [internal_out_stage] got END_OF_INPUT");
 			// send EOS to the feedback channel
@@ -165,14 +164,10 @@ public:
 	OutputStage(ModelLogic * logic) : logic_(logic) {}
 
 	void * svc(void * task) {
+		delete (bool *)task;
 		FAST_DEBUG("(OUTPUT STAGE): got gradients");
-		bool * in = (bool  *)task;
 		gam_vector<T> * out = new gam_vector<T>(0);
-		if (*in == true)
-			return (void*)out;
-
 		NDVecToVec( logic_->exec->grad_arrays, logic_->arg_names, *out, "X", "label");
-		delete in;
 		FAST_DEBUG("(OUTPUT STAGE): serialized gradient\n" << *out);
 
 		return (void*)out;
@@ -203,13 +198,12 @@ public:
 		FAST_DEBUG("(MXNET WORKER): svc offloaded")
 
 		global_->load_result( &outptr );
-		gam_vector<T> * outvec = (gam_vector<T> *)outptr;
 		FAST_DEBUG("(MXNET WORKER): svc got results")
 
-		FAST_DEBUG("(MXNET WORKER): results size: " << outvec->size())
-		if (outvec->size() == 0)
+		if (logic_.max_epoch_reached == true)
 			return gff::eos;
 
+		gam_vector<T> * outvec = (gam_vector<T> *)outptr;
 		auto public_out = gam::public_ptr< gam_vector<T> >(outvec, [](gam_vector<T> * ptr){delete ptr;});
 		FAST_DEBUG("(MXNET WORKER): svc prepared results")
 
@@ -251,8 +245,25 @@ public:
 
 	void svc_end(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
 		FAST_DEBUG("(MXNET WORKER): Offloading EOS task")
-		global_->offload(ff::FF_EOS);
+		global_->offload((void *)ff::FF_EOS);
 		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
+
+		// wait EOS
+		if (training_->wait_freezing()<0) {
+			FAST_DEBUG("(MXNET FINALIZATION): freezing error");
+		}
+//        // join all threads
+//        if (training_->wait()<0) {
+//        	FAST_DEBUG("(MXNET FINALIZATION): error waiting pipe");
+//        }
+//        if (global_->wait_freezing()<0) {
+//        	FAST_DEBUG("(MXNET FINALIZATION): freezing error");
+//        }
+//        // join all threads
+//        if (global_->wait()<0) {
+//        	FAST_DEBUG("(MXNET FINALIZATION): error wating pipe");
+//        }
 		logic_.finalize();
 		if (global_)
 			delete global_;

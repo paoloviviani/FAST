@@ -1,4 +1,4 @@
-include config.mk
+include ../config.mk
 
 OPTIMIZE_FLAGS       = -O3 -DLOGLEVEL_INFO -g0
 ifeq ($(DEBUG),debug)
@@ -20,6 +20,8 @@ CFLAGS               = -std=c++11
 LDFLAGS              = 
 LIBS                 = -lpthread
 
+INCLUDES             = -I$(FAST_ROOT)/fast -I$(FAST_ROOT)/tests/catch2 -I$(FAST_ROOT)/3rdparty/fastflow/ -I$(FAST_ROOT)/3rdparty/fastflow/ff/d/gff -I$(FAST_ROOT)/3rdparty/gam/include
+
 #Libfabric dependency
 ifeq ($(LIBFABRIC_ROOT),)
 LIBS                 += -lfabric
@@ -30,14 +32,18 @@ ifneq ($(LIBFABRIC_ROOT),)
 INCLUDES             += -I$(LIBFABRIC_ROOT)/include
 endif
 
-INCLUDES             = -I$(FAST_ROOT)/fast -I$(FAST_ROOT)/tests/catch2 -I$(FAST_ROOT)/3rdparty/fastflow/ -I$(FAST_ROOT)/3rdparty/fastflow/ff/d/gff -I$(FAST_ROOT)/3rdparty/gam/include -I$(FAST_ROOT)/3rdparty/armadillo
-EXECS                = basic_gff_train
-TARGET_OBJ           = basic_gff_train.o
+#MxNet dependency
+INCLUDES             += -I$(MXNET_INCLUDE_DIR)
+LIBS                 += -L$(MXNET_LIB_DIR) -lmxnet
+CCFLAGS              += -DMXNET_TENSOR
 
 #MxNet dependency
 INCLUDES             += -I$(MXNET_ROOT)/include
 LIBS                 += -L$(MXNET_ROOT)/lib -lmxnet
 CCFLAGS              += -DUSE_GAM
+
+EXECS                = fast_mnist
+TARGET_OBJ           = fast_mnist.o
 
 .PHONY: all clean cleanall
 .SUFFIXES: .c .cpp .o
@@ -49,7 +55,7 @@ all: $(EXECS)
 	$(CXX) $(INCLUDES) $(CCFLAGS) $(CFLAGS) $(OPTIMIZE_FLAGS) -c -o $@ $<
 
 #basic unit test executable
-basic_gff_train: $(TARGET_OBJ)
+fast_mnist: $(TARGET_OBJ)
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
 
 cleanbtr:
@@ -60,4 +66,3 @@ clean:
 cleanall: clean
 	rm -rf bin/$(EXECS)
 	rm -rf $(TARGET_OBJ) *.d *.btr
-
