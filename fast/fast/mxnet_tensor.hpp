@@ -17,8 +17,9 @@ namespace FAST {
 template <typename T>
 void appendToVec(gam_vector<T> & vec, mxnet::cpp::NDArray & t){
 	size_t append_size = t.Size();
+	size_t original_size = vec.size();
 	vec.resize(vec.size() + append_size);
-	t.SyncCopyToCPU(vec.data() + vec.size(),append_size);
+	t.SyncCopyToCPU(vec.data() + original_size,append_size);
 }
 
 template <typename T>
@@ -32,13 +33,11 @@ void NDVecToVec(std::vector<mxnet::cpp::NDArray> & grad_arrays, const std::vecto
 		std::string inp="X", std::string out="label") {
 
 	size_t grad_size = 0;
-	for (size_t i = 0; i < arg_names.size(); i++) {
-		if (arg_names[i] == inp || arg_names[i] == out) continue;
+	for (size_t i = 0; i < grad_arrays.size(); i++) {
 		grad_size += grad_arrays[i].Size();
 	}
-	vec.resize(grad_size);
-	for (size_t i = 0; i < arg_names.size(); i++) {
-		if (arg_names[i] == inp || arg_names[i] == out) continue;
+	vec.reserve(grad_size);
+	for (size_t i = 0; i < grad_arrays.size(); i++) {
 		appendToVec(vec, grad_arrays[i]);
 	}
 
@@ -49,8 +48,7 @@ void vecToNDVec(gam_vector<T> & vec, std::vector<mxnet::cpp::NDArray> & grad_arr
 		std::string inp="X", std::string out="label", const mxnet::cpp::Context & ctx=mxnet::cpp::Context::cpu()) {
 
 	size_t offset = 0;
-	for (size_t i = 0; i < arg_names.size(); i++) {
-		if (arg_names[i] == inp || arg_names[i] == out) continue;
+	for (size_t i = 0; i < grad_arrays.size(); i++) {
 		vecToNDArray(vec, grad_arrays[i], offset, ctx);
 		offset += grad_arrays[i].Size();
 	}
@@ -62,12 +60,8 @@ void accumToNDVec(gam_vector<T> & vec, std::vector<mxnet::cpp::NDArray> & grad_a
 				string inp="X", string out="label", const mxnet::cpp::Context & ctx=mxnet::cpp::Context::cpu()) {
 
 	size_t offset = 0;
-	for (size_t i = 0; i < arg_names.size(); i++) {
-		if (arg_names[i] == inp || arg_names[i] == out) continue;
-		FAST_DEBUG("(ACCUM op debug) input NDArray: " << grad_arrays[i])
-		FAST_DEBUG("(ACCUM op debug) input vector: " << vec)
+	for (size_t i = 0; i < grad_arrays.size(); i++) {
 		grad_arrays[i] += mxnet::cpp::NDArray(vec.data() + offset, mxnet::cpp::Shape(grad_arrays[i].GetShape()), ctx);
-		FAST_DEBUG("(ACCUM op debug) output NDarray: " << grad_arrays[i])
 		offset += grad_arrays[i].Size();
 	}
 
@@ -76,12 +70,10 @@ void accumToNDVec(gam_vector<T> & vec, std::vector<mxnet::cpp::NDArray> & grad_a
 void buildNDVec(std::vector<mxnet::cpp::NDArray> & grad_arrays, const std::vector<mxnet::cpp::NDArray> & exec_grads, //
 		const std::vector<std::string> arg_names, const std::string inp="X", const std::string out="label", //
 		const mxnet::cpp::Context & ctx=mxnet::cpp::Context::cpu()) {
-	size_t offset = 0;
 	for (size_t i = 0; i < arg_names.size(); i++) {
 		if (arg_names[i] == inp || arg_names[i] == out) continue;
 		grad_arrays.push_back( mxnet::cpp::NDArray(mxnet::cpp::Shape(exec_grads[i].GetShape()), ctx) );
 		grad_arrays.back() = 0;
-		offset += grad_arrays.back().Size();
 	}
 
 }
