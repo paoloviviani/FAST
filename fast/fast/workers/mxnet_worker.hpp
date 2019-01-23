@@ -169,6 +169,10 @@ public:
 		gam_vector<T> * out = new gam_vector<T>(0);
 		if (*in == true)
 			return (void*)out;
+		for (size_t i = 0; i < logic_->arg_names.size(); ++i) {
+			if (logic_->arg_names[i] == "X" || logic_->arg_names[i] == "label") continue;
+			FAST_DEBUG("(OUTPUT STAGE): reading gradient array" << logic_->exec->grad_arrays[i]);
+		}
 		NDVecToVec( logic_->exec->grad_arrays, logic_->arg_names, *out, "X", "label");
 		delete in;
 		FAST_DEBUG("(OUTPUT STAGE): serialized gradient\n" << *out);
