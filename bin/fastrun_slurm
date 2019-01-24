@@ -1,6 +1,7 @@
 #!/bin/bash
 
 EXEC=$2
+DIRECTORY=`dirname $0`
 
 echo "running $EXEC on $SLURM_NODELIST"
 
@@ -25,7 +26,7 @@ do
 done
 
 cat <<EOT >> commands.conf
-0-$TASK_COUNT   bash -c 'GAM_RANK=$SLURM_PROCID $EXEC'
+0-$TASK_COUNT  bash -c '$DIRECTORY/fastnode_slurm'
 EOT
 
 srun --export=ALL -N$GAM_CARDINALITY --ntasks-per-node=1 -l --multi-prog commands.conf

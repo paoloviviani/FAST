@@ -1,0 +1,6 @@
+#!/bin/bash
+
+EXEC=$1
+export GAM_RANK=$SLURM_PROCID
+$EXEC
+
