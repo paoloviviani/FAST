@@ -1,0 +1,18 @@
+language: cpp
+
+matrix:
+  include:
+    - os: osx
+      addons:
+        homebrew:
+          packages:
+            - libfabric
+      env:
+        - MATRIX_EVAL="CC=clang && CXX=clang++"
+
+script:
+  - mkdir build && cd build
+  - cmake ..
+  - cmake --build .
+  - ctest
+
