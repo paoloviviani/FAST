@@ -10,15 +10,13 @@ TARGET_OBJ           = fast_mnist.o
 all: $(EXECS)
 
 #objects
-%.o: %.cpp $(FAST_ROOT)/fast/fast/*.hpp
+%.o: %.cpp $(FAST_ROOT)/include/fast/*.hpp $(FAST_ROOT)/include/fast/workers/mxnet_worker.hpp 
 	$(CXX) $(INCLUDES) $(CCFLAGS) $(CFLAGS) $(OPTIMIZE_FLAGS) -c -o $@ $<
 
 #basic unit test executable
 fast_mnist: $(TARGET_OBJ)
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
 
-cleanbtr:
-	rm -rf *.btr
 clean:
 	rm -rf *.o *~ $(TARGET_OBJ)
 

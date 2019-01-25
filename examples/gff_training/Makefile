@@ -5,7 +5,7 @@ EXECS                = basic_gff_train
 TARGET_OBJ           = basic_gff_train.o
 
 #MxNet dependency
-MXNET_INCLUDE_DIR		=	$(FAST_ROOT)/3rdparty/mxnet/include
+MXNET_INCLUDE_DIR     =	$(FAST_ROOT)/3rdparty/mxnet/include
 INCLUDES             += -I$(MXNET_ROOT)/include
 LIBS                 += -L$(MXNET_ROOT)/lib -lmxnet
 CCFLAGS              += -DUSE_GAM
@@ -16,7 +16,7 @@ CCFLAGS              += -DUSE_GAM
 all: $(EXECS)
 
 #objects
-%.o: %.cpp $(FAST_ROOT)/fast/fast/*.hpp
+%.o: %.cpp $(FAST_ROOT)/include/fast/*.hpp
 	$(CXX) $(INCLUDES) $(CCFLAGS) $(CFLAGS) $(OPTIMIZE_FLAGS) -c -o $@ $<
 
 #basic unit test executable
