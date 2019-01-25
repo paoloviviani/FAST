@@ -1,0 +1,15 @@
+#!/bin/bash
+
+EXEC=$2
+
+echo "running $EXEC on:"
+echo "`cat hosts`"
+
+export GAM_LOG_PREFIX=$PWD/logs
+export GAM_CARDINALITY=$1
+export TASK_COUNT=$(($GAM_CARDINALITY - 1))
+export BASE_PAP=6100
+export BASE_MEM=6228
+export BASE_DMN=6356
+
+mpirun --hostfile hosts -n $GAM_CARDINALITY ./fastnode_mpi $EXEC
