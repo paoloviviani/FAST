@@ -1,7 +1,5 @@
 #!/bin/bash
 
 EXEC=$1
-
 export GAM_RANK=$OMPI_COMM_WORLD_RANK
-
-eval $EXEC
+$EXEC
