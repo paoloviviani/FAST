@@ -6,7 +6,6 @@
  */
 
 #include <iostream>
-#include <catch.hpp>
 #include <string>
 #include <cassert>
 #include <cmath>

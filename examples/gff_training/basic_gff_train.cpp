@@ -207,7 +207,7 @@ public:
 
 private:
 	array<unsigned int,2> idx;
-	gam::public_ptr< gam_vector<float> > grad_store_;
+	gam::public_ptr< FAST::gam_vector<float> > grad_store_;
 	MXDataIter train_iter = MXDataIter("MNISTIter");
 	Symbol net;
 	std::map<string, NDArray> args;
@@ -222,8 +222,8 @@ private:
 
 
 typedef gff::Filter<gff::NondeterminateMerge, gff::OutBundleBroadcast<gff::NondeterminateMerge>,//
-		gam::public_ptr< gam_vector<float> >, //
-		gam::public_ptr< gam_vector<float> >, //
+		gam::public_ptr< FAST::gam_vector<float> >, //
+		gam::public_ptr< FAST::gam_vector<float> >, //
 		MXNetModelLogic> MXNetWorker;
 
 

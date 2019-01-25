@@ -122,7 +122,7 @@ public:
 	 * @return
 	 */
 	std::ostream &log_error() {
-		return cerr << "[" << currentDateTime() << ", proc " << id <<"] ";
+		return std::cerr << "[" << currentDateTime() << ", proc " << id <<"] ";
 	}
 
 	/**
@@ -130,7 +130,7 @@ public:
 	 * @return
 	 */
 	std::ostream &log_output() {
-		return cout << "[" << currentDateTime() << ", proc " << id <<"] ";
+		return std::cout << "[" << currentDateTime() << ", proc " << id <<"] ";
 	}
 
 	/**

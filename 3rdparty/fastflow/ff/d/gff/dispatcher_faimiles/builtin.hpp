@@ -108,7 +108,7 @@ public:
 	template<typename T>
 	void broadcast(const std::vector<gam::executor_id> &d, //
 			gam::private_ptr<T> &&p) {
-		USRASSERT(!p.get().is_address());
+		assert(!p.get().is_address());
 		for (auto to : d)
 			gam::private_ptr<T>(p.get()).push(to);
 	}
@@ -149,7 +149,7 @@ public:
 	template<typename T>
 	void broadcast(const std::vector<gam::executor_id> &d, //
 			gam::private_ptr<T> &&p) {
-		USRASSERT(!p.get().is_address());
+		assert(!p.get().is_address());
 		for (auto to : d)
 			gam::private_ptr<T>(p.get()).push(to);
 	}

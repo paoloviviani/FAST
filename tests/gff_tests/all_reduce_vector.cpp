@@ -95,7 +95,7 @@ typedef gff::Filter<gff::NondeterminateMerge, gff::OutBundleBroadcast<gff::Nonde
  *******************************************************************************
  */
 
-TEST_CASE( "gff allreduce multi", "gam,gff,multi" ) {
+TEST_CASE( "gff allreduce multi vector", "gam,gff,multi" ) {
 	FAST_LOG_INIT
 	FAST_INFO("TEST name: "<< Catch::getResultCapture().getCurrentTestName());
 
