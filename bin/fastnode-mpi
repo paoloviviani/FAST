@@ -4,5 +4,4 @@ EXEC=$1
 
 export GAM_RANK=$OMPI_COMM_WORLD_RANK
 
-echo $GAM_SVC_PAP_0
 eval $EXEC
