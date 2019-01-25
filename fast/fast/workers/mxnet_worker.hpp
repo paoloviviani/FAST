@@ -139,12 +139,17 @@ private:
 	}
 };
 
+template <typename ModelLogic>
 class InternalAuxStage : public ff::ff_monode {
+public:
+	InternalAuxStage(ModelLogic * logic) : logic_(logic) {}
+
 	void * svc(void * in) {
 		if (in != END_OF_INPUT) {
 			FAST_DEBUG("(AUX STAGE): > [internal_out_stage] got " << in);
 			// send a NEXT_ITERATION message to the feedback channel
-			ff_send_out_to(NEXT_ITERATION, 0);
+			if (logic_->max_epoch_reached == false)
+				ff_send_out_to(NEXT_ITERATION, 0);
 			// forward the input pointer downstream
 			ff_send_out_to(in, 1);
 		} else {
@@ -154,6 +159,8 @@ class InternalAuxStage : public ff::ff_monode {
 		}
 		return ff::FF_GO_ON;
 	}
+private:
+	ModelLogic * logic_;
 };
 
 template <typename ModelLogic, typename T >
@@ -199,8 +206,10 @@ public:
 		global_->load_result( &outptr );
 		FAST_DEBUG("(MXNET WORKER): svc got results")
 
-		if (logic_.max_epoch_reached == true)
+		if (logic_.max_epoch_reached == true){
+			FAST_DEBUG(" MAX REACHED, terminating ========== ")	
 			return gff::eos;
+		}
 
 		gam_vector<T> * outvec = (gam_vector<T> *)outptr;
 		auto public_out = gam::public_ptr< gam_vector<T> >(outvec, [](gam_vector<T> * ptr){delete ptr;});
@@ -226,7 +235,7 @@ public:
 		FAST_DEBUG("(MXNET WORKER): Creating pipeline")
 		global_->add_stage( new InputStage<ModelLogic, T>(&logic_) );
 		training_->add_stage( new TrainerStage<ModelLogic, T>(&logic_) );
-		training_->add_stage( new InternalAuxStage() );
+		training_->add_stage( new InternalAuxStage<ModelLogic>(&logic_) );
 		training_->wrap_around();
 		global_->add_stage(training_);
 		global_->add_stage( new OutputStage<ModelLogic, T>(&logic_) );
