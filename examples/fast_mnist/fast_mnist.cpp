@@ -85,21 +85,24 @@ public:
 		FAST_DEBUG("(LOGIC): run batch, iteration = " << iter_);
 
 		if (!train_iter.Next()) {
+			iter_ = 0;
 			epoch_++;
 			train_iter.Reset();
 		    train_acc.Reset();
-			iter_ = 0;
-			if (epoch_ == 10){
-					max_epoch_reached = true; // Terminate
-					return;
-			}
+		}
+
+		if (iter_ == 10){
+			FAST_DEBUG("(LOGIC): MAX EPOCH REACHED");
+			max_epoch_reached = true; // Terminate
+			return;
 		}
 
 		auto data_batch = train_iter.GetDataBatch();
 		// Set data and label
 		data_batch.data.CopyTo(&args["X"]);
 		data_batch.label.CopyTo(&args["label"]);
-
+		
+		FAST_DEBUG("(LOGIC): running");
 		// Compute gradients
 		exec->Forward(true);
 		exec->Backward();
@@ -109,7 +112,7 @@ public:
 			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
 			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 		}
-
+		FAST_DEBUG("(LOGIC): processed batch");
 		iter_++;
 	}
 
