@@ -1,6 +1,7 @@
 #!/bin/bash
 
 EXEC=$2
+DIRECTORY=`dirname $0`
 
 echo "running $EXEC on:"
 echo "`cat hosts`"
@@ -24,4 +25,4 @@ do
         export GAM_SVC_DMN_$i=$BASE_DMN
 done
 
-mpirun --machinefile hosts --pernode --tag-output -n $GAM_CARDINALITY ./fastnode-mpi $EXEC
+mpirun --machinefile hosts --pernode --tag-output -n $GAM_CARDINALITY $DIRECTORY/fastnode-mpi $EXEC
