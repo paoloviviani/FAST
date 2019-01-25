@@ -26,7 +26,7 @@ do
 done
 
 cat <<EOT >> commands.conf
-0-$TASK_COUNT  bash -c '$DIRECTORY/fastnode_slurm'
+0-$TASK_COUNT  bash -c '$DIRECTORY/fastnode_slurm $EXEC'
 EOT
 
 srun --export=ALL -N$GAM_CARDINALITY --ntasks-per-node=1 -l --multi-prog commands.conf
