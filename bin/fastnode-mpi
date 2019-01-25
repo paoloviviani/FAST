@@ -4,15 +4,5 @@ EXEC=$1
 
 export GAM_RANK=$OMPI_COMM_WORLD_RANK
 
-for i in `eval echo {0..$TASK_COUNT}`
-do
-        IDX=$(($i + 1))
-        HOST=`sed "${IDX}q;d" hosts`
-        export GAM_NODE_$i=$HOST
-        export GAM_SVC_PAP_$i=$BASE_PAP
-        export GAM_SVC_MEM_$i=$BASE_MEM
-        export GAM_SVC_DMN_$i=$BASE_DMN
-done
-
-echo $EXEC
+echo $GAM_SVC_PAP_0
 eval $EXEC

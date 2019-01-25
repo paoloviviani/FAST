@@ -4,6 +4,7 @@ EXEC=$2
 
 echo "running $EXEC on:"
 echo "`cat hosts`"
+echo "================="
 
 export GAM_LOG_PREFIX=$PWD/logs
 export GAM_CARDINALITY=$1
@@ -12,4 +13,15 @@ export BASE_PAP=6100
 export BASE_MEM=6228
 export BASE_DMN=6356
 
-mpirun --hostfile hosts -n $GAM_CARDINALITY ./fastnode_mpi $EXEC
+
+for i in `eval echo {0..$TASK_COUNT}`
+do
+        IDX=$(($i + 1))
+        HOST=`sed "${IDX}q;d" hosts`
+        export GAM_NODE_$i=$HOST
+        export GAM_SVC_PAP_$i=$BASE_PAP
+        export GAM_SVC_MEM_$i=$BASE_MEM
+        export GAM_SVC_DMN_$i=$BASE_DMN
+done
+
+mpirun --hostfile hosts -n $GAM_CARDINALITY ./fastnode-mpi $EXEC
