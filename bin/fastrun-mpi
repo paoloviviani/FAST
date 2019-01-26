@@ -1,30 +1,24 @@
 #!/bin/bash
 
 # PARSE ARGUMENTS
+
+EXECUTABLE=${@: -1}
+
 POSITIONAL=()
 while [[ $# -gt 0 ]]
 do
 key="$1"
 
 case $key in
-    -e|--extension)
-    EXTENSION="$2"
+    -H|--hostfile)
+    HOSTFILE="$2"
     shift # past argument
     shift # past value
     ;;
-    -s|--searchpath)
-    SEARCHPATH="$2"
+    -n|--numproc)
+    export GAM_CARDINALITY="$2"
     shift # past argument
     shift # past value
-    ;;
-    -l|--lib)
-    LIBPATH="$2"
-    shift # past argument
-    shift # past value
-    ;;
-    --default)
-    DEFAULT=YES
-    shift # past argument
     ;;
     *)    # unknown option
     POSITIONAL+=("$1") # save it in an array for later
@@ -34,15 +28,13 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-EXEC=$2
 DIRECTORY=`dirname $0`
 
-echo "running $EXEC on:"
+echo "running $EXECUTABLE on:"
 echo "`cat hosts`"
 echo "================="
 
 export GAM_LOG_PREFIX=$PWD/logs
-export GAM_CARDINALITY=$1
 export TASK_COUNT=$(($GAM_CARDINALITY - 1))
 export BASE_PAP=6100
 export BASE_MEM=6228
@@ -59,4 +51,4 @@ do
         export GAM_SVC_DMN_$i=$BASE_DMN
 done
 
-mpirun --machinefile hosts --pernode --tag-output -n $GAM_CARDINALITY $DIRECTORY/fastnode-mpi $EXEC
+mpirun --machinefile $HOSTFILE --pernode --tag-output -n $GAM_CARDINALITY $DIRECTORY/fastnode-mpi $EXECUTABLE
