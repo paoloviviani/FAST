@@ -1,0 +1,36 @@
+OPTIMIZE_FLAGS       = -O3 -DLOGLEVEL_INFO -g0
+ifeq ($(DEBUG),debug)
+OPTIMIZE_FLAGS       = -O0 -DLOGLEVEL_DEBUG -g3 -DGFF_LOG -DGAM_DBG
+endif
+ifeq ($(DEBUG),info)
+OPTIMIZE_FLAGS       = -O3 -DLOGLEVEL_INFO -g0
+endif
+ifeq ($(DEBUG),error)
+OPTIMIZE_FLAGS       = -O3 -DLOGLEVEL_ERROR -g0
+endif
+
+USE_GAM	             = 1
+
+CXX                  = g++
+LINK_OPT             = 
+VERSION              = 
+
+CCFLAGS              = -Wall -Wfatal-errors -Wno-unused-variable #-Wextra -Wstrict-aliasing -pedantic
+CFLAGS               = -std=c++11
+LDFLAGS              = 
+LIBS                 = -lpthread
+
+INCLUDES             = -I$(FAST_ROOT)/include -I$(FAST_ROOT)/3rdparty/fastflow/ -I$(FAST_ROOT)/3rdparty/fastflow/ff/d/gff -I$(FAST_ROOT)/3rdparty/gam/include
+
+#Libfabric dependency
+ifeq ($(LIBFABRIC_LIB_DIR),)
+LIBS                 += -lfabric
+else
+LIBS                 += -L$(LIBFABRIC_LIB_DIR) -lfabric
+endif
+
+#MxNet dependency
+MXNET_INCLUDE_DIR     =	$(FAST_ROOT)/3rdparty/mxnet/include
+INCLUDES             += -I$(MXNET_INCLUDE_DIR)
+LIBS                 += -L$(MXNET_LIB_DIR) -lmxnet
+CCFLAGS              += -DMXNET_TENSOR
