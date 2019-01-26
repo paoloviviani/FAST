@@ -23,10 +23,11 @@ LIBS                 = -lpthread
 INCLUDES             = -I$(FAST_ROOT)/include -I$(FAST_ROOT)/3rdparty/fastflow/ -I$(FAST_ROOT)/3rdparty/fastflow/ff/d/gff -I$(FAST_ROOT)/3rdparty/gam/include
 
 #Libfabric dependency
-ifeq ($(LIBFABRIC_LIB_DIR),)
+ifeq ($(LIBFABRIC_ROOT),)
 LIBS                 += -lfabric
 else
-LIBS                 += -L$(LIBFABRIC_LIB_DIR) -lfabric
+LIBS                 += -L$(LIBFABRIC_ROOT)/lib -lfabric
+INCLUDES             += -I$(LIBFABRIC_ROOT)/include
 endif
 
 #MxNet dependency
