@@ -2,6 +2,25 @@
 
 # PARSE ARGUMENTS
 
+show_help ()
+{
+  echo "Usage:
+
+  ${0##*/} [-h][-H HOSTFILE][-n numprocs] executable
+
+Options:
+
+  -h, --help
+    display this help and exit
+
+  -H, --hostfile
+    file containing hostnames/IPs of compute nodes
+
+  -n, --numproc
+    number of processes
+  "
+}
+
 EXECUTABLE=${@: -1}
 
 POSITIONAL=()
@@ -19,6 +38,10 @@ case $key in
     export GAM_CARDINALITY="$2"
     shift # past argument
     shift # past value
+    ;;
+    -h|--help)
+	show_help
+	exit
     ;;
     *)    # unknown option
     POSITIONAL+=("$1") # save it in an array for later

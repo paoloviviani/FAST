@@ -1,6 +1,56 @@
 #!/bin/bash
 
-EXEC=$2
+# PARSE ARGUMENTS
+
+show_help ()
+{
+  echo "Usage:
+
+  ${0##*/} [-h][-H HOSTFILE][-n numprocs] executable
+
+Options:
+
+  -h, --help
+    display this help and exit
+
+  -H, --hostfile
+    file containing hostnames/IPs of compute nodes
+
+  -n, --numproc
+    number of processes
+  "
+}
+
+EXECUTABLE=${@: -1}
+
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+key="$1"
+
+case $key in
+    -H|--hostfile)
+    HOSTFILE="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -n|--numproc)
+    export GAM_CARDINALITY="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -h|--help)
+	show_help
+	exit
+    ;;
+    *)    # unknown option
+    POSITIONAL+=("$1") # save it in an array for later
+    shift # past argument
+    ;;
+esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
 DIRECTORY=`dirname $0`
 
 echo "running $EXEC on $SLURM_NODELIST"
@@ -9,7 +59,6 @@ export HOSTS=`scontrol show hostnames $SLURM_NODELIST`
 echo $HOSTS
 
 export GAM_LOG_PREFIX=$PWD/logs
-export GAM_CARDINALITY=$1
 export TASK_COUNT=`expr $GAM_CARDINALITY - 1`
 export BASE_PAP=6100
 export BASE_MEM=6228
