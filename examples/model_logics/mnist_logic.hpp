@@ -146,5 +146,5 @@ public:
 	bool max_epoch_reached = false;
 	MXDataIter train_iter = MXDataIter("MNISTIter");
 	Accuracy train_acc;
-	const int batch_size_ = 32;
+	int batch_size_ = 32;
 };
