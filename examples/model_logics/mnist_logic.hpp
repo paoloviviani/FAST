@@ -42,12 +42,12 @@ public:
 
 		train_iter.SetParam("image", "../mnist_data/train-images-idx3-ubyte")
 			  .SetParam("label", "../mnist_data/train-labels-idx1-ubyte")
-			  .SetParam("batch_size", batch_size)
+			  .SetParam("batch_size", batch_size_)
 			  .SetParam("flat", 1)
 			  .CreateDataIter();
 
-		args["X"] = NDArray(Shape(batch_size, image_size*image_size), ctx);
-		args["label"] = NDArray(Shape(batch_size), ctx);
+		args["X"] = NDArray(Shape(batch_size_, image_size*image_size), ctx);
+		args["label"] = NDArray(Shape(batch_size_), ctx);
 		// Let MXNet infer shapes other parameters such as weights
 		net.InferArgsMap(ctx, &args, args);
 
