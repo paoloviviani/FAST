@@ -71,6 +71,7 @@ public:
 		FAST_DEBUG("(LOGIC): run batch, iteration = " << iter_);
 
 		if (!train_iter.Next()) {
+			FAST_DEBUG("(LOGIC): next epoch");
 			iter_ = 0;
 			epoch_++;
 			train_iter.Reset();

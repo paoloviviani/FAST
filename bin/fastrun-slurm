@@ -40,8 +40,8 @@ case $key in
     shift # past value
     ;;
     -h|--help)
-	show_help
-	exit
+  show_help
+  exit
     ;;
     *)    # unknown option
     POSITIONAL+=("$1") # save it in an array for later
@@ -53,10 +53,9 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 DIRECTORY=`dirname $0`
 
-echo "running $EXEC on $SLURM_NODELIST"
+echo "running $EXECUTABLE on $SLURM_NODELIST"
 
 export HOSTS=`scontrol show hostnames $SLURM_NODELIST`
-echo $HOSTS
 
 export GAM_LOG_PREFIX=$PWD/logs
 export TASK_COUNT=`expr $GAM_CARDINALITY - 1`
@@ -74,11 +73,13 @@ do
 	export GAM_SVC_DMN_$i=$BASE_DMN
 done
 
-cat <<EOT >> commands.conf
-0-$TASK_COUNT  bash -c '$DIRECTORY/fastnode_slurm $EXEC'
-EOT
+for i in `eval echo {0..$TASK_COUNT}` 
+do
+echo "$i  bash -c '$DIRECTORY/fastnode-slurm $EXECUTABLE'" >> commands.conf
+done
 
 srun --export=ALL -N$GAM_CARDINALITY --ntasks-per-node=1 -l --multi-prog commands.conf
 rm commands.conf
+
 
 
