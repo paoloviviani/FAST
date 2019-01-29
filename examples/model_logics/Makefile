@@ -1,8 +1,8 @@
 include ../../make/config.mk
 include ../../make/Makefile.global
 
-EXECS                = fast_mnist
-TARGET_OBJ           = fast_mnist.o
+EXECS                = mnist2D
+TARGET_OBJ           = mnist2D.o
 
 .PHONY: all clean cleanall
 .SUFFIXES: .c .cpp .o
@@ -10,11 +10,11 @@ TARGET_OBJ           = fast_mnist.o
 all: $(EXECS)
 
 #objects
-%.o: %.cpp $(FAST_ROOT)/include/fast/*.hpp $(FAST_ROOT)/include/fast/workers/mxnet_worker.hpp 
-	$(CXX) $(INCLUDES) $(CCFLAGS) $(CFLAGS) $(OPTIMIZE_FLAGS) -c -o $@ $<
+mnist2D.o: $(FAST_ROOT)/src/2D_torus.cpp $(FAST_ROOT)/include/fast/*.hpp $(FAST_ROOT)/include/fast/workers/mxnet_worker.hpp 
+	$(CXX) $(INCLUDES) -include mnist_logic.hpp $(CCFLAGS) $(CFLAGS) $(OPTIMIZE_FLAGS) -c -o $@ $<
 
 #basic unit test executable
-fast_mnist: $(TARGET_OBJ)
+mnist2D: $(TARGET_OBJ)
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
 
 clean:

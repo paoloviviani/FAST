@@ -14,12 +14,6 @@
 #include <gff.hpp>
 #include <fast.hpp>
 
-#ifndef LOGICFILE
-#define LOGICFILE <mnist_logic.hpp>
-#endif
-
-#include <LOGICFILE>
-
 #ifndef MODELLOGIC
 #define MODELLOGIC ModelLogic
 #endif
