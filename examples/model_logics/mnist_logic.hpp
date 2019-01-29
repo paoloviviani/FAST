@@ -33,7 +33,7 @@ public:
 	void init() {
 		const int image_size = 28;
 		const std::vector<int> layers{128, 64, 32, 10};
-		const int batch_size = 32;
+		batch_size_ = 32;
 		const float learning_rate = 0.001;
 
 		net = mlp(layers);
@@ -77,7 +77,7 @@ public:
 		    train_acc.Reset();
 		}
 
-		if (iter_ == 10){
+		if (epoch_ == 10){
 			FAST_DEBUG("(LOGIC): MAX EPOCH REACHED");
 			max_epoch_reached = true; // Terminate
 			return;
@@ -93,6 +93,7 @@ public:
 		exec->Forward(true);
 		exec->Backward();
 		train_acc.Update(data_batch.label, exec->outputs[0]);
+		FAST_INFO("=== TRAINING ACCURACY === " << train_acc.Get());
 		// Update parameters
 		for (size_t i = 0; i < arg_names.size(); ++i) {
 			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
@@ -116,7 +117,23 @@ public:
 	}
 
 	void finalize() {
-
+		  auto val_iter = MXDataIter("MNISTIter")
+		      .SetParam("image", "../data/mnist_data/t10k-images-idx3-ubyte")
+		      .SetParam("label", "../data/mnist_data/t10k-labels-idx1-ubyte")
+			  .SetParam("batch_size", batch_size_)
+			  .SetParam("flat", 1)
+			  .CreateDataIter();
+		  Accuracy acc;
+		    val_iter.Reset();
+		    while (val_iter.Next()) {
+		  	auto data_batch = val_iter.GetDataBatch();
+		  	data_batch.data.CopyTo(&args["X"]);
+		  	data_batch.label.CopyTo(&args["label"]);
+		  	// Forward pass is enough as no gradient is needed when evaluating
+		  	exec->Forward(false);
+		  	acc.Update(data_batch.label, exec->outputs[0]);
+		    }
+		    FAST_INFO("=== VALIDATION ACCURACY === " << train_acc.Get());
 	}
 
 	Symbol net;
@@ -129,4 +146,5 @@ public:
 	bool max_epoch_reached = false;
 	MXDataIter train_iter = MXDataIter("MNISTIter");
 	Accuracy train_acc;
+	const int batch_size_ = 32;
 };
