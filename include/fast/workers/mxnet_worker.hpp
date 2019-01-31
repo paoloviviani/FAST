@@ -239,9 +239,9 @@ public:
 		FAST_DEBUG("(MXNET WORKER): Launching pipeline")
 		global_->run();
 
-		auto dummy_out = gam::public_ptr< gam_vector<T> >(ptr, [](gam_vector<T> * ptr){delete ptr;});
-		FAST_DEBUG("(MXNET WORKER): Emitting trigger")
-		c.emit(dummy_out);
+//		auto dummy_out = gam::public_ptr< gam_vector<T> >(ptr, [](gam_vector<T> * ptr){delete ptr;});
+//		FAST_DEBUG("(MXNET WORKER): Emitting trigger")
+//		c.emit(dummy_out);
 	}
 
 	void svc_end(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
@@ -275,6 +275,36 @@ private:
 	ff::ff_pipeline * global_;
 	ff::ff_pipeline * training_;
 	ModelLogic logic_;
+};
+
+/**
+ * Common initialization class
+ */
+template < typename T >
+class TriggerLogic {
+public:
+
+	/**
+	 * The svc function is called repeatedly by the runtime, until an eos
+	 * token is returned.
+	 * Pointers are sent downstream by calling the emit() function on the
+	 * output channel, that is passed as input argument.
+	 *
+	 * @param c is the output channel (could be a template for simplicity)
+	 * @return a gff token
+	 */
+	gff::token_t svc(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+		c.emit(gam::make_private<gam_vector<T>>(0));
+		return gff::eos;
+	}
+
+	void svc_init() {
+	}
+
+	void svc_end(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
+	}
+
 };
 
 } // namespace FAST

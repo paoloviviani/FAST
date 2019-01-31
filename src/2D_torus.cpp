@@ -18,6 +18,14 @@
 #define MODELLOGIC ModelLogic
 #endif
 
+#ifndef TRIGGERLOGIC
+#define TRIGGERLOGIC TriggerLogic
+#endif
+
+typedef gff::Source<gff::OutBundleBroadcast<gff::NondeterminateMerge>, //
+		gam::public_ptr< FAST::gam_vector<float> >, //
+		TRIGGERLOGIC<float>> Trigger;
+
 typedef gff::Filter<gff::NondeterminateMerge, gff::OutBundleBroadcast<gff::NondeterminateMerge>,//
 		gam::public_ptr< FAST::gam_vector<float> >, gam::public_ptr< FAST::gam_vector<float> >, //
 		FAST::MXNetWorkerLogic<MODELLOGIC, float> > MxNetWorker;
@@ -69,6 +77,8 @@ int main(int argc, char** argv) {
 			gff::add(MxNetWorker(incoming_channels.at(i).at(j),outgoing_channels.at(i).at(j)));
 		}
 	}
+
+
 
 	/* execute the network */
 	gff::run();
