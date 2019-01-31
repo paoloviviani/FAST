@@ -114,6 +114,8 @@ public:
 			FAST_DEBUG("(TRAINER STAGE): executed batch from gradients");
 			return (void*)trigger;
 		}
+		if (in_ptr->size() == 0)
+			delete in_ptr;
 
 		// Got a pointer from the feedback channel
 		FAST_DEBUG("(TRAINER STAGE): got feedback go on");

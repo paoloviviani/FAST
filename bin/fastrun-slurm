@@ -75,7 +75,7 @@ done
 
 for i in `eval echo {0..$TASK_COUNT}` 
 do
-echo "$i  bash -c '$DIRECTORY/fastnode-slurm $EXECUTABLE'" >> commands.conf
+echo "$i  bash -c '$DIRECTORY/slurmnode $EXECUTABLE'" >> commands.conf
 done
 
 srun --export=ALL -N$GAM_CARDINALITY --ntasks-per-node=1 -l --multi-prog commands.conf
