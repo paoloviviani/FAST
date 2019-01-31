@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	gff::add(trigger_channel);
+	gff::add(Trigger(trigger_channel));
 
 	/* execute the network */
 	gff::run();
