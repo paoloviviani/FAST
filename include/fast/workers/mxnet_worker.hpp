@@ -146,14 +146,12 @@ public:
 
 	void * svc(void * in) {
 		if (in != END_OF_INPUT) {
-			FAST_DEBUG("(AUX STAGE): > [internal_out_stage] got " << in);
 			// send a NEXT_ITERATION message to the feedback channel
 			if (logic_->max_epoch_reached == false)
 				ff_send_out_to(NEXT_ITERATION, 0);
 			// forward the input pointer downstream
 			ff_send_out_to(in, 1);
 		} else {
-			FAST_DEBUG("(AUX STAGE): > [internal_out_stage] got END_OF_INPUT");
 			// send EOS to the feedback channel
 			ff_send_out_to(ff::FF_EOS, 0);
 		}
