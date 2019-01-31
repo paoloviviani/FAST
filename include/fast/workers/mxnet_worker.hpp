@@ -176,7 +176,7 @@ public:
 
 		auto public_out = gam::public_ptr< gam_vector<T> >(out, [](gam_vector<T> * ptr){delete ptr;});
 		FAST_DEBUG("(OUTPUT STAGE): prepared results")
-		c_.emit(public_out);
+		c_->emit(public_out);
 		FAST_DEBUG("(OUTPUT STAGE): emitted results")
 
 		return ff::FF_GO_ON;
