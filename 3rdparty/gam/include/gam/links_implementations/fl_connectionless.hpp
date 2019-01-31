@@ -63,9 +63,7 @@ class fl_connectionless {
     fl_node(src_node);
 
     // query fabric contexts
-#ifdef GAM_LOG
-    fprintf(stderr, "LKS init_links\n");
-#endif
+    LOGLN("LKS init_links");
     uint64_t flags = 0;
     fl_getinfo(&fl_info_, src_node, NULL, flags, FI_EP_RDM, FI_DIRECTED_RECV);
 
@@ -199,9 +197,7 @@ class fl_connectionless {
     int ret = FI_SUCCESS;
 
     // get fabric context
-#ifdef GAM_LOG
-    fprintf(stderr, "LKS src-endpoint node=%s svc=%s\n", node, service);
-#endif
+    LOGLN("LKS src-endpoint node=%s svc=%s", node, service);
     fi_info *fi;
     fl_getinfo(&fi, node, service, FI_SOURCE, FI_EP_RDM, FI_DIRECTED_RECV);
 

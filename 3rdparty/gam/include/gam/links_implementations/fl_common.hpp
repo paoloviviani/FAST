@@ -35,7 +35,6 @@
 #include <rdma/fabric.h>
 #include <rdma/fi_domain.h>
 
-
 namespace gam {
 
 constexpr auto FL_FI_VERSION = FI_VERSION(1, 4);
@@ -68,9 +67,7 @@ static void fl_getinfo(fi_info **fi,                           //
       fi_freeinfo(*fi);
       *fi = tmp;
 
-#ifdef GAM_LOG
-      fprintf(stderr, "> promoted FI_PROTO_RXM provider\n");
-#endif
+      LOGLN("> promoted FI_PROTO_RXM provider");
 
       break;
     }
@@ -78,21 +75,17 @@ static void fl_getinfo(fi_info **fi,                           //
 
   fi_freeinfo(hints);
 
-#ifdef GAM_LOG
   struct fi_info *cur;
   for (cur = *fi; cur; cur = cur->next) {
-    fprintf(stderr, "provider: %s\n", cur->fabric_attr->prov_name);
-    fprintf(stderr, "    fabric: %s\n", cur->fabric_attr->name);
-    fprintf(stderr, "    domain: %s\n", cur->domain_attr->name);
-    fprintf(stderr, "    version: %d.%d\n",
-            FI_MAJOR(cur->fabric_attr->prov_version),
-            FI_MINOR(cur->fabric_attr->prov_version));
-    fprintf(stderr, "    type: %s\n",
-            fi_tostr(&cur->ep_attr->type, FI_TYPE_EP_TYPE));
-    fprintf(stderr, "    protocol: %s\n",
-            fi_tostr(&cur->ep_attr->protocol, FI_TYPE_PROTOCOL));
+    LOGLN("provider: %s", cur->fabric_attr->prov_name);
+    LOGLN("    fabric: %s", cur->fabric_attr->name);
+    LOGLN("    domain: %s", cur->domain_attr->name);
+    LOGLN("    version: %d.%d", FI_MAJOR(cur->fabric_attr->prov_version),
+          FI_MINOR(cur->fabric_attr->prov_version));
+    LOGLN("    type: %s", fi_tostr(&cur->ep_attr->type, FI_TYPE_EP_TYPE));
+    LOGLN("    protocol: %s",
+          fi_tostr(&cur->ep_attr->protocol, FI_TYPE_PROTOCOL));
   }
-#endif
 }
 
 static int fl_dst_addr(char *node, char *service, struct fi_info **fi_dst,

@@ -40,7 +40,6 @@ class wrapped_allocator {
    */
   inline void *malloc(size_t size) {
 #ifdef GAM_DBG
-
     return a.malloc(size);
 #else
     return ::malloc(size);

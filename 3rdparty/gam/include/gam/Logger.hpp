@@ -66,17 +66,13 @@ class Logger {
     return &logger;
   }
 
-  void init(std::string fname, int id) {
-    fname.append("/gam.").append(std::to_string(id)).append(".log");
-    m_Logfile.open(fname, std::ios::out);
-    assert(m_Logfile);
+  void init(int id) {
     // print header message
     log("I am gam executor %d (pid=%d)", id, getpid());
   }
-  void finalize(int id = 0) {
+  void finalize(int id) {
     // print footer message
     log("stop logging executor %d", id);
-    m_Logfile.close();
   }
 
   /**
@@ -89,20 +85,19 @@ class Logger {
     vsprintf(sMessage, format, args);
 
     lock();
-    m_Logfile << "[" << time(0) << "] " << sMessage << std::endl;
+    std::cout << "[" << time(0) << "] " << sMessage << std::endl;
     unlock();
 
     va_end(args);
   }
 
-  std::ostream &out_stream() { return m_Logfile << "[" << time(0) << "] "; }
+  std::ostream &out_stream() { return std::cout << "[" << time(0) << "] "; }
 
   void lock() { mtx.lock(); }
 
   void unlock() { mtx.unlock(); }
 
  private:
-  std::ofstream m_Logfile;
   std::mutex mtx;
 
   char sMessage[256];
