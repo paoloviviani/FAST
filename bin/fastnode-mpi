@@ -10,7 +10,7 @@ export BASE_DMN=6356
 for i in `eval echo {0..$TASK_COUNT}`
 do
         IDX=$(($i + 1))
-        HOST=`sed "${IDX}q;d" $HOSTFILE`
+        HOST=`sed "${IDX}q;d" ${HOSTFILE}`
         export GAM_NODE_$i=$HOST
         export GAM_SVC_PAP_$i=$BASE_PAP
         export GAM_SVC_MEM_$i=$BASE_MEM
