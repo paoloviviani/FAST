@@ -18,13 +18,9 @@
 #define MODELLOGIC ModelLogic
 #endif
 
-#ifndef TRIGGERLOGIC
-#define TRIGGERLOGIC TriggerLogic
-#endif
-
 typedef gff::Source<gff::OutBundleBroadcast<gff::NondeterminateMerge>, //
 		gam::public_ptr< FAST::gam_vector<float> >, //
-		TRIGGERLOGIC<float>> Trigger;
+		FAST::TriggerLogic<float>> Trigger;
 
 typedef gff::Filter<gff::NondeterminateMerge, gff::OutBundleBroadcast<gff::NondeterminateMerge>,//
 		gam::public_ptr< FAST::gam_vector<float> >, gam::public_ptr< FAST::gam_vector<float> >, //
