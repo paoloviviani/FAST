@@ -101,9 +101,7 @@ class Context {
     /*
      * initialize logger
      */
-    env = std::getenv("GAM_LOG_PREFIX");
-    assert(env);
-    LOGGER_INIT(env, rank_);
+    LOGGER_INIT(rank_);
     LOGLN("CTX rank = %llu", rank_);
 
     /*
