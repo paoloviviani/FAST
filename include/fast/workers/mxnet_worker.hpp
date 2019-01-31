@@ -165,7 +165,7 @@ template <typename ModelLogic, typename T >
 class OutputStage: public ff::ff_node {
 public:
 
-	OutputStage(ModelLogic * logic) : logic_(logic) {}
+	OutputStage(ModelLogic * logic, gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) : logic_(logic), c_(c) {}
 
 	void * svc(void * task) {
 		delete (bool *)task;
@@ -174,11 +174,17 @@ public:
 		NDVecToVec( logic_->exec->grad_arrays, logic_->arg_names, *out, "X", "label");
 		FAST_DEBUG("(OUTPUT STAGE): serialized gradient");
 
-		return (void*)out;
+		auto public_out = gam::public_ptr< gam_vector<T> >(out, [](gam_vector<T> * ptr){delete ptr;});
+		FAST_DEBUG("(OUTPUT STAGE): prepared results")
+		c_.emit(public_out);
+		FAST_DEBUG("(OUTPUT STAGE): emitted results")
+
+		return ff::FF_GO_ON;
 	}
 
 private:
 	ModelLogic * logic_;
+	gff::OutBundleBroadcast<gff::NondeterminateMerge> c_;
 };
 
 /**
@@ -201,20 +207,10 @@ public:
 		global_->offload( (void*)inp );
 		FAST_DEBUG("(MXNET WORKER): svc offloaded")
 
-		global_->load_result( &outptr );
-		FAST_DEBUG("(MXNET WORKER): svc got results")
-
 		if (logic_.max_epoch_reached == true){
 			FAST_DEBUG(" MAX REACHED, terminating ========== ")	
 			return gff::eos;
 		}
-
-		gam_vector<T> * outvec = (gam_vector<T> *)outptr;
-		auto public_out = gam::public_ptr< gam_vector<T> >(outvec, [](gam_vector<T> * ptr){delete ptr;});
-		FAST_DEBUG("(MXNET WORKER): svc prepared results")
-
-		c.emit(public_out);
-		FAST_DEBUG("(MXNET WORKER): svc emitted results")
 
 		return gff::go_on;
 	}
@@ -236,7 +232,7 @@ public:
 		training_->add_stage( new InternalAuxStage<ModelLogic>(&logic_) );
 		training_->wrap_around();
 		global_->add_stage(training_);
-		global_->add_stage( new OutputStage<ModelLogic, T>(&logic_) );
+		global_->add_stage( new OutputStage<ModelLogic, T>(&logic_, c) );
 
 		global_->cleanup_nodes();
 		training_->cleanup_nodes();
