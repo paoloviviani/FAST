@@ -53,7 +53,7 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 DIRECTORY=`dirname $0`
 export GAM_LOG_PREFIX=$PWD/logs
-export NODE_COUNT=`cat $HOSTFILE | wc -l`
+export NODE_COUNT=`cat ${HOSTFILE} | wc -l`
 echo $NODE_COUNT
 
 echo "running $EXECUTABLE on:"
