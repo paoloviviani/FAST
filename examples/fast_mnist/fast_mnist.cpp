@@ -19,13 +19,13 @@ using namespace mxnet::cpp;
 
 Context ctx = Context::cpu();  // Use CPU for training
 
-Symbol mlp(const vector<int> &layers) {
+Symbol mlp(const std::vector<int> &layers) {
 	auto x = Symbol::Variable("X");
 	auto label = Symbol::Variable("label");
 
-	vector<Symbol> weights(layers.size());
-	vector<Symbol> biases(layers.size());
-	vector<Symbol> outputs(layers.size());
+	std::vector<Symbol> weights(layers.size());
+	std::vector<Symbol> biases(layers.size());
+	std::vector<Symbol> outputs(layers.size());
 
 	for (size_t i = 0; i < layers.size(); ++i) {
 		weights[i] = Symbol::Variable("w" + to_string(i));
@@ -45,8 +45,8 @@ class ModelLogic {
 public:
 	void init() {
 		const int image_size = 28;
-		const vector<int> layers{128, 64, 32, 10};
-		const int batch_size = 32;
+		const std::vector<int> layers{256, 64, 32, 10};
+		batch_size_ = 32;
 		const float learning_rate = 0.001;
 
 		net = mlp(layers);
@@ -55,12 +55,12 @@ public:
 
 		train_iter.SetParam("image", "../mnist_data/train-images-idx3-ubyte")
 			  .SetParam("label", "../mnist_data/train-labels-idx1-ubyte")
-			  .SetParam("batch_size", batch_size)
+			  .SetParam("batch_size", batch_size_)
 			  .SetParam("flat", 1)
 			  .CreateDataIter();
 
-		args["X"] = NDArray(Shape(batch_size, image_size*image_size), ctx);
-		args["label"] = NDArray(Shape(batch_size), ctx);
+		args["X"] = NDArray(Shape(batch_size_, image_size*image_size), ctx);
+		args["label"] = NDArray(Shape(batch_size_), ctx);
 		// Let MXNet infer shapes other parameters such as weights
 		net.InferArgsMap(ctx, &args, args);
 
@@ -84,23 +84,27 @@ public:
 		FAST_DEBUG("(LOGIC): run batch, iteration = " << iter_);
 
 		if (!train_iter.Next()) {
+			FAST_DEBUG("(LOGIC): next epoch");
 			iter_ = 0;
 			epoch_++;
+			FAST_INFO("=== TRAINING ACCURACY === " << train_acc.Get());
 			train_iter.Reset();
 		    train_acc.Reset();
 		}
 
-		if (iter_ == 10){
+		if (epoch_ == 10){
 			FAST_DEBUG("(LOGIC): MAX EPOCH REACHED");
 			max_epoch_reached = true; // Terminate
 			return;
 		}
 
+		// Simulate granularity
+
 		auto data_batch = train_iter.GetDataBatch();
 		// Set data and label
 		data_batch.data.CopyTo(&args["X"]);
 		data_batch.label.CopyTo(&args["label"]);
-		
+
 		FAST_DEBUG("(LOGIC): running");
 		// Compute gradients
 		exec->Forward(true);
@@ -129,7 +133,23 @@ public:
 	}
 
 	void finalize() {
-
+		  auto val_iter = MXDataIter("MNISTIter")
+		      .SetParam("image", "../data/mnist_data/t10k-images-idx3-ubyte")
+		      .SetParam("label", "../data/mnist_data/t10k-labels-idx1-ubyte")
+			  .SetParam("batch_size", batch_size_)
+			  .SetParam("flat", 1)
+			  .CreateDataIter();
+		  Accuracy acc;
+		    val_iter.Reset();
+		    while (val_iter.Next()) {
+		  	auto data_batch = val_iter.GetDataBatch();
+		  	data_batch.data.CopyTo(&args["X"]);
+		  	data_batch.label.CopyTo(&args["label"]);
+		  	// Forward pass is enough as no gradient is needed when evaluating
+		  	exec->Forward(false);
+		  	acc.Update(data_batch.label, exec->outputs[0]);
+		    }
+		    FAST_INFO("=== VALIDATION ACCURACY === " << train_acc.Get());
 	}
 
 	Symbol net;
@@ -142,6 +162,7 @@ public:
 	bool max_epoch_reached = false;
 	MXDataIter train_iter = MXDataIter("MNISTIter");
 	Accuracy train_acc;
+	int batch_size_ = 32;
 };
 
 typedef gff::Filter<gff::NondeterminateMerge, gff::OutBundleBroadcast<gff::NondeterminateMerge>,//
