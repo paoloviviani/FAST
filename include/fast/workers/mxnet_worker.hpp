@@ -200,7 +200,6 @@ public:
 
 		FAST_DEBUG("(MXNET WORKER): svc got pointer")
 
-		void * outptr = nullptr;
 		PublicWrapper<T> * inp = new PublicWrapper<T>();
 		inp->payload = in;
 
