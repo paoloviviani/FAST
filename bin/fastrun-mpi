@@ -53,9 +53,11 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 DIRECTORY=`dirname $0`
 export GAM_LOG_PREFIX=$PWD/logs
+export NODE_COUNT=`cat $HOSTFILE | wc -l`
+echo $NODE_COUNT
 
 echo "running $EXECUTABLE on:"
 echo "`cat hosts`"
 echo "================="
 
-mpirun -x LD_LIBRARY_PATH -x GAM_LOG_PREFIX -x GAM_CARDINALITY --machinefile $HOSTFILE --pernode --tag-output -n $GAM_CARDINALITY $DIRECTORY/fastnode-mpi $EXECUTABLE
+mpirun -x LD_LIBRARY_PATH -x GAM_LOG_PREFIX -x GAM_CARDINALITY -x NODE_COUNT -X HOSTFILE --machinefile $HOSTFILE --pernode --tag-output -n $GAM_CARDINALITY $DIRECTORY/fastnode-mpi $EXECUTABLE
