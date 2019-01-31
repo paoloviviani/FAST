@@ -252,7 +252,6 @@ public:
 		global_->offload((void *)ff::FF_EOS);
 		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
-
 		// wait EOS
 		if (training_->wait_freezing()<0) {
 			FAST_DEBUG("(MXNET FINALIZATION): freezing error");
