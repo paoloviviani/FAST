@@ -165,7 +165,7 @@ template <typename ModelLogic, typename T >
 class OutputStage: public ff::ff_node {
 public:
 
-	OutputStage(ModelLogic * logic, gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) : logic_(logic), c_(c) {}
+	OutputStage(ModelLogic * logic, gff::OutBundleBroadcast<gff::NondeterminateMerge> * c) : logic_(logic), c_(c) {}
 
 	void * svc(void * task) {
 		delete (bool *)task;
@@ -184,7 +184,7 @@ public:
 
 private:
 	ModelLogic * logic_;
-	gff::OutBundleBroadcast<gff::NondeterminateMerge> c_;
+	gff::OutBundleBroadcast<gff::NondeterminateMerge> * c_;
 };
 
 /**
@@ -232,7 +232,7 @@ public:
 		training_->add_stage( new InternalAuxStage<ModelLogic>(&logic_) );
 		training_->wrap_around();
 		global_->add_stage(training_);
-		global_->add_stage( new OutputStage<ModelLogic, T>(&logic_, c) );
+		global_->add_stage( new OutputStage<ModelLogic, T>(&logic_, &c) );
 
 		global_->cleanup_nodes();
 		training_->cleanup_nodes();
