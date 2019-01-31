@@ -295,7 +295,7 @@ public:
 	 */
 	gff::token_t svc(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-		c.emit(gam::make_private<gam_vector<T>>(0));
+		c.emit(gam::make_public<gam_vector<T>>(0));
 		return gff::eos;
 	}
 
