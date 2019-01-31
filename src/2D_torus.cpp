@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	gff::OutBundleBroadcast<gff::NondeterminateMerge> trigger_channel(workers);
+	gff::OutBundleBroadcast<gff::NondeterminateMerge> trigger_channel();
 	for (int i = 0; i < grid_h; i++) {
 		for (int j = 0; j < grid_w; j++) {
 			trigger_channel.add_comm(incoming_channels.at(i).at(j));
