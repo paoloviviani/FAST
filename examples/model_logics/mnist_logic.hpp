@@ -74,6 +74,7 @@ public:
 			FAST_DEBUG("(LOGIC): next epoch");
 			iter_ = 0;
 			epoch_++;
+			FAST_INFO("=== TRAINING ACCURACY === " << train_acc.Get());
 			train_iter.Reset();
 		    train_acc.Reset();
 		}
@@ -94,7 +95,6 @@ public:
 		exec->Forward(true);
 		exec->Backward();
 		train_acc.Update(data_batch.label, exec->outputs[0]);
-		FAST_INFO("=== TRAINING ACCURACY === " << train_acc.Get());
 		// Update parameters
 		for (size_t i = 0; i < arg_names.size(); ++i) {
 			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
