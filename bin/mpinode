@@ -19,6 +19,6 @@ done
 
 export GAM_RANK=$OMPI_COMM_WORLD_RANK
 hostname
-echo $GAM_RANK
+echo GAM_NODE_$GAM_RANK
 #eval $EXEC
 
