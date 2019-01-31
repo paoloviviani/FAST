@@ -60,4 +60,4 @@ echo "running $EXECUTABLE on:"
 echo "`cat hosts`"
 echo "================="
 
-mpirun -x LD_LIBRARY_PATH -x GAM_LOG_PREFIX -x GAM_CARDINALITY -x NODE_COUNT -X HOSTFILE --machinefile $HOSTFILE --pernode --tag-output -n $GAM_CARDINALITY $DIRECTORY/fastnode-mpi $EXECUTABLE
+mpirun -x LD_LIBRARY_PATH -x GAM_LOG_PREFIX -x GAM_CARDINALITY -x NODE_COUNT -x HOSTFILE --machinefile $HOSTFILE --pernode --tag-output -n $GAM_CARDINALITY $DIRECTORY/fastnode-mpi $EXECUTABLE
