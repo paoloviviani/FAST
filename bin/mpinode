@@ -18,5 +18,7 @@ do
 done
 
 export GAM_RANK=$OMPI_COMM_WORLD_RANK
-eval $EXEC
+hostname
+echo $GAM_RANK
+#eval $EXEC
 
