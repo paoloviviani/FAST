@@ -18,10 +18,6 @@
 #define MODELLOGIC ModelLogic
 #endif
 
-typedef gff::Source<gff::OutBundleBroadcast<gff::NondeterminateMerge>, //
-		gam::public_ptr< FAST::gam_vector<float> >, //
-		FAST::TriggerLogic<float>> Trigger;
-
 typedef gff::Filter<gff::NondeterminateMerge, gff::OutBundleBroadcast<gff::NondeterminateMerge>,//
 		gam::public_ptr< FAST::gam_vector<float> >, gam::public_ptr< FAST::gam_vector<float> >, //
 		FAST::MXNetWorkerLogic<MODELLOGIC, float> > MxNetWorker;
@@ -37,9 +33,9 @@ typedef gff::Filter<gff::NondeterminateMerge, gff::OutBundleBroadcast<gff::Nonde
 int main(int argc, char** argv) {
 	FAST_LOG_INIT
 
-	size_t workers = 9;
-	size_t grid_h = 3;
-	size_t grid_w = 3;
+	size_t workers = 16;
+	size_t grid_h = 4;
+	size_t grid_w = 4;
 
 	// Row major ordering
 	std::vector < std::vector< gff::NondeterminateMerge > > incoming_channels(grid_h);
@@ -73,15 +69,6 @@ int main(int argc, char** argv) {
 			gff::add(MxNetWorker(incoming_channels.at(i).at(j),outgoing_channels.at(i).at(j)));
 		}
 	}
-
-	gff::OutBundleBroadcast<gff::NondeterminateMerge> trigger_channel;
-	for (int i = 0; i < grid_h; i++) {
-		for (int j = 0; j < grid_w; j++) {
-			trigger_channel.add_comm( incoming_channels.at(i).at(j) );
-		}
-	}
-
-	gff::add(Trigger(trigger_channel));
 
 	/* execute the network */
 	gff::run();
