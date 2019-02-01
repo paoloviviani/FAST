@@ -2,6 +2,9 @@
 #include <fast.hpp>
 #include "mxnet-cpp/MxNetCpp.h"
 
+#define DATA_TAG "data"
+#define OUTPUT_TAG "label"
+
 using namespace mxnet::cpp;
 
 Context ctx = Context::cpu();  // Use CPU for training
@@ -73,7 +76,7 @@ public:
 
 		auto data_batch = train_iter.GetDataBatch();
 		// Set data and label
-		data_batch.data.CopyTo(&args["X"]);
+		data_batch.data.CopyTo(&args["data"]);
 		data_batch.label.CopyTo(&args["label"]);
 
 		FAST_DEBUG("(LOGIC): running");
@@ -83,7 +86,7 @@ public:
 		train_acc.Update(data_batch.label, exec->outputs[0]);
 		// Update parameters
 		for (size_t i = 0; i < arg_names.size(); ++i) {
-			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
+			if (arg_names[i] == "data" || arg_names[i] == "label") continue;
 			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 		}
 		if (iter_ % 20 == 0)
@@ -97,7 +100,7 @@ public:
 				if (in.size() > 0) {
 					int ii = 0;
 					for (size_t i = 0; i < arg_names.size(); ++i) {
-						if (arg_names[i] == "X" || arg_names[i] == "label") continue;
+						if (arg_names[i] == "data" || arg_names[i] == "label") continue;
 						opt->Update(i, exec->arg_arrays[i], in[ii]);
 						ii++;
 					}
@@ -122,7 +125,7 @@ public:
 		val_iter.Reset();
 		while (val_iter.Next()) {
 			auto data_batch = val_iter.GetDataBatch();
-			data_batch.data.CopyTo(&args["X"]);
+			data_batch.data.CopyTo(&args["data"]);
 			data_batch.label.CopyTo(&args["label"]);
 			// Forward pass is enough as no gradient is needed when evaluating
 			exec->Forward(false);
