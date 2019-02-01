@@ -9,7 +9,7 @@
 #include <string>
 #include <cassert>
 #include <cmath>
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <gff.hpp>
 #include <fast.hpp>
@@ -33,9 +33,13 @@ typedef gff::Filter<gff::NondeterminateMerge, gff::OutBundleBroadcast<gff::Nonde
 int main(int argc, char** argv) {
 	FAST_LOG_INIT
 
-	size_t workers = 16;
-	size_t grid_h = 4;
-	size_t grid_w = 4;
+	if (argc < 3) {
+		std::cout << "Usage: > ./executable grid_height grid_width\n\n"
+		return 1;
+	}
+	size_t grid_h = atoi(argv[1]);
+	size_t grid_w = atoi(argv[2]);
+	size_t workers = grid_h*grid_w;
 
 	// Row major ordering
 	std::vector < std::vector< gff::NondeterminateMerge > > incoming_channels(grid_h);
