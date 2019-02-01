@@ -20,10 +20,10 @@
 #include <ff/node.hpp>
 
 #ifndef DATA_TAG
-#define DATA_TAG "X"
+#define DATA_TAG X
 #endif
 #ifndef OUTPUT_TAG
-#define OUTPUT_TAG "label"
+#define OUTPUT_TAG label
 #endif
 
 namespace FAST {
@@ -85,7 +85,7 @@ public:
 			FAST_DEBUG("(INPUT STAGE): push gradients")
 			this->ff_send_out((void *)buffer_);
 			buffer_ = new NDAvector(0);
-			FAST::buildNDVec( *buffer_, logic_->exec->grad_arrays, logic_->arg_names, DATA_TAG, OUTPUT_TAG, mxnet::cpp::Context::cpu() );
+			FAST::buildNDVec( *buffer_, logic_->exec->grad_arrays, logic_->arg_names, "DATA_TAG", "OUTPUT_TAG", mxnet::cpp::Context::cpu() );
 		}
 		return ff::FF_GO_ON;
 	}
@@ -93,7 +93,7 @@ public:
 	int svc_init() {
 		FAST_DEBUG("(INPUT STAGE): init stage")
 		buffer_ = new NDAvector(0);
-		FAST::buildNDVec( *buffer_, logic_->exec->grad_arrays, logic_->arg_names, DATA_TAG, OUTPUT_TAG, mxnet::cpp::Context::cpu() );
+		FAST::buildNDVec( *buffer_, logic_->exec->grad_arrays, logic_->arg_names, "DATA_TAG", "OUTPUT_TAG", mxnet::cpp::Context::cpu() );
 		FAST_DEBUG("(INPUT STAGE): Built NDVec");
 		return 0;
 	}
@@ -187,7 +187,7 @@ public:
 		FAST_DEBUG("(OUTPUT STAGE): got pointer");
 		delete (bool *)task;
 		gam_vector<T> * out = new gam_vector<T>();
-		NDVecToVec( logic_->exec->grad_arrays, logic_->arg_names, *out, DATA_TAG, OUTPUT_TAG);
+		NDVecToVec( logic_->exec->grad_arrays, logic_->arg_names, *out, "DATA_TAG", "OUTPUT_TAG");
 		FAST_DEBUG("(OUTPUT STAGE): allocated size " << out->size());
 		FAST_DEBUG("(OUTPUT STAGE): serialized gradients");
 
