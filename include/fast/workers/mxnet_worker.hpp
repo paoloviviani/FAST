@@ -225,6 +225,7 @@ public:
 
 		
 		global_->load_result(&outptr);
+		FAST_DEBUG("(MXNET WORKER): loaded results")
 //		delete (bool*)outptr;
 		gam_vector<T> * out = (gam_vector<T> *)outptr;
 		auto public_out = gam::public_ptr< gam_vector<T> >(out, [](gam_vector<T> * ptr){delete ptr;});
