@@ -9,9 +9,7 @@ Context ctx = Context::cpu();  // Use CPU for training
 class ModelLogic {
 public:
 	void init() {
-		const int image_size = 28;
 		batch_size_ = 32;
-		const float learning_rate = 0.001;
 		const float learning_rate = 0.01;
 		const float weight_decay = 1e-4;
 
