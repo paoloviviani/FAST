@@ -33,9 +33,9 @@ typedef gff::Filter<gff::NondeterminateMerge, gff::OutBundleBroadcast<gff::Nonde
 int main(int argc, char** argv) {
 	FAST_LOG_INIT
 
-	size_t workers = 9;
-	size_t grid_h = 3;
-	size_t grid_w = 3;
+	size_t workers = 16;
+	size_t grid_h = 4;
+	size_t grid_w = 4;
 
 	// Row major ordering
 	std::vector < std::vector< gff::NondeterminateMerge > > incoming_channels(grid_h);

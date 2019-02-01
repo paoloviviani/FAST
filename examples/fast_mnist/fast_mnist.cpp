@@ -99,7 +99,7 @@ public:
 		}
 
 		// Simulate granularity
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
 		auto data_batch = train_iter.GetDataBatch();
 		// Set data and label
 		data_batch.data.CopyTo(&args["X"]);
@@ -116,6 +116,8 @@ public:
 			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 		}
 		FAST_DEBUG("(LOGIC): processed batch");
+		if (iter_ % 20 == 0)
+			FAST_INFO("Iter = " << iter_ << " Accuracy = " << train_acc.Get() );
 		iter_++;
 	}
 

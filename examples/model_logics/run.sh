@@ -11,7 +11,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$MXNET_LIBDIR:$LIBFABRIC_ROOT/lib
 
 #export GAM_LOG_PREFIX=$PWD/logs
 
-export GAM_CARDINALITY=9
+export GAM_CARDINALITY=16
 
 #if [[ $* == *-l* ]]; then
 #export GAM_RUN_LOCAL=$FAST_ROOT/bin/gamrun-local_logging
