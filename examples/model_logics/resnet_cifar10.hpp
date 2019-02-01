@@ -14,7 +14,7 @@ public:
 		const float learning_rate = 0.01;
 		const float weight_decay = 1e-4;
 
-		auto net = Symbol::Load("./symbols/resnet18_v2.json");
+		net = Symbol::Load("./symbols/resnet18_v2.json");
 
 		MXDataIter("ImageRecordIter")
 			.SetParam("path_imglist", "../cifar10/cifar10_train.lst")
@@ -27,6 +27,8 @@ public:
 			.SetParam("preprocess_threads", 24)
 			.SetParam("pad", 2)
 			.CreateDataIter();
+
+		FAST_DEBUG("(LOGIC): Loaded data ");
 
 		args["data"] = NDArray(Shape(batch_size_, 3, image_size, image_size), ctx);
 		args["label"] = NDArray(Shape(batch_size_), ctx);
