@@ -28,20 +28,23 @@ public:
 			.SetParam("pad", 2)
 			.CreateDataIter();
 
-		args["X"] = NDArray(Shape(batch_size_, image_size*image_size), ctx);
+		std::map<string, NDArray> args;
+		args["data"] = NDArray(Shape(batch_size_, 3, image_size, image_size), ctx);
 		args["label"] = NDArray(Shape(batch_size_), ctx);
-		// Let MXNet infer shapes other parameters such as weights
+		//Let MXNet infer shapes other parameters such as weights
 		net.InferArgsMap(ctx, &args, args);
 
-		// Initialize all parameters with uniform distribution U(-0.01, 0.01)
-		auto initializer = Uniform(0.01);
+		//Initialize all parameters with uniform distribution U(-0.01, 0.01)
+		auto initializer = Xavier();
 		for (auto& arg : args) {
-			// arg.first is parameter name, and arg.second is the value
+			//arg.first is parameter name, and arg.second is the value
 			initializer(arg.first, &arg.second);
 		}
 
 		opt = OptimizerRegistry::Find("adam");
 		opt->SetParam("lr", learning_rate);
+		opt->SetParam("wd", weight_decay);
+
 		exec = net.SimpleBind(ctx, args);
 		arg_names = net.ListArguments();
 
