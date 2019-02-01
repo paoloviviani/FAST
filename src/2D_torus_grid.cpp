@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
 	FAST_LOG_INIT
 
 	if (argc < 3) {
-		std::cout << "Usage: > ./executable grid_height grid_width\n\n"
+		std::cout << "Usage: > ./executable grid_height grid_width\n\n";
 		return 1;
 	}
 	size_t grid_h = atoi(argv[1]);
