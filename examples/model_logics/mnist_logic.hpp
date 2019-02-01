@@ -30,7 +30,7 @@ class ModelLogic {
 public:
 	void init() {
 		const int image_size = 28;
-		const std::vector<int> layers{256, 64, 32, 10};
+		const std::vector<int> layers{16, 16, 10};
 		batch_size_ = 32;
 		const float learning_rate = 0.001;
 
@@ -84,8 +84,7 @@ public:
 		}
 
 		// Simulate granularity
-		std::this_thread::sleep_for(std::chrono::milliseconds(300));
-
+		std::this_thread::sleep_for(std::chrono::milliseconds(150));
 		auto data_batch = train_iter.GetDataBatch();
 		// Set data and label
 		data_batch.data.CopyTo(&args["X"]);
@@ -102,6 +101,8 @@ public:
 			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 		}
 		FAST_DEBUG("(LOGIC): processed batch");
+		if (iter_ % 20 == 0)
+			FAST_INFO("Iter = " << iter_ << " Accuracy = " << train_acc.Get() );
 		iter_++;
 	}
 
