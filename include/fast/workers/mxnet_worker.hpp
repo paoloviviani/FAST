@@ -19,6 +19,13 @@
 #include <ff/pipeline.hpp>
 #include <ff/node.hpp>
 
+#ifndef DATA_TAG
+#define DATA_TAG "X"
+#endif
+#ifndef OUTPUT_TAG
+#define OUTPUT_TAG "label"
+#endif
+
 namespace FAST {
 
 /**

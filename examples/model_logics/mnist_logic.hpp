@@ -2,9 +2,6 @@
 #include <fast.hpp>
 #include "mxnet-cpp/MxNetCpp.h"
 
-#define DATA_TAG "X"
-#define OUTPUT_TAG "label"
-
 using namespace mxnet::cpp;
 
 Symbol mlp(const std::vector<int> &layers) {

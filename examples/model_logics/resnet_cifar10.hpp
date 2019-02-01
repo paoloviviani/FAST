@@ -2,9 +2,6 @@
 #include <fast.hpp>
 #include "mxnet-cpp/MxNetCpp.h"
 
-#define DATA_TAG "data"
-#define OUTPUT_TAG "label"
-
 using namespace mxnet::cpp;
 
 Context ctx = Context::cpu();  // Use CPU for training
