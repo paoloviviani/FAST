@@ -45,7 +45,7 @@ class ModelLogic {
 public:
 	void init() {
 		const int image_size = 28;
-		const std::vector<int> layers{256, 64, 32, 10};
+		const std::vector<int> layers{16, 16, 10};
 		batch_size_ = 32;
 		const float learning_rate = 0.001;
 

@@ -53,9 +53,10 @@ public:
 	InputStage(ModelLogic * logic) : logic_(logic), buffer_(nullptr), first_push_(true) {}
 
 	void * svc(void * task) {
-
+		FAST_DEBUG("(INPUT STAGE): started svc")
 		auto recv_ptr = ((PublicWrapper<T> *)task)->payload.local();
 		delete (PublicWrapper<T> *)task;
+		FAST_DEBUG("(INPUT STAGE): got pointer")
 
 		if (recv_ptr->size() == 0) {
 			FAST_DEBUG("(INPUT STAGE): got trigger pointer")
@@ -150,14 +151,14 @@ public:
 	void * svc(void * in) {
 		if (in != END_OF_INPUT) {
 			// send a NEXT_ITERATION message to the feedback channel
-			FAST_DEBUG("(AUX STAGE): received pointer");
+			FAST_DEBUG("(AUX STAGE): got pointer");
 			if (logic_->max_epoch_reached == false) {
 				ff_send_out_to(NEXT_ITERATION, 0);
-				FAST_DEBUG("(AUX STAGE): sent feedback");
+				FAST_DEBUG("(AUX STAGE): forwarded feedback");
 			}
 			// forward the input pointer downstream
 			ff_send_out_to(in, 1);
-			FAST_DEBUG("(AUX STAGE): sent pointer");
+			FAST_DEBUG("(AUX STAGE): forwarded pointer");
 		} else {
 			// send EOS to the feedback channel
 			ff_send_out_to(ff::FF_EOS, 0);
@@ -177,11 +178,17 @@ public:
 
 	void * svc(void * task) {
 		FAST_DEBUG("(OUTPUT STAGE): got pointer");
-//		delete (bool *)task;
+		delete (bool *)task;
 		gam_vector<T> * out = new gam_vector<T>();
+		NDVecToVec( logic_->exec->grad_arrays, logic_->arg_names, *out, "X", "label");
 		FAST_DEBUG("(OUTPUT STAGE): allocated size " << out->size());
-//		NDVecToVec( logic_->exec->grad_arrays, logic_->arg_names, *out, "X", "label");
 		FAST_DEBUG("(OUTPUT STAGE): serialized gradients");
+
+//		gam_vector<T> * out = (gam_vector<T> *)outptr;
+//		auto public_out = gam::public_ptr< gam_vector<T> >(out, [](gam_vector<T> * ptr){delete ptr;});
+//		FAST_DEBUG("(OUTPUT STAGE): prepared results")
+//		c_.emit(public_out);
+//		FAST_DEBUG("(OUTPUT STAGE): emitted results")
 
 		return (void*)out;
 	}
@@ -217,13 +224,13 @@ public:
 		}
 
 		
-		if (global_->load_result(&outptr)) {
-			gam_vector<T> * out = (gam_vector<T> *)outptr;
-			auto public_out = gam::public_ptr< gam_vector<T> >(out, [](gam_vector<T> * ptr){delete ptr;});
-			FAST_DEBUG("(OUTPUT STAGE): prepared results")
-			c.emit(public_out);
-			FAST_DEBUG("(OUTPUT STAGE): emitted results")
-		}
+		global_->load_result(&outptr);
+//		delete (bool*)outptr;
+		gam_vector<T> * out = (gam_vector<T> *)outptr;
+		auto public_out = gam::public_ptr< gam_vector<T> >(out, [](gam_vector<T> * ptr){delete ptr;});
+		FAST_DEBUG("(MXNET WORKER): prepared results")
+		c.emit(public_out);
+		FAST_DEBUG("(MXNET WORKER): emitted results")
 
 		return gff::go_on;
 	}
