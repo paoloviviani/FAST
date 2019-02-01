@@ -102,20 +102,21 @@ public:
 	TrainerStage(ModelLogic * logic) : logic_(logic) {}
 
 	void * svc(void * task) {
-		NDAvector * in_ptr = (NDAvector  *)task;
+		FAST_DEBUG("(TRAINER STAGE): started svc");
 		bool * trigger = new bool(true);
-		if (this->get_channel_id() == -1 && in_ptr->size() != 0) {
+		if (this->get_channel_id() == -1) {
 			// got a pointer from the input stage
+			NDAvector * in_ptr = (NDAvector  *)task;
 			FAST_DEBUG("(TRAINER STAGE): got gradients");
-			logic_->update( *in_ptr );
+			if (in_ptr->size() != 0)
+				logic_->update( *in_ptr );
 			FAST_DEBUG("(TRAINER STAGE): updated");
 			logic_->run_batch();
 			delete in_ptr;
 			FAST_DEBUG("(TRAINER STAGE): executed batch from gradients");
 			return (void*)trigger;
 		}
-		if (in_ptr->size() == 0)
-			delete in_ptr;
+
 
 		// Got a pointer from the feedback channel
 		FAST_DEBUG("(TRAINER STAGE): got feedback go on");
@@ -150,8 +151,10 @@ public:
 		if (in != END_OF_INPUT) {
 			// send a NEXT_ITERATION message to the feedback channel
 			FAST_DEBUG("(AUX STAGE): received pointer");
-			if (logic_->max_epoch_reached == false)
+			if (logic_->max_epoch_reached == false) {
 				ff_send_out_to(NEXT_ITERATION, 0);
+				FAST_DEBUG("(AUX STAGE): sent feedback");
+			}
 			// forward the input pointer downstream
 			ff_send_out_to(in, 1);
 			FAST_DEBUG("(AUX STAGE): sent pointer");
@@ -173,11 +176,12 @@ public:
 	OutputStage(ModelLogic * logic, gff::OutBundleBroadcast<gff::NondeterminateMerge> & c) : logic_(logic), c_(c) {}
 
 	void * svc(void * task) {
-		delete (bool *)task;
-		FAST_DEBUG("(OUTPUT STAGE): got gradients");
-		gam_vector<T> * out = new gam_vector<T>(0);
-		NDVecToVec( logic_->exec->grad_arrays, logic_->arg_names, *out, "X", "label");
-		FAST_DEBUG("(OUTPUT STAGE): serialized gradient");
+		FAST_DEBUG("(OUTPUT STAGE): got pointer");
+//		delete (bool *)task;
+		gam_vector<T> * out = new gam_vector<T>();
+		FAST_DEBUG("(OUTPUT STAGE): allocated size " << out->size());
+//		NDVecToVec( logic_->exec->grad_arrays, logic_->arg_names, *out, "X", "label");
+		FAST_DEBUG("(OUTPUT STAGE): serialized gradients");
 
 		return (void*)out;
 	}
@@ -213,7 +217,7 @@ public:
 		}
 
 		
-		if (global_->load_result_nb(&outptr)) {
+		if (global_->load_result(&outptr)) {
 			gam_vector<T> * out = (gam_vector<T> *)outptr;
 			auto public_out = gam::public_ptr< gam_vector<T> >(out, [](gam_vector<T> * ptr){delete ptr;});
 			FAST_DEBUG("(OUTPUT STAGE): prepared results")
