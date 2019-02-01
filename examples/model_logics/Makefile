@@ -1,8 +1,7 @@
 include ../../make/config.mk
 include ../../make/Makefile.global
 
-EXECS                = mnist2D
-TARGET_OBJ           = mnist2D.o
+EXECS      = mnist2D resnet2D
 
 .PHONY: all clean cleanall
 .SUFFIXES: .c .cpp .o
@@ -10,16 +9,20 @@ TARGET_OBJ           = mnist2D.o
 all: $(EXECS)
 
 #objects
-mnist2D.o: $(FAST_ROOT)/src/2D_torus.cpp $(FAST_ROOT)/include/fast/*.hpp $(FAST_ROOT)/include/fast/workers/mxnet_worker.hpp 
+mnist2D.o: $(FAST_ROOT)/src/2D_torus_grid.cpp mnist_logic.hpp $(FAST_ROOT)/include/fast/*.hpp $(FAST_ROOT)/include/fast/workers/mxnet_worker.hpp 
 	$(CXX) $(INCLUDES) -include mnist_logic.hpp $(CCFLAGS) $(CFLAGS) $(OPTIMIZE_FLAGS) -c -o $@ $<
+resnet.o: $(FAST_ROOT)/src/2D_torus_grid.cpp resnet_cifar10.hpp $(FAST_ROOT)/include/fast/*.hpp $(FAST_ROOT)/include/fast/workers/mxnet_worker.hpp 
+	$(CXX) $(INCLUDES) -include resnet_cifar10.hpp $(CCFLAGS) $(CFLAGS) $(OPTIMIZE_FLAGS) -c -o $@ $<
 
-#basic unit test executable
-mnist2D: $(TARGET_OBJ)
+# Execs
+mnist2D: mnist2D.o
+	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
+resnet2D: resnet.o
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
 
 clean:
-	rm -rf *.o *~ $(TARGET_OBJ)
+	rm *.o
 
 cleanall: clean
-	rm -rf bin/$(EXECS)
-	rm -rf $(TARGET_OBJ) *.d *.btr
+	rm -rf $(EXECS)
+	rm -rf *o
