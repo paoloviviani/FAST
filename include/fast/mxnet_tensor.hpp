@@ -32,12 +32,12 @@ template <typename T>
 void NDVecToVec(std::vector<mxnet::cpp::NDArray> & grad_arrays, const std::vector<std::string> arg_names, gam_vector<T> & vec, //
 		std::string inp="X", std::string out="label") {
 
-	size_t grad_size = 0;
-	for (size_t i = 0; i < grad_arrays.size(); i++) {
-		if (arg_names[i] == inp || arg_names[i] == out) continue;
-		grad_size += grad_arrays[i].Size();
-	}
-	vec.reserve(grad_size);
+	// size_t grad_size = 0;
+	// for (size_t i = 0; i < grad_arrays.size(); i++) {
+	// 	if (arg_names[i] == inp || arg_names[i] == out) continue;
+	// 	grad_size += grad_arrays[i].Size();
+	// }
+	// vec.reserve(grad_size);
 	for (size_t i = 0; i < grad_arrays.size(); i++) {
 		if (arg_names[i] == inp || arg_names[i] == out) continue;
 		appendToVec(vec, grad_arrays[i]);

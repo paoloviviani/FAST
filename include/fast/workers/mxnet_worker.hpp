@@ -149,13 +149,16 @@ public:
 	void * svc(void * in) {
 		if (in != END_OF_INPUT) {
 			// send a NEXT_ITERATION message to the feedback channel
+			FAST_DEBUG("(AUX STAGE): received pointer");
 			if (logic_->max_epoch_reached == false)
 				ff_send_out_to(NEXT_ITERATION, 0);
 			// forward the input pointer downstream
 			ff_send_out_to(in, 1);
+			FAST_DEBUG("(AUX STAGE): sent pointer");
 		} else {
 			// send EOS to the feedback channel
 			ff_send_out_to(ff::FF_EOS, 0);
+			FAST_DEBUG("(AUX STAGE): sent eos");
 		}
 		return ff::FF_GO_ON;
 	}
@@ -167,7 +170,7 @@ template <typename ModelLogic, typename T >
 class OutputStage: public ff::ff_node {
 public:
 
-	OutputStage(ModelLogic * logic, gff::OutBundleBroadcast<gff::NondeterminateMerge> * c) : logic_(logic), c_(c) {}
+	OutputStage(ModelLogic * logic, gff::OutBundleBroadcast<gff::NondeterminateMerge> & c) : logic_(logic), c_(c) {}
 
 	void * svc(void * task) {
 		delete (bool *)task;
@@ -176,17 +179,12 @@ public:
 		NDVecToVec( logic_->exec->grad_arrays, logic_->arg_names, *out, "X", "label");
 		FAST_DEBUG("(OUTPUT STAGE): serialized gradient");
 
-		auto public_out = gam::public_ptr< gam_vector<T> >(out, [](gam_vector<T> * ptr){delete ptr;});
-		FAST_DEBUG("(OUTPUT STAGE): prepared results")
-		c_->emit(public_out);
-		FAST_DEBUG("(OUTPUT STAGE): emitted results")
-
-		return ff::FF_GO_ON;
+		return (void*)out;
 	}
 
 private:
 	ModelLogic * logic_;
-	gff::OutBundleBroadcast<gff::NondeterminateMerge> * c_;
+	gff::OutBundleBroadcast<gff::NondeterminateMerge> c_;
 };
 
 /**
@@ -214,6 +212,15 @@ public:
 			return gff::eos;
 		}
 
+		
+		if (global_->load_result_nb(&outptr)) {
+			gam_vector<T> * out = (gam_vector<T> *)outptr;
+			auto public_out = gam::public_ptr< gam_vector<T> >(out, [](gam_vector<T> * ptr){delete ptr;});
+			FAST_DEBUG("(OUTPUT STAGE): prepared results")
+			c.emit(public_out);
+			FAST_DEBUG("(OUTPUT STAGE): emitted results")
+		}
+
 		return gff::go_on;
 	}
 
@@ -234,7 +241,7 @@ public:
 		training_->add_stage( new InternalAuxStage<ModelLogic>(&logic_) );
 		training_->wrap_around();
 		global_->add_stage(training_);
-		global_->add_stage( new OutputStage<ModelLogic, T>(&logic_, &c) );
+		global_->add_stage( new OutputStage<ModelLogic, T>(&logic_, c) );
 
 		global_->cleanup_nodes();
 		training_->cleanup_nodes();

@@ -10,10 +10,11 @@ export GAM_LOCALHOST=localhost
 
 export GAM_RUN_LOCAL=$FAST_ROOT/bin/fastrun-local
 
-$GAM_RUN_LOCAL -v -n 1 -l $GAM_LOCALHOST ./bin/unit_test
-$GAM_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/gam_unit_test
-$GAM_RUN_LOCAL -v -n 5 -l $GAM_LOCALHOST ./bin/gff_farm
-$GAM_RUN_LOCAL -v -n 3 -l $GAM_LOCALHOST ./bin/gff_all_reduce
-$GAM_RUN_LOCAL -v -n 3 -l $GAM_LOCALHOST ./bin/gff_all_reduce_multi
-$GAM_RUN_LOCAL -v -n 3 -l $GAM_LOCALHOST ./bin/gff_all_reduce_vector
-#$GAM_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/mxnet_worker_test
+#$GAM_RUN_LOCAL -v -n 1 -l $GAM_LOCALHOST ./bin/unit_test
+
+#$FAST_ROOT/bin/fastrun-mpi -H hosts -n 2 $PWD/bin/gam_unit_test
+#$FAST_ROOT/bin/fastrun-mpi -H hosts -n 5 $PWD/bin/gff_farm
+#$FAST_ROOT/bin/fastrun-mpi -H hosts -n 3 $PWD/bin/gff_all_reduce
+#$FAST_ROOT/bin/fastrun-mpi -H hosts -n 3 $PWD/bin/gff_all_reduce_multi
+#$FAST_ROOT/bin/fastrun-mpi -H hosts -n 3 $PWD/bin/gff_all_reduce_vector
+$FAST_ROOT/bin/fastrun-mpi -H hosts -n 2 $PWD/bin/mxnet_worker_test
