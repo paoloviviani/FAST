@@ -28,7 +28,6 @@ public:
 			.SetParam("pad", 2)
 			.CreateDataIter();
 
-		std::map<string, NDArray> args;
 		args["data"] = NDArray(Shape(batch_size_, 3, image_size, image_size), ctx);
 		args["label"] = NDArray(Shape(batch_size_), ctx);
 		//Let MXNet infer shapes other parameters such as weights
@@ -85,6 +84,8 @@ public:
 			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
 			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 		}
+		if (iter_ % 20 == 0)
+			FAST_INFO("Iter = " << iter_ << " Accuracy = " << train_acc.Get() );
 		FAST_DEBUG("(LOGIC): processed batch");
 		iter_++;
 	}
