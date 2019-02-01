@@ -20,4 +20,4 @@ export GAM_RUN_LOCAL=$FAST_ROOT/bin/fastrun-local
 #fi
 
 #$GAM_RUN_LOCAL -v -n $GAM_CARDINALITY -l localhost ./mnist2D
-$FAST_ROOT/bin/fastrun-mpi -H hosts -n $GAM_CARDINALITY $PWD/mnist2D
+$FAST_ROOT/bin/fastrun-mpi -H hosts -n $GAM_CARDINALITY "$PWD/$1 4 4"
