@@ -24,7 +24,7 @@ public:
 			.SetParam("data_shape", Shape(3, 32, 32))
 			.SetParam("batch_size", batch_size_)
 			.SetParam("shuffle", 1)
-			.SetParam("preprocess_threads", 24)
+			.SetParam("preprocess_threads", 1)
 			.SetParam("pad", 2)
 			.CreateDataIter();
 
@@ -114,7 +114,7 @@ public:
 			.SetParam("data_shape", Shape(3, 32, 32))
 			.SetParam("batch_size", batch_size_)
 			.SetParam("round_batch", 0)
-			.SetParam("preprocess_threads", 24)
+			.SetParam("preprocess_threads", 1)
 			.SetParam("pad", 2)
 			.CreateDataIter();
 

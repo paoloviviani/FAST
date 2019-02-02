@@ -11,7 +11,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$MXNET_LIBDIR:$LIBFABRIC_ROOT/lib
 
 #export GAM_LOG_PREFIX=$PWD/logs
 
-export GAM_CARDINALITY=16
+export GAM_CARDINALITY=2
 
 #if [[ $* == *-l* ]]; then
 #export GAM_RUN_LOCAL=$FAST_ROOT/bin/gamrun-local_logging
@@ -19,5 +19,5 @@ export GAM_CARDINALITY=16
 export GAM_RUN_LOCAL=$FAST_ROOT/bin/fastrun-local
 #fi
 
-#$GAM_RUN_LOCAL -v -n $GAM_CARDINALITY -l localhost ./mnist2D
-$FAST_ROOT/bin/fastrun-mpi -H hosts -n $GAM_CARDINALITY "$@"
+$GAM_RUN_LOCAL -v -n $GAM_CARDINALITY -l localhost $@
+#$FAST_ROOT/bin/fastrun-mpi -H hosts -n $GAM_CARDINALITY "$@"
