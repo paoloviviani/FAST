@@ -11,7 +11,15 @@
 
 namespace FAST {
 
-} /* namespace FAST */
 
+uint32_t rank() {
+	return gam::rank();
+}
+
+uint32_t cardinality() {
+	return gam::cardinality();
+}
+
+} /* namespace FAST */
 
 #endif /* FAST_FAST_FAST_UTILS_HPP_ */

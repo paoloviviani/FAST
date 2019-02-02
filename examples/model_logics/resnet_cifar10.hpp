@@ -9,12 +9,14 @@ Context ctx = Context::cpu();  // Use CPU for training
 class ModelLogic {
 public:
 	void init() {
-		batch_size_ = 128;
+		batch_size_ = 16;
 		const int image_size = 32;
-		const float learning_rate = 0.01;
+		const float learning_rate = 0.001;
 		const float weight_decay = 1e-4;
 
 		net = Symbol::Load("./symbols/resnet18_v2.json");
+
+		MXRandomSeed(42);
 
 		train_iter = MXDataIter("ImageRecordIter")
 			.SetParam("path_imglist", "../cifar10/cifar10_train.lst")
@@ -24,9 +26,11 @@ public:
 			.SetParam("data_shape", Shape(3, 32, 32))
 			.SetParam("batch_size", batch_size_)
 			.SetParam("shuffle", 1)
-			.SetParam("preprocess_threads", 1)
-			.SetParam("pad", 2)
+			.SetParam("preprocess_threads", 24)
+			.SetParam("num_parts", FAST::cardinality())
+			.SetParam("part_index", FAST::rank())
 			.CreateDataIter();
+
 
 		FAST_DEBUG("(LOGIC): Loaded data ");
 
