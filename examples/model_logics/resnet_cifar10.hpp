@@ -16,7 +16,7 @@ public:
 
 		net = Symbol::Load("./symbols/resnet18_v2.json");
 
-		MXDataIter("ImageRecordIter")
+		train_iter = MXDataIter("ImageRecordIter")
 			.SetParam("path_imglist", "../cifar10/cifar10_train.lst")
 			.SetParam("path_imgrec", "../cifar10/cifar10_train.rec")
 			.SetParam("rand_crop", 1)
@@ -139,7 +139,7 @@ public:
 	unsigned int iter_ = 0;
 	unsigned int epoch_ = 0;
 	bool max_epoch_reached = false;
-	MXDataIter train_iter = MXDataIter("MNISTIter");
+	MXDataIter train_iter = MXDataIter("ImageRecordIter");
 	Accuracy train_acc;
 	int batch_size_ = 32;
 	const int max_epoch_ = 200;
