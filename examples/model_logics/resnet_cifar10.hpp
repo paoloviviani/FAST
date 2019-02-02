@@ -64,9 +64,10 @@ public:
 			FAST_DEBUG("(LOGIC): next epoch");
 			iter_ = 0;
 			epoch_++;
-			FAST_INFO("=== TRAINING ACCURACY === " << train_acc.Get());
+			std::cout << "=== TRAINING ACCURACY === " << train_acc.Get() << std::endl;
 			train_iter.Reset();
 			train_acc.Reset();
+			FAST_INFO("Restarted data iterator")
 		}
 
 		if (epoch_ == max_epoch_){
