@@ -233,7 +233,7 @@ public:
 		
 		global_->load_result(&outptr);
 		FAST_DEBUG("(MXNET WORKER): loaded results")
-		delete (bool*)outptr;
+//		delete (bool*)outptr;
 		gam_vector<T> * out = (gam_vector<T> *)outptr;
 		auto public_out = gam::public_ptr< gam_vector<T> >(out, [](gam_vector<T> * ptr){delete ptr;});
 		FAST_DEBUG("(MXNET WORKER): prepared results")
@@ -245,14 +245,14 @@ public:
 
 	void svc_init(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
 
-		FAST_DEBUG("(MXNET WORKER): Initializing model logic")
-		logic_.init();
-		FAST_DEBUG("(MXNET WORKER): Initialized model logic")
-
 		global_ = new ff::ff_pipeline(true);
 		training_ = new ff::ff_pipeline();
 
 		gam_vector<T> * ptr = new gam_vector<T>(0);
+
+		FAST_DEBUG("(MXNET WORKER): Initializing model logic")
+		logic_.init();
+		FAST_DEBUG("(MXNET WORKER): Initialized model logic")
 
 		FAST_DEBUG("(MXNET WORKER): Creating pipeline")
 		global_->add_stage( new InputStage<ModelLogic, T>(&logic_) );
