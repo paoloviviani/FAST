@@ -86,8 +86,8 @@ public:
 			if (arg_names[i] == "data" || arg_names[i] == "label") continue;
 			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 		}
-//		if (iter_ == 10)
-//			mxnet::cpp::NDArray::Save("weights.bin", args);
+		if (iter_ == 10)
+			mxnet::cpp::NDArray::Save("resnet18_epoch0.bin", args);
 		if (iter_ % 10 == 0)
 			std::cout << "Iter = " << iter_ << " Accuracy = " << train_acc.Get() << std::endl;
 		iter_++;

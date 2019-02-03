@@ -24,10 +24,10 @@ public:
 			.SetParam("rand_mirror", 1)
 			.SetParam("data_shape", Shape(3, 32, 32))
 			.SetParam("batch_size", batch_size_)
-			.SetParam("shuffle", 1)
+//			.SetParam("shuffle", 1)
 			.SetParam("preprocess_threads", 24)
-			.SetParam("num_parts", FAST::cardinality())
-			.SetParam("part_index", FAST::rank())
+//			.SetParam("num_parts", FAST::cardinality())
+//			.SetParam("part_index", FAST::rank())
 			.CreateDataIter();
 
 
@@ -38,7 +38,7 @@ public:
 		//Let MXNet infer shapes other parameters such as weights
 		net.InferArgsMap(ctx, &args, args);
 
-//		//Initialize all parameters with uniform distribution U(-0.01, 0.01)
+		//Initialize all parameters with uniform distribution U(-0.01, 0.01)
 //		auto initializer = Xavier();
 //		for (auto& arg : args) {
 //			//arg.first is parameter name, and arg.second is the value
@@ -93,8 +93,12 @@ public:
 			if (arg_names[i] == "data" || arg_names[i] == "label") continue;
 			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 		}
-		if (iter_ % 100 == 0)
+
+		if (iter_ % 100 == 0) {
 			FAST_INFO("Iter = " << iter_ << " Accuracy = " << train_acc.Get() );
+			std::string name = std::to_string(FAST::rank())+"_"+std::to_string(iter_)+"weights.bin";
+			mxnet::cpp::NDArray::Save(name, args);
+		}
 		FAST_DEBUG("(LOGIC): processed batch");
 		iter_++;
 	}
