@@ -65,6 +65,7 @@ public:
 			epoch_++;
 			std::cout << "=== TRAINING ACCURACY === " << train_acc.Get() << std::endl;
 			train_iter.Reset();
+			train_iter.Next();
 			train_acc.Reset();
 			FAST_INFO("Restarted data iterator")
 		}
@@ -90,7 +91,7 @@ public:
 			if (arg_names[i] == "data" || arg_names[i] == "label") continue;
 			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 		}
-		if (iter_ % 20 == 0)
+		if (iter_ % 100 == 0)
 			FAST_INFO("Iter = " << iter_ << " Accuracy = " << train_acc.Get() );
 		FAST_DEBUG("(LOGIC): processed batch");
 		iter_++;

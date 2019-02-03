@@ -12,8 +12,8 @@ Symbol mlp(const std::vector<int> &layers) {
 	std::vector<Symbol> outputs(layers.size());
 
 	for (size_t i = 0; i < layers.size(); ++i) {
-		weights[i] = Symbol::Variable("w" + to_string(i));
-		biases[i] = Symbol::Variable("b" + to_string(i));
+		weights[i] = Symbol::Variable("w" + std::to_string(i));
+		biases[i] = Symbol::Variable("b" + std::to_string(i));
 		Symbol fc = FullyConnected(
 				i == 0? x : outputs[i-1],  // data
 						weights[i],
@@ -68,13 +68,15 @@ public:
 		FAST_DEBUG("(LOGIC): run batch, iteration = " << iter_);
 
 		if (!train_iter.Next()) {
-			FAST_DEBUG("(LOGIC): next epoch");
+			std::cout << "(LOGIC): next epoch" << std::endl;
 			iter_ = 0;
 			epoch_++;
-			FAST_INFO("=== TRAINING ACCURACY === " << train_acc.Get());
+			std::cout << "=== TRAINING ACCURACY === " << train_acc.Get() << std::endl;
 			train_iter.Reset();
+			train_iter.Next();
 		    train_acc.Reset();
 		}
+
 
 		if (epoch_ == 10){
 			FAST_DEBUG("(LOGIC): MAX EPOCH REACHED");
@@ -100,7 +102,7 @@ public:
 			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 		}
 		FAST_DEBUG("(LOGIC): processed batch");
-		if (iter_ % 20 == 0)
+		if (iter_ % 100 == 0)
 			FAST_INFO("Iter = " << iter_ << " Accuracy = " << train_acc.Get() );
 		iter_++;
 	}

@@ -11,8 +11,8 @@ Symbol mlp(const std::vector<int> &layers) {
 	std::vector<Symbol> outputs(layers.size());
 
 	for (size_t i = 0; i < layers.size(); ++i) {
-		weights[i] = Symbol::Variable("w" + to_string(i));
-		biases[i] = Symbol::Variable("b" + to_string(i));
+		weights[i] = Symbol::Variable("w" + std::to_string(i));
+		biases[i] = Symbol::Variable("b" + std::to_string(i));
 		Symbol fc = FullyConnected(
 				i == 0? x : outputs[i-1],  // data
 						weights[i],
@@ -71,6 +71,7 @@ public:
 			epoch_++;
 			std::cout << "=== TRAINING ACCURACY === " << train_acc.Get() << std::endl;
 			train_iter.Reset();
+			train_iter.Next();
 		    train_acc.Reset();
 		}
 
@@ -81,8 +82,8 @@ public:
 		}
 
 		// Simulate granularity
-		std::this_thread::sleep_for(std::chrono::milliseconds(150));
 		auto data_batch = train_iter.GetDataBatch();
+
 		// Set data and label
 		data_batch.data.CopyTo(&args["X"]);
 		data_batch.label.CopyTo(&args["label"]);
@@ -91,12 +92,13 @@ public:
 		exec->Forward(true);
 		exec->Backward();
 		train_acc.Update(data_batch.label, exec->outputs[0]);
+
 		// Update parameters
 		for (size_t i = 0; i < arg_names.size(); ++i) {
 			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
 			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 		}
-		if (iter_ % 20 == 0)
+		if (iter_ % 100 == 0)
 			std::cout << "Iter = " << iter_ << " Accuracy = " << train_acc.Get() << std::endl;
 		iter_++;
 	}

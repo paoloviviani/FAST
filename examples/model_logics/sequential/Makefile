@@ -1,5 +1,5 @@
-include ../../make/config.mk
-include ../../make/Makefile.global
+include ../../../make/config.mk
+include ../../../make/Makefile.global
 
 EXECS      = mnistSequential resnetSequential
 
