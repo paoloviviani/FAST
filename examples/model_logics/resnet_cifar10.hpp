@@ -38,12 +38,13 @@ public:
 		//Let MXNet infer shapes other parameters such as weights
 		net.InferArgsMap(ctx, &args, args);
 
-		//Initialize all parameters with uniform distribution U(-0.01, 0.01)
-		auto initializer = Xavier();
-		for (auto& arg : args) {
-			//arg.first is parameter name, and arg.second is the value
-			initializer(arg.first, &arg.second);
-		}
+//		//Initialize all parameters with uniform distribution U(-0.01, 0.01)
+//		auto initializer = Xavier();
+//		for (auto& arg : args) {
+//			//arg.first is parameter name, and arg.second is the value
+//			initializer(arg.first, &arg.second);
+//		}
+		args = mxnet::cpp::NDArray::LoadToMap("./weights/resnet18_cifar10_epoch0.bin");
 
 		opt = OptimizerRegistry::Find("adam");
 		opt->SetParam("lr", learning_rate);
