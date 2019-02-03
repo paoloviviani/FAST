@@ -20,5 +20,5 @@ export GAM_SVC_DMN_1=6357
 export GAM_RANK=$1
 
 #valgrind ./fast_mnist
-gdb ./resnet2nodes
-#./fast_mnist
+#gdb ./resnet2nodes
+./resnet2nodes
