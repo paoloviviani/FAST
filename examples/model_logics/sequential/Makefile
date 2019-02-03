@@ -23,6 +23,6 @@ resnetSequential: resnetSequential.o
 clean:
 	rm *.o
 
-cleanall: clean
+cleanall:
 	rm -rf $(EXECS)
 	rm -rf *o

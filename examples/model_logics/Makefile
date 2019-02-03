@@ -31,6 +31,6 @@ resnet2nodes: resnet2nodes.o
 clean:
 	rm *.o
 
-cleanall: clean
+cleanall:
 	rm -rf $(EXECS)
 	rm -rf *o

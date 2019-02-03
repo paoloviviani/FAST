@@ -63,6 +63,7 @@ public:
 			FAST_DEBUG("(LOGIC): next epoch");
 			iter_ = 0;
 			epoch_++;
+			std::cout << "=== Epoch === " << epoch_ << std::endl;
 			std::cout << "=== TRAINING ACCURACY === " << train_acc.Get() << std::endl;
 			train_iter.Reset();
 			train_iter.Next();

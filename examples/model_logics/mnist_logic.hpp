@@ -85,7 +85,7 @@ public:
 		}
 
 		// Simulate granularity
-		std::this_thread::sleep_for(std::chrono::milliseconds(150));
+		std::this_thread::sleep_for(std::chrono::milliseconds(300));
 		auto data_batch = train_iter.GetDataBatch();
 		// Set data and label
 		data_batch.data.CopyTo(&args["X"]);

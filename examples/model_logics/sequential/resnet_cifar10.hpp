@@ -17,16 +17,16 @@ public:
 		MXRandomSeed(42);
 
 		train_iter = MXDataIter("ImageRecordIter")
-			.SetParam("path_imglist", "../cifar10/cifar10_train.lst")
-			.SetParam("path_imgrec", "../cifar10/cifar10_train.rec")
+			.SetParam("path_imglist", "../../cifar10/cifar10_train.lst")
+			.SetParam("path_imgrec", "../../cifar10/cifar10_train.rec")
 			.SetParam("rand_crop", 1)
 			.SetParam("rand_mirror", 1)
 			.SetParam("data_shape", Shape(3, 32, 32))
 			.SetParam("batch_size", batch_size_)
 			.SetParam("shuffle", 1)
 			.SetParam("preprocess_threads", 24)
-			.SetParam("num_parts", 6000)
-			.SetParam("part_index", 0)
+//			.SetParam("num_parts", 6000)
+//			.SetParam("part_index", 1)
 			.CreateDataIter();
 
 
@@ -62,7 +62,7 @@ public:
 			epoch_++;
 			std::cout << "=== TRAINING ACCURACY === " << train_acc.Get() << std::endl;
 			train_iter.Reset();
-			train_iter.Next()
+			train_iter.Next();
 			train_acc.Reset();
 		}
 
@@ -86,7 +86,9 @@ public:
 			if (arg_names[i] == "data" || arg_names[i] == "label") continue;
 			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 		}
-		if (iter_ % 100 == 0)
+		if (iter_ == 10)
+			mxnet::cpp::NDArray::Save("weights.bin", args);
+		if (iter_ % 10 == 0)
 			std::cout << "Iter = " << iter_ << " Accuracy = " << train_acc.Get() << std::endl;
 		iter_++;
 	}
@@ -104,8 +106,8 @@ public:
 
 	void finalize() {
 		auto val_iter = MXDataIter("ImageRecordIter")
-			.SetParam("path_imglist", "../cifar10/cifar10_val.lst")
-			.SetParam("path_imgrec", "../cifar10/cifar10_val.rec")
+			.SetParam("path_imglist", "../../cifar10/cifar10_val.lst")
+			.SetParam("path_imgrec", "../../cifar10/cifar10_val.rec")
 			.SetParam("rand_crop", 0)
 			.SetParam("rand_mirror", 0)
 			.SetParam("data_shape", Shape(3, 32, 32))
