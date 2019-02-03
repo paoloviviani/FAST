@@ -8,6 +8,35 @@
 #ifndef FAST_FAST_FAST_UTILS_HPP_
 #define FAST_FAST_FAST_UTILS_HPP_
 
+/*
+ * Pretty printing for std::vector
+ */
+template < class T >
+inline std::ostream& operator << (std::ostream& os, const std::vector<T>& v)
+{
+    os << "[";
+    for (auto item : v)
+    {
+        os << item << ", ";
+    }
+    os << " ]";
+    return os;
+}
+
+/*
+ * Pretty printing for FAST::gam_vector
+ */
+template < class T >
+inline std::ostream& operator << (std::ostream& os, const FAST::gam_vector<T>& v)
+{
+    os << "[";
+    for (auto item : v)
+    {
+        os << item << ", ";
+    }
+    os << " ]";
+    return os;
+}
 
 namespace FAST {
 

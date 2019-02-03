@@ -32,6 +32,7 @@ mnist2nodes: mnist2nodes.o
 resnet2nodes: resnet2nodes.o
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
 mnistSequential: mnistSequential.o
+	USE_GAM=0
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
 resnetSequential: resnetSequential.o
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)

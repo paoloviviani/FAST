@@ -1,4 +1,3 @@
-#include <gff.hpp>
 #include <fast.hpp>
 #include "mxnet-cpp/MxNetCpp.h"
 

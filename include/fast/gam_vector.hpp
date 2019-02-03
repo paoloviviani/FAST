@@ -5,6 +5,8 @@
  *      Author: pvi
  */
 
+#include<vector>
+
 #ifndef FAST_FAST_GAM_VECTOR_HPP_
 #define FAST_FAST_GAM_VECTOR_HPP_
 
