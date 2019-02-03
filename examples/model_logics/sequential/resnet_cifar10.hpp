@@ -1,4 +1,3 @@
-#include <fast.hpp>
 #include "mxnet-cpp/MxNetCpp.h"
 
 using namespace mxnet::cpp;
@@ -13,7 +12,7 @@ public:
 		const float learning_rate = 0.001;
 		const float weight_decay = 1e-4;
 
-		net = Symbol::Load("./symbols/resnet18_v2.json");
+		net = Symbol::Load("../symbols/resnet18_v2.json");
 
 		MXRandomSeed(42);
 
@@ -26,12 +25,11 @@ public:
 			.SetParam("batch_size", batch_size_)
 			.SetParam("shuffle", 1)
 			.SetParam("preprocess_threads", 24)
-			.SetParam("num_parts", FAST::cardinality())
-			.SetParam("part_index", FAST::rank())
+			.SetParam("num_parts", 6000)
+			.SetParam("part_index", 0)
 			.CreateDataIter();
 
 
-		FAST_DEBUG("(LOGIC): Loaded data ");
 
 		args["data"] = NDArray(Shape(batch_size_, 3, image_size, image_size), ctx);
 		args["label"] = NDArray(Shape(batch_size_), ctx);
@@ -52,25 +50,23 @@ public:
 		exec = net.SimpleBind(ctx, args);
 		arg_names = net.ListArguments();
 
-		FAST_DEBUG("Logic initialized")
+		std::cout <<"Logic initialized" << std::endl;
 	}
 
 
 	void run_batch() {
-		FAST_DEBUG("(LOGIC): run batch, iteration = " << iter_);
 
 		if (!train_iter.Next()) {
-			FAST_DEBUG("(LOGIC): next epoch");
+			std::cout << "(LOGIC): next epoch" << std::endl;
 			iter_ = 0;
 			epoch_++;
 			std::cout << "=== TRAINING ACCURACY === " << train_acc.Get() << std::endl;
 			train_iter.Reset();
 			train_acc.Reset();
-			FAST_INFO("Restarted data iterator")
 		}
 
 		if (epoch_ == max_epoch_){
-			FAST_DEBUG("(LOGIC): MAX EPOCH REACHED");
+			std::cout << "(LOGIC): MAX EPOCH REACHED" << std::endl;
 			max_epoch_reached = true; // Terminate
 			return;
 		}
@@ -80,7 +76,6 @@ public:
 		data_batch.data.CopyTo(&args["data"]);
 		data_batch.label.CopyTo(&args["label"]);
 
-		FAST_DEBUG("(LOGIC): running");
 		// Compute gradients
 		exec->Forward(true);
 		exec->Backward();
@@ -91,13 +86,11 @@ public:
 			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 		}
 		if (iter_ % 20 == 0)
-			FAST_INFO("Iter = " << iter_ << " Accuracy = " << train_acc.Get() );
-		FAST_DEBUG("(LOGIC): processed batch");
+			std::cout << "Iter = " << iter_ << " Accuracy = " << train_acc.Get() << std::endl;
 		iter_++;
 	}
 
 	void update(std::vector<mxnet::cpp::NDArray> &in) {
-		FAST_DEBUG("(LOGIC UPDATE): updating")
 				if (in.size() > 0) {
 					int ii = 0;
 					for (size_t i = 0; i < arg_names.size(); ++i) {
@@ -105,7 +98,6 @@ public:
 						opt->Update(i, exec->arg_arrays[i], in[ii]);
 						ii++;
 					}
-					FAST_DEBUG("(LOGIC UPDATE): updated")
 				}
 	}
 
@@ -132,7 +124,7 @@ public:
 			exec->Forward(false);
 			acc.Update(data_batch.label, exec->outputs[0]);
 		}
-		FAST_INFO("=== VALIDATION ACCURACY === " << train_acc.Get());
+		std::cout << "=== VALIDATION ACCURACY === " << train_acc.Get() << std::endl;
 	}
 
 	Symbol net;
