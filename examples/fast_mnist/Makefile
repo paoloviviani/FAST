@@ -20,6 +20,6 @@ fast_mnist: $(TARGET_OBJ)
 clean:
 	rm -rf *.o *~ $(TARGET_OBJ)
 
-cleanall: clean
+cleanall:
 	rm -rf bin/$(EXECS)
 	rm -rf $(TARGET_OBJ) *.d *.btr
