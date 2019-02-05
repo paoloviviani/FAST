@@ -27,8 +27,8 @@ public:
 		MXRandomSeed(42);
 
 		train_iter = MXDataIter("ImageRecordIter")
-			.SetParam("path_imglist", "../../cifar10/cifar10_train.lst")
-			.SetParam("path_imgrec", "../../cifar10/cifar10_train.rec")
+			.SetParam("path_imglist", "../cifar10/cifar10_train.lst")
+			.SetParam("path_imgrec", "../cifar10/cifar10_train.rec")
 			.SetParam("rand_crop", 1)
 			.SetParam("rand_mirror", 1)
 			.SetParam("data_shape", Shape(3, 32, 32))
@@ -96,8 +96,8 @@ public:
 			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 		}
 		if (iter_ == 0) {
-			mxnet::cpp::NDArray::Save("resnet18_cifar10_epoch0.bin", args);
-			std::cerr << "Weights saved. Continue or stop\n";
+			mxnet::cpp::NDArray::Save("../initialized_weights/resnet18_cifar10_epoch0.bin", args);
+			std::cerr << "Initialized weights saved as \"../initialized_weights/resnet18_cifar10_epoch0.bin\". Continue training or stop the application\n";
 			std::cin.get();
 		}
 		if (iter_ % 10 == 0)
@@ -118,8 +118,8 @@ public:
 
 	void finalize() {
 		auto val_iter = MXDataIter("ImageRecordIter")
-			.SetParam("path_imglist", "../../cifar10/cifar10_val.lst")
-			.SetParam("path_imgrec", "../../cifar10/cifar10_val.rec")
+			.SetParam("path_imglist", "../cifar10/cifar10_val.lst")
+			.SetParam("path_imgrec", "../cifar10/cifar10_val.rec")
 			.SetParam("rand_crop", 0)
 			.SetParam("rand_mirror", 0)
 			.SetParam("data_shape", Shape(3, 32, 32))

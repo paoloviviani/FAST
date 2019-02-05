@@ -1,0 +1,1 @@
+Run resnetSequential to create binary file storing serialized weights for the corresponding symbol.
