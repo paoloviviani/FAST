@@ -4,10 +4,20 @@ using namespace mxnet::cpp;
 
 Context ctx = Context::cpu();  // Use CPU for training
 
+// Get current date/time, format is YYYY-MM-DD.HH:mm:ss
+inline const std::string currentDateTime() {
+	time_t     now = time(0);
+	struct tm  tstruct;
+	char       buf[80];
+	tstruct = *localtime(&now);
+	strftime(buf, sizeof(buf), "%X", &tstruct);
+	return buf;
+}
+
 class ModelLogic {
 public:
 	void init() {
-		batch_size_ = 16;
+		batch_size_ = 64;
 		const int image_size = 32;
 		const float learning_rate = 0.001;
 		const float weight_decay = 1e-4;
@@ -25,8 +35,6 @@ public:
 			.SetParam("batch_size", batch_size_)
 			.SetParam("shuffle", 1)
 			.SetParam("preprocess_threads", 24)
-//			.SetParam("num_parts", 6000)
-//			.SetParam("part_index", 1)
 			.CreateDataIter();
 
 
@@ -43,9 +51,9 @@ public:
 			initializer(arg.first, &arg.second);
 		}
 
-		opt = OptimizerRegistry::Find("adam");
+		opt = OptimizerRegistry::Find("sgd");
 		opt->SetParam("lr", learning_rate);
-		opt->SetParam("wd", weight_decay);
+//		opt->SetParam("wd", weight_decay);
 
 		exec = net.SimpleBind(ctx, args);
 		arg_names = net.ListArguments();
@@ -60,6 +68,7 @@ public:
 			std::cout << "(LOGIC): next epoch" << std::endl;
 			iter_ = 0;
 			epoch_++;
+			std::cout << "=== Epoch === " << epoch_ << std::endl;
 			std::cout << "=== TRAINING ACCURACY === " << train_acc.Get() << std::endl;
 			train_iter.Reset();
 			train_iter.Next();
@@ -89,7 +98,7 @@ public:
 		if (iter_ == 10)
 			mxnet::cpp::NDArray::Save("resnet18_epoch0.bin", args);
 		if (iter_ % 10 == 0)
-			std::cout << "Iter = " << iter_ << " Accuracy = " << train_acc.Get() << std::endl;
+			std::cout << "[ " << currentDateTime() << "] Iter = " << iter_ << " Accuracy = " << train_acc.Get() << std::endl;
 		iter_++;
 	}
 

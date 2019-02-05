@@ -15,7 +15,7 @@ public:
 
 		net = Symbol::Load("./symbols/resnet18_v2.json");
 
-		MXRandomSeed(42);
+//		MXRandomSeed(42);
 
 		train_iter = MXDataIter("ImageRecordIter")
 			.SetParam("path_imglist", "../cifar10/cifar10_train.lst")
@@ -24,10 +24,10 @@ public:
 			.SetParam("rand_mirror", 1)
 			.SetParam("data_shape", Shape(3, 32, 32))
 			.SetParam("batch_size", batch_size_)
-//			.SetParam("shuffle", 1)
+			.SetParam("shuffle", 1)
 			.SetParam("preprocess_threads", 24)
-//			.SetParam("num_parts", FAST::cardinality())
-//			.SetParam("part_index", FAST::rank())
+			.SetParam("num_parts", FAST::cardinality())
+			.SetParam("part_index", FAST::rank())
 			.CreateDataIter();
 
 
@@ -44,11 +44,12 @@ public:
 //			//arg.first is parameter name, and arg.second is the value
 //			initializer(arg.first, &arg.second);
 //		}
+		// Load same weights for all the workers
 		args = mxnet::cpp::NDArray::LoadToMap("./weights/resnet18_cifar10_epoch0.bin");
 
-		opt = OptimizerRegistry::Find("adam");
+		opt = OptimizerRegistry::Find("sgd");
 		opt->SetParam("lr", learning_rate);
-		opt->SetParam("wd", weight_decay);
+//		opt->SetParam("wd", weight_decay);
 
 		exec = net.SimpleBind(ctx, args);
 		arg_names = net.ListArguments();

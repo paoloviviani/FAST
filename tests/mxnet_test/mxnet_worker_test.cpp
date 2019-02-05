@@ -22,96 +22,58 @@ using namespace mxnet::cpp;
 
 Context ctx = Context::cpu();  // Use CPU for training
 
-Symbol mlp(const vector<int> &layers) {
-	auto x = Symbol::Variable("X");
-	auto label = Symbol::Variable("label");
-
-	vector<Symbol> weights(layers.size());
-	vector<Symbol> biases(layers.size());
-	vector<Symbol> outputs(layers.size());
-
-	for (size_t i = 0; i < layers.size(); ++i) {
-		weights[i] = Symbol::Variable("w" + to_string(i));
-		biases[i] = Symbol::Variable("b" + to_string(i));
-		Symbol fc = FullyConnected(
-				i == 0? x : outputs[i-1],  // data
-						weights[i],
-						biases[i],
-						layers[i]);
-		outputs[i] = i == layers.size()-1 ? fc : Activation(fc, ActivationActType::kRelu);
-	}
-
-	return SoftmaxOutput(outputs.back(), label);
-}
+struct Dummy {
+	std::vector<NDArray> grad_arrays;
+};
 
 class ModelLogic {
 public:
 	void init() {
-		net = mlp({2,2,1});
-
 		Context ctx = Context::cpu();  // Use CPU for training
 
-		args["X"] = NDArray(Shape(1, 2), ctx);
-		args["label"] = NDArray(Shape(1,1), ctx);
-		// Let MXNet infer shapes other parameters such as weights
-		net.InferArgsMap(ctx, &args, args);
+		exec = new Dummy();
+		arg_names.push_back("first");
+//		arg_names.push_back("second");
+//		arg_names.push_back("third");
+//		arg_names.push_back("fourth");
 
-		// Initialize all parameters with uniform distribution U(-0.01, 0.01)
-		auto initializer = Uniform(0.01);
-		for (auto& arg : args) {
-			// arg.first is parameter name, and arg.second is the value
-			initializer(arg.first, &arg.second);
-		}
-
-		opt = OptimizerRegistry::Find("adam");
-		opt->SetParam("lr", 0.001);
-		exec = net.SimpleBind(ctx, args);
-		arg_names = net.ListArguments();
-		//Dummy init grads
-		args["X"] = 1.;
-		args["label"] = 0.5;
-		exec->Forward(true);
-		exec->Backward();
 		for (size_t i = 0; i < arg_names.size(); ++i) {
-			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
-			FAST_DEBUG("(LOGIC INIT): gradients initial values = " << exec->grad_arrays[i])
+			exec->grad_arrays.push_back( NDArray(Shape(8, 2), ctx) );
+			exec->grad_arrays[i] = 0.;
+			FAST_INFO("(LOGIC INIT): gradients initial values = " << exec->grad_arrays[i])
 		}
-		FAST_DEBUG("Logic initialized")
+		FAST_INFO("Logic initialized")
 	}
 
 
 	void run_batch() {
-		FAST_DEBUG("(LOGIC): run batch, iteration = " << iter_)
+		FAST_INFO("(LOGIC): run batch, iteration = " << iter_)
 		for (size_t i = 0; i < arg_names.size(); ++i) {
-			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
-			exec->grad_arrays[i] += 1.;
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			exec->grad_arrays[i] += 0.1;
+			FAST_INFO("(LOGIC RUN): gradients new values = " << exec->grad_arrays[i])
+//			std::this_thread::sleep_for(std::chrono::milliseconds(200));
 		}
 		iter_++;
-		if (iter_ == 10)
+		if (iter_ == 1000)
 			max_epoch_reached = true; // Terminate
 	}
 
 	void update(std::vector<mxnet::cpp::NDArray> &in) {
-		if (in.size() > 0) {
-			int ii = 0;
+		REQUIRE(in.size() > 0);
 			for (size_t i = 0; i < arg_names.size(); ++i) {
-				if (arg_names[i] == "X" || arg_names[i] == "label") continue;
-				exec->grad_arrays[i] += in[ii];
-				ii++;
+				FAST_INFO("(LOGIC UPDATE): original gradients = " << exec->grad_arrays[i])
+				FAST_INFO("(LOGIC UPDATE): incoming gradients = " << in[i])
+				exec->grad_arrays[i] += in[i];
+				FAST_INFO("(LOGIC UPDATE): updated gradients values = " << exec->grad_arrays[i])
 			}
-			FAST_DEBUG("(LOGIC UPDATE): updated")
-		}
+			FAST_INFO("(LOGIC UPDATE): updated")
 	}
 
 	void finalize() {
 
 	}
 
-	Symbol net;
-	std::map<string, NDArray> args;
-	Optimizer* opt;
-	Executor * exec;
+	Dummy * exec;
 	vector<string> arg_names;
 	unsigned int iter_ = 0;
 	bool max_epoch_reached = false;
