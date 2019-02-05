@@ -13,7 +13,7 @@ public:
 		const float learning_rate = 0.001;
 		const float weight_decay = 1e-4;
 
-		net = Symbol::Load("./symbols/resnet18_v2.json");
+		net = Symbol::Load("../symbols/resnet18_v2.json");
 
 //		MXRandomSeed(42);
 
