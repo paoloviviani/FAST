@@ -51,7 +51,7 @@ public:
 		for (size_t i = 0; i < arg_names.size(); ++i) {
 			exec->grad_arrays[i] += 0.1;
 			FAST_INFO("(LOGIC RUN): gradients new values = " << exec->grad_arrays[i])
-//			std::this_thread::sleep_for(std::chrono::milliseconds(200));
+			std::this_thread::sleep_for(std::chrono::milliseconds(200));
 		}
 		iter_++;
 		if (iter_ == 1000)
@@ -91,7 +91,7 @@ typedef gff::Filter<gff::NondeterminateMerge, gff::OutBundleBroadcast<gff::Nonde
  *******************************************************************************
  */
 
-TEST_CASE( "Tensor passing basic", "gam,gff,multi,mxnet" ) {
+TEST_CASE( "MxNet worker basic test", "gam,gff,multi,mxnet" ) {
 	FAST_LOG_INIT
 	FAST_INFO("TEST name: "<< Catch::getResultCapture().getCurrentTestName());
 
