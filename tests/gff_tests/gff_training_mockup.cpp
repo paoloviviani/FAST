@@ -62,11 +62,14 @@ public:
 			internal_state_.at(i) += recv->at(i);
 			out->at(i) = 1.;
 		}
-		auto out_ptr = gam::public_ptr< FAST::gam_vector<float> >(out, [](FAST::gam_vector<float> * ptr){delete ptr;});
-		c.emit(out_ptr);
+
 		iter++;
 		if (iter == MAX_ITER)
 			return gff::eos;
+
+		auto out_ptr = gam::public_ptr< FAST::gam_vector<float> >(out, [](FAST::gam_vector<float> * ptr){delete ptr;});
+		c.emit(out_ptr);
+
 		return gff::go_on;
 	}
 
@@ -81,6 +84,8 @@ public:
 	}
 
 	void svc_end(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
+		float test = MAX_ITER;
+		REQUIRE(internal_state_.at(0) == test);
 		FAST_INFO("(svc_end): intenral_state = " << internal_state_)
 		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 	}
