@@ -66,12 +66,12 @@ export FAST_RUN_MPI=$FAST_ROOT/bin/fastrun-mpi
 export FAST_RUN_SLURM=$FAST_ROOT/bin/fastrun-slurm
 
 if [[ $LAUNCHER == localhost ]]; then
-	$FAST_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/unit_test
-	$FAST_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/gam_unit_test
-	$FAST_RUN_LOCAL -v -n 5 -l $GAM_LOCALHOST ./bin/gff_farm
-	$FAST_RUN_LOCAL -v -n 3 -l $GAM_LOCALHOST ./bin/gff_all_reduce
-	$FAST_RUN_LOCAL -v -n 3 -l $GAM_LOCALHOST ./bin/gff_all_reduce_multi
-	$FAST_RUN_LOCAL -v -n 3 -l $GAM_LOCALHOST ./bin/gff_all_reduce_vector
+	#$FAST_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/unit_test
+	#$FAST_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/gam_unit_test
+	#$FAST_RUN_LOCAL -v -n 5 -l $GAM_LOCALHOST ./bin/gff_farm
+	#$FAST_RUN_LOCAL -v -n 3 -l $GAM_LOCALHOST ./bin/gff_all_reduce
+	#$FAST_RUN_LOCAL -v -n 3 -l $GAM_LOCALHOST ./bin/gff_all_reduce_multi
+	#$FAST_RUN_LOCAL -v -n 3 -l $GAM_LOCALHOST ./bin/gff_all_reduce_vector
 	#$FAST_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/mxnet_worker_test
 	$FAST_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/gff_training_mockup
 elif [[ $LAUNCHER == mpi ]]; then
