@@ -60,13 +60,13 @@ public:
 
 	void update(std::vector<mxnet::cpp::NDArray> &in) {
 		REQUIRE(in.size() > 0);
-			for (size_t i = 0; i < arg_names.size(); ++i) {
-				FAST_INFO("(LOGIC UPDATE): original gradients = " << exec->grad_arrays[i])
-				FAST_INFO("(LOGIC UPDATE): incoming gradients = " << in[i])
-				exec->grad_arrays[i] += in[i];
-				FAST_INFO("(LOGIC UPDATE): updated gradients values = " << exec->grad_arrays[i])
-			}
-			FAST_INFO("(LOGIC UPDATE): updated")
+		for (size_t i = 0; i < arg_names.size(); ++i) {
+			FAST_INFO("(LOGIC UPDATE): original gradients = " << exec->grad_arrays[i])
+						FAST_INFO("(LOGIC UPDATE): incoming gradients = " << in[i])
+						exec->grad_arrays[i] += in[i];
+			FAST_INFO("(LOGIC UPDATE): updated gradients values = " << exec->grad_arrays[i])
+		}
+		FAST_INFO("(LOGIC UPDATE): updated")
 	}
 
 	void finalize() {

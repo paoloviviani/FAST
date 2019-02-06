@@ -23,6 +23,11 @@ Options:
 
 EXECUTABLE=${@: -1}
 
+if [[ $# -eq 0 ]]; then
+	show_help
+	exit
+fi
+
 POSITIONAL=()
 while [[ $# -gt 0 ]]
 do
@@ -40,12 +45,14 @@ case $key in
     shift # past value
     ;;
     -h|--help)
-  show_help
-  exit
+    show_help
+    exit
     ;;
     *)    # unknown option
+    show_help
     POSITIONAL+=("$1") # save it in an array for later
     shift # past argument
+    exit
     ;;
 esac
 done
