@@ -35,7 +35,7 @@ key="$1"
 
 case $key in
     -H|--hostfile)
-    HOSTFILE="$2"
+    export HOSTFILE="$2"
     shift # past argument
     shift # past value
     ;;
@@ -52,7 +52,6 @@ case $key in
     show_help
     POSITIONAL+=("$1") # save it in an array for later
     shift # past argument
-    exit
     ;;
 esac
 done

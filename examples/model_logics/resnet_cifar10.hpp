@@ -45,7 +45,9 @@ public:
 //			initializer(arg.first, &arg.second);
 //		}
 		// Load same weights for all the workers
+
 		args = mxnet::cpp::NDArray::LoadToMap("../initialized_weights/resnet18_cifar10_epoch0.bin");
+
 
 		opt = OptimizerRegistry::Find("sgd");
 		opt->SetParam("lr", learning_rate);

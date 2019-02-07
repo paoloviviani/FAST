@@ -21,12 +21,12 @@ Options:
   "
 }
 
-EXECUTABLE=${@: -1}
-
 if [[ $# -eq 0 ]]; then
 	show_help
 	exit
 fi
+
+EXECUTABLE=${@: -1}
 
 POSITIONAL=()
 while [[ $# -gt 0 ]]
@@ -51,7 +51,6 @@ case $key in
     *)    # unknown option
     POSITIONAL+=("$1") # save it in an array for later
     shift # past argument
-    exit
     ;;
 esac
 done
