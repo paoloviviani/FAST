@@ -129,12 +129,15 @@ public:
 		pipe_->load_result(&outptr);
 
 		iter++;
-		if (iter == MAX_ITER)
+		if (iter == MAX_ITER) {
+			pipe_->offload( ff::FF_EOS );
 			return gff::eos;
+		}
 
 		FAST::gam_vector<float> * out_vec = (FAST::gam_vector<float> *)outptr;
 
 		auto out_ptr = gam::public_ptr< FAST::gam_vector<float> >(out_vec, [](FAST::gam_vector<float> * ptr){delete ptr;});
+		c.emit(out_ptr);
 		c.emit(out_ptr);
 		return gff::go_on;
 	}
