@@ -129,15 +129,12 @@ public:
 		pipe_->load_result(&outptr);
 
 		iter++;
-		if (iter == MAX_ITER) {
-			pipe_->offload( ff::FF_EOS );
+		if (iter == MAX_ITER && FAST::rank() == 0)
 			return gff::eos;
-		}
 
 		FAST::gam_vector<float> * out_vec = (FAST::gam_vector<float> *)outptr;
 
 		auto out_ptr = gam::public_ptr< FAST::gam_vector<float> >(out_vec, [](FAST::gam_vector<float> * ptr){delete ptr;});
-		c.emit(out_ptr);
 		c.emit(out_ptr);
 		return gff::go_on;
 	}
@@ -159,7 +156,8 @@ public:
 	}
 
 	void svc_end(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+		pipe_->offload( ff::FF_EOS );
+//		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 	}
 private:
 	vector< float > internal_state_;

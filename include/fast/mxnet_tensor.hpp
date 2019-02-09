@@ -23,9 +23,9 @@ void appendToVec(gam_vector<T> & vec, mxnet::cpp::NDArray & t){
 }
 
 template <typename T>
-void vecToNDArray(gam_vector<T> * vec, mxnet::cpp::NDArray & t, size_t offset, size_t size, //
+void vecToNDArray(gam_vector<T> & vec, mxnet::cpp::NDArray & t, size_t offset, size_t size, //
 					const mxnet::cpp::Context & ctx=mxnet::cpp::Context::cpu() ) {
-	t.SyncCopyFromCPU(vec->data() + offset, size);
+	t.SyncCopyFromCPU(vec.data() + offset, size);
 }
 
 template <typename T>
@@ -51,7 +51,7 @@ void vecToNDVec(gam_vector<T> & vec, std::vector<mxnet::cpp::NDArray> & grad_arr
 
 	size_t offset = 0;
 	for (size_t i = 0; i < grad_arrays.size(); i++) {
-		vecToNDArray(vec, grad_arrays[i], offset, ctx);
+		vecToNDArray(vec, grad_arrays[i], offset, grad_arrays[i].Size(), ctx);
 		offset += grad_arrays[i].Size();
 	}
 

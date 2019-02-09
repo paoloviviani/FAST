@@ -279,20 +279,11 @@ public:
 		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
 		// wait EOS
-		if (training_->wait_freezing()<0) {
-			FAST_DEBUG("(MXNET FINALIZATION): freezing error");
-		}
-//        // join all threads
-//        if (training_->wait()<0) {
-//        	FAST_DEBUG("(MXNET FINALIZATION): error waiting pipe");
-//        }
-//        if (global_->wait_freezing()<0) {
-//        	FAST_DEBUG("(MXNET FINALIZATION): freezing error");
-//        }
-//        // join all threads
-//        if (global_->wait()<0) {
-//        	FAST_DEBUG("(MXNET FINALIZATION): error wating pipe");
-//        }
+		// join all threads
+        if (global_->wait()<0) {
+        	FAST_DEBUG("(MXNET FINALIZATION): error wating pipe");
+        }
+
 		logic_.finalize();
 		if (global_)
 			delete global_;

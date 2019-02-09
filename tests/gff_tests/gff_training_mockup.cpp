@@ -64,8 +64,10 @@ public:
 		}
 
 		iter++;
-		if (iter == MAX_ITER)
+		if (iter == MAX_ITER && FAST::rank() == 0)
 			return gff::eos;
+		if (iter == MAX_ITER && FAST::rank() != 0)
+					return gff::go_on;
 
 		auto out_ptr = gam::public_ptr< FAST::gam_vector<float> >(out, [](FAST::gam_vector<float> * ptr){delete ptr;});
 		c.emit(out_ptr);
