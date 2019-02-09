@@ -62,17 +62,14 @@ class GlobalPointer {
 
   GlobalPointer() {}
 
-  GlobalPointer(uint64_t lsb, executor_id home) {
-    assert(home <= max_home);  // todo error reporting
-    descriptor_ = lsb | ((uint64_t)home << 32);
+  explicit GlobalPointer(uint64_t descriptor) : descriptor_(descriptor) {}
 
-    /* check consistency */
+  GlobalPointer(executor_id home, uint64_t lsb)
+      : GlobalPointer(lsb | ((uint64_t)home << 32)) {
     assert(is_address());
-    assert((lsb | ((uint64_t)home << 32)) == this->address());
+    assert((this->lsb() | ((uint64_t)home << 32)) == this->address());
     assert(home == this->home());
   }
-
-  GlobalPointer(uint64_t d) { descriptor_ = d; }
 
   bool operator==(const GlobalPointer& gp) {
     return this->address() == gp.address();
@@ -121,7 +118,27 @@ class GlobalPointer {
   uint64_t descriptor_ = 0;
 
   inline executor_id home() const { return (executor_id)(descriptor_ >> 32); }
+  inline executor_id lsb() const {
+    return descriptor_ & (((uint64_t)1 << 32) - 1);
+  }
 };
+
+/*
+ ***************************************************************************
+ *
+ * thread-safe global-address generator
+ *
+ ***************************************************************************
+ */
+static uint64_t generate_lsb() {
+  static std::atomic<uint64_t> cnt{1};
+  return cnt++;
+}
+
+static GlobalPointer make_global(executor_id home) {
+  assert(home <= GlobalPointer::max_home);  // todo error reporting
+  return GlobalPointer(home, generate_lsb());
+}
 
 } /* namespace gam */
 

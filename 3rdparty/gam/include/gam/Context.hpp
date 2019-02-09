@@ -383,7 +383,7 @@ class Context {
     /* ensure a private pointer was pulled */
     if (!buf.p.is_address() || buf.al == AL_PRIVATE) return pulled_private(buf);
 
-    std::cerr << "> pull_private() pulled a non-private pointer: \n"
+    std::cerr << "> pull_private() pulled an invalid pointer: \n"
               << buf.p << std::endl;
     return GlobalPointer();
   }
@@ -454,8 +454,6 @@ class Context {
    */
   template <typename T>
   GlobalPointer publish(const GlobalPointer &p) {
-    GlobalPointer p_;
-
     LOGLN_OS("CTX publishing p=" << p);
     assert(p.is_address());
     assert(is_private(p));
@@ -464,8 +462,9 @@ class Context {
     executor_id auth = view.author(a);
 
     /* map to fresh global address */
-    p_ = name_allocator();
-    uint64_t a_ = p_.address();
+    auto res = make_global(rank_);
+    assert(res.is_address());
+    uint64_t a_ = res.address();
     view.bind_access_level(a_, AL_PUBLIC);
 
     /* steal memory */
@@ -501,7 +500,7 @@ class Context {
     view.bind_owner(a_, (executor_id)GlobalPointer::max_home + 1);  // dummy
     view.bind_child(a_, nullptr);                                   // dummy
 
-    return p_;
+    return res;
   }
 
   /*
@@ -580,7 +579,7 @@ class Context {
         /*
          * destroy and un-bind committed memory
          */
-        unmap(a);
+        unmap(p);
     } else
       forward_dec(p);
   }
@@ -640,8 +639,6 @@ class Context {
 
   std::thread *daemon;
   std::atomic<char> daemon_termination;
-
-  std::mt19937 name_allocator;
 
   /*
    ***************************************************************************
@@ -737,7 +734,7 @@ class Context {
           case daemon_pointer::RC_DEC:
             LOGLN("DMN recv -1 %llu from %lu", a, p.from);
             assert(ctx.view.author(a) == ctx.rank());
-            if (ctx.mc.rc_dec(a) == 0) ctx.unmap(a);
+            if (ctx.mc.rc_dec(a) == 0) ctx.unmap(p.p);
             break;
           case daemon_pointer::RC_GET: {
             LOGLN("DMN recv RC_GET %llu from %lu", a, p.from);
@@ -750,7 +747,7 @@ class Context {
             LOGLN("DMN recv PVT -1 %llu from %lu", a, p.from);
             assert(ctx.view.author(a) == ctx.rank_);
             assert(ctx.view.committed(a) != nullptr);
-            ctx.unmap(a);
+            ctx.unmap(p.p);
             break;
           case daemon_pointer::RLOAD:
             LOGLN("DMN recv RLOAD %llu from %lu", a, p.from);
@@ -776,7 +773,7 @@ class Context {
 
   template <AccessLevel al, class T, typename Deleter>
   GlobalPointer mmap_global(T *lp, Deleter d) {
-    GlobalPointer res = GlobalPointer(name_allocator(), rank_);
+    auto res = make_global(rank_);
     uint64_t a = res.address();
 
     LOGLN("CTX mmap global=%llu -> local=%p", a, lp);
@@ -808,8 +805,6 @@ class Context {
   }
 
   GlobalPointer pulled_public(const pap_pointer &buf) {
-    GlobalPointer res;
-
     if (buf.p.is_address()) {
       LOGLN_OS("CTX pulled public=" << buf.p);
 
@@ -821,15 +816,10 @@ class Context {
     } else
       LOGLN_OS("CTX pulled reserved=" << buf.p);
 
-    /* prepare output */
-    res = buf.p;
-
-    return res;
+    return buf.p;
   }
 
   GlobalPointer pulled_private(const pap_pointer &buf) {
-    GlobalPointer res;
-
     if (buf.p.is_address()) {
       LOGLN_OS("CTX pulled private=" << buf.p);
 
@@ -845,10 +835,7 @@ class Context {
     } else
       LOGLN_OS("CTX pulled reserved=" << buf.p);
 
-    /* prepare output */
-    res = buf.p;
-
-    return res;
+    return buf.p;
   }
 
   template <typename T>
