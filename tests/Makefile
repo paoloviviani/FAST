@@ -11,6 +11,7 @@ EXECS                += gff_all_reduce_multi
 EXECS                += gff_all_reduce_vector
 EXECS                += gff_training_mockup
 EXECS                += gff_training_concurrent
+EXECS                += gff_training_concurrent2
 EXECS                += mxnet_aux_test
 EXECS                += mxnet_worker_test
 
@@ -40,6 +41,9 @@ TARGET_OBJ            += $(TARGET_OBJ_TRAIN_MOCK)
 
 TARGET_OBJ_TRAIN_PIPE = gff_tests/gff_training_concurrent.o
 TARGET_OBJ            += $(TARGET_OBJ_TRAIN_PIPE)
+
+TARGET_OBJ_TRAIN_PIPE = gff_tests/gff_training_concurrent2.o
+TARGET_OBJ            += $(TARGET_OBJ_TRAIN_MULTIPIPE)
 
 TARGET_OBJ_MXNET_AUX  = mxnet_test/mxnet_aux_test.o
 TARGET_OBJ            += $(TARGET_OBJ_MXNET_AUX)
@@ -73,6 +77,8 @@ gff_all_reduce_vector: $(TARGET_OBJ_GFF_VECT) $(TEST_DRIVER_OBJ)
 gff_training_mockup: $(TARGET_OBJ_TRAIN_MOCK) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)	
 gff_training_concurrent: $(TARGET_OBJ_TRAIN_PIPE) $(TEST_DRIVER_OBJ)
+	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
+gff_training_concurrent2: $(TARGET_OBJ_TRAIN_MULTIPIPE) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
 mxnet_aux_test: $(TARGET_OBJ_MXNET_AUX) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)

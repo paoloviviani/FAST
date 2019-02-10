@@ -48,13 +48,27 @@ public:
 			return ff::FF_GO_ON;
 		}
 
-		std::vector<float> * internal = new std::vector<float>(SIZE);
 		for (int i = 0; i < SIZE; i++) {
-			internal->at(i) = recv_ptr->at(i);
+			buffer->at(i) += recv_ptr->at(i);
 		}
-		this->ff_send_out((void*)internal);
+
+		if (this->get_out_buffer()->empty()) {
+			this->ff_send_out((void*)buffer);
+			buffer = new std::vector<float>(SIZE);
+			for (int i = 0; i < SIZE; i++)
+				buffer->at(i) = 0.;
+		}
 		return ff::FF_GO_ON;
 	}
+
+	int svc_init() {
+		buffer = new std::vector<float>(SIZE);
+		for (int i = 0; i < SIZE; i++)
+			buffer->at(i) = 0.;
+		return 0;
+	}
+private:
+	std::vector<float> * buffer;
 };
 
 class ComputeStage: public ff::ff_node {
