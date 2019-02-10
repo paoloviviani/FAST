@@ -1,10 +1,10 @@
 #!/bin/bash
-FAST_ROOT=$(cd ../; pwd)
+FAST_ROOT=$(cd ..; pwd)
 MXNET_LIBDIR=$FAST_ROOT/3rdparty/mxnet/lib
-LIBFABRIC_ROOT=
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$MXNET_LIBDIR#:$LIBFABRIC_ROOT/lib
+LIBFABRIC_ROOT=/opt/libfabric
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$MXNET_LIBDIR:$LIBFABRIC_ROOT/lib
 
-export GAM_CARDINALITY=2
+export GAM_CARDINALITY=1
 export GAM_RUN_LOCAL=$FAST_ROOT/bin/fastrun-local
 export GAM_LOG_PREFIX=$PWD/logs
 
@@ -19,6 +19,6 @@ export GAM_SVC_MEM_1=6229
 export GAM_SVC_DMN_1=6357
 export GAM_RANK=$1
 
-#valgrind ./fast_mnist
-gdb ./bin/mxnet_aux_test
-#./resnet2nodes
+#valgrind ./bin/mxnet_aux_test
+#gdb ./bin/mxnet_aux_test
+$@

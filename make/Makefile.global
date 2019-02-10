@@ -20,7 +20,8 @@ CFLAGS               = -std=c++11
 LDFLAGS              = 
 LIBS                 = -lpthread
 
-INCLUDES             = -I$(FAST_ROOT)/include -I$(FAST_ROOT)/3rdparty/fastflow/ -I$(FAST_ROOT)/3rdparty/fastflow/ff/d/gff -I$(FAST_ROOT)/3rdparty/gam/include
+BASIC_INCLUDES       = -I$(FAST_ROOT)/include
+INCLUDES             = $(BASIC_INCLUDES) -I$(FAST_ROOT)/include -I$(FAST_ROOT)/3rdparty/fastflow/ -I$(FAST_ROOT)/3rdparty/fastflow/ff/d/gff -I$(FAST_ROOT)/3rdparty/gam/include
 
 #Libfabric dependency
 ifeq ($(LIBFABRIC_ROOT),)
