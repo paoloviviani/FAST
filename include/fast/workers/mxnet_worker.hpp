@@ -78,7 +78,7 @@ public:
 		}
 
 		FAST_DEBUG("(INPUT STAGE): got real pointer of size " << (*recv_ptr).size())
-		FAST::accumToNDVec( *recv_ptr, *buffer_, mxnet::cpp::Context::cpu() );
+		FAST::accumToNDVec( *recv_ptr, *buffer_, logic_->arg_names, "DATA_TAG", "OUTPUT_TAG", mxnet::cpp::Context::cpu() );
 		FAST_DEBUG("(INPUT STAGE): accumulated gradients")
 
 		if (this->get_out_buffer()->empty()) {

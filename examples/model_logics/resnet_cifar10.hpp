@@ -109,11 +109,9 @@ public:
 	void update(std::vector<mxnet::cpp::NDArray> &in) {
 		FAST_DEBUG("(LOGIC UPDATE): updating")
 				if (in.size() > 0) {
-					int ii = 0;
 					for (size_t i = 0; i < arg_names.size(); ++i) {
 						if (arg_names[i] == "data" || arg_names[i] == "label") continue;
-						opt->Update(i, exec->arg_arrays[i], in[ii]);
-						ii++;
+						opt->Update(i, exec->arg_arrays[i], in[1]);
 					}
 					FAST_DEBUG("(LOGIC UPDATE): updated")
 				}
