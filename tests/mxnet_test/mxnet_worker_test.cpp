@@ -40,7 +40,7 @@ public:
 		for (size_t i = 0; i < arg_names.size(); ++i) {
 			exec->grad_arrays.push_back( NDArray(Shape(8, 2), ctx) );
 			exec->grad_arrays[i] = 0.;
-			FAST_INFO("(LOGIC INIT): gradients initial values = " << exec->grad_arrays[i])
+			FAST_DEBUG("(LOGIC INIT): gradients initial values = " << exec->grad_arrays[i])
 		}
 		FAST_INFO("Logic initialized")
 	}
@@ -50,21 +50,21 @@ public:
 		FAST_INFO("(LOGIC): run batch, iteration = " << iter_)
 		for (size_t i = 0; i < arg_names.size(); ++i) {
 			exec->grad_arrays[i] += 0.1;
-			FAST_INFO("(LOGIC RUN): gradients new values = " << exec->grad_arrays[i])
+			FAST_DEBUG("(LOGIC RUN): gradients new values = " << exec->grad_arrays[i])
 			std::this_thread::sleep_for(std::chrono::milliseconds(200));
 		}
 		iter_++;
-		if (iter_ == 1000)
+		if (iter_ == 150)
 			max_epoch_reached = true; // Terminate
 	}
 
 	void update(std::vector<mxnet::cpp::NDArray> &in) {
 		REQUIRE(in.size() > 0);
 		for (size_t i = 0; i < arg_names.size(); ++i) {
-			FAST_INFO("(LOGIC UPDATE): original gradients = " << exec->grad_arrays[i])
-						FAST_INFO("(LOGIC UPDATE): incoming gradients = " << in[i])
-						exec->grad_arrays[i] += in[i];
-			FAST_INFO("(LOGIC UPDATE): updated gradients values = " << exec->grad_arrays[i])
+			FAST_DEBUG("(LOGIC UPDATE): original gradients = " << exec->grad_arrays[i])
+			FAST_DEBUG("(LOGIC UPDATE): incoming gradients = " << in[i])
+			exec->grad_arrays[i] += in[i];
+			FAST_DEBUG("(LOGIC UPDATE): updated gradients values = " << exec->grad_arrays[i])
 		}
 		FAST_INFO("(LOGIC UPDATE): updated")
 	}
