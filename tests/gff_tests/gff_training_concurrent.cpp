@@ -48,28 +48,51 @@ public:
 			return ff::FF_GO_ON;
 		}
 
+		std::vector<float> * internal = new std::vector<float>(SIZE);
 		for (int i = 0; i < SIZE; i++) {
-			buffer->at(i) += recv_ptr->at(i);
+			internal->at(i) = recv_ptr->at(i);
 		}
-
-		if (this->get_out_buffer()->empty()) {
-			this->ff_send_out((void*)buffer);
-			buffer = new std::vector<float>(SIZE);
-			for (int i = 0; i < SIZE; i++)
-				buffer->at(i) = 0.;
-		}
+		this->ff_send_out((void*)internal);
 		return ff::FF_GO_ON;
 	}
-
-	int svc_init() {
-		buffer = new std::vector<float>(SIZE);
-		for (int i = 0; i < SIZE; i++)
-			buffer->at(i) = 0.;
-		return 0;
-	}
-private:
-	std::vector<float> * buffer;
 };
+
+//class InputStage: public ff::ff_node {
+//public:
+//
+//	void * svc(void * task) {
+//		auto recv_ptr = ((PublicWrapper<float> *)task)->payload.local();
+//		delete (PublicWrapper<float> *)task;
+//		FAST_DEBUG("(INPUT STAGE): got pointer")
+//
+//		if (recv_ptr->size() == 0) {
+//			std::vector<float> * trigger = new std::vector<float>(0);
+//			this->ff_send_out((void*)trigger);
+//			return ff::FF_GO_ON;
+//		}
+//
+//		for (int i = 0; i < SIZE; i++) {
+//			buffer->at(i) += recv_ptr->at(i);
+//		}
+//
+//		if (this->get_out_buffer()->empty()) {
+//			this->ff_send_out((void*)buffer);
+//			buffer = new std::vector<float>(SIZE);
+//			for (int i = 0; i < SIZE; i++)
+//				buffer->at(i) = 0.;
+//		}
+//		return ff::FF_GO_ON;
+//	}
+//
+//	int svc_init() {
+//		buffer = new std::vector<float>(SIZE);
+//		for (int i = 0; i < SIZE; i++)
+//			buffer->at(i) = 0.;
+//		return 0;
+//	}
+//private:
+//	std::vector<float> * buffer;
+//};
 
 class ComputeStage: public ff::ff_node {
 public:
