@@ -77,8 +77,8 @@ if [[ $LAUNCHER == localhost ]]; then
 	#$FAST_RUN_LOCAL -v -n 1 -l $GAM_LOCALHOST ./bin/mxnet_aux_test
 	#$FAST_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/mxnet_worker_test
 	#$FAST_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/gff_training_mockup
-	#$FAST_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/gff_training_concurrent
-	$FAST_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/gff_training_concurrent2
+	$FAST_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/gff_training_concurrent
+	#$FAST_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/gff_training_concurrent2
 elif [[ $LAUNCHER == mpi ]]; then
 	$FAST_RUN_MPI -H hosts -n 2 $PWD/bin/gam_unit_test
 	$FAST_RUN_MPI -H hosts -n 5 $PWD/bin/gff_farm

@@ -58,18 +58,26 @@ struct gam_vector : public std::vector<T> {
 	/* ingesting constructor */
 	template<typename StreamInF>
 	void ingest(StreamInF &&f) {
+		std::cerr << "DEBUG 1 \n\n";
 		typename std::vector<T>::size_type in_size;
 		f(&in_size, sizeof(vsize_t));
 		this->resize(in_size);
 		assert(this->size() == in_size);
+		std::cerr << "DEBUG 2 \n\n";
 		f(this->data(), in_size * sizeof(T));
 	}
 
 	/* marshalling function */
 	gam::marshalled_t marshall() {
 		gam::marshalled_t res;
+		std::cerr << "DEBUG 3 \n\n";
+
 		size_ = this->size();
+		std::cerr << "DEBUG 4 \n\n";
+
 		res.emplace_back(&size_, sizeof(vsize_t));
+		std::cerr << "DEBUG 2 \n\n";
+
 		res.emplace_back(this->data(), size_ * sizeof(T));
 		return res;
 	}
