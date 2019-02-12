@@ -26,15 +26,15 @@
 #if defined LOGLEVEL_DEBUG
 #define FAST_DEBUG(x) {\
 		FAST::Logger::getLogger()->lock(); \
-		FAST::Logger::getLogger()->log_output() << x << std::endl; \
+		FAST::Logger::getLogger()->log_output() << x << std::endl << std::flush; \
 		FAST::Logger::getLogger()->unlock();}
 #define FAST_INFO(x) {\
 		FAST::Logger::getLogger()->lock(); \
-		FAST::Logger::getLogger()->log_output() << x << std::endl; \
+		FAST::Logger::getLogger()->log_output() << x << std::endl << std::flush; \
 		FAST::Logger::getLogger()->unlock();}
 #define FAST_ERROR(x) {\
 		FAST::Logger::getLogger()->lock(); \
-		FAST::Logger::getLogger()->log_error() << x << std::endl; \
+		FAST::Logger::getLogger()->log_error() << x << std::endl << std::flush; \
 		FAST::Logger::getLogger()->unlock();}
 
 #elif defined LOGLEVEL_INFO
@@ -45,7 +45,7 @@
 		FAST::Logger::getLogger()->unlock();}
 #define FAST_ERROR(x) {\
 		FAST::Logger::getLogger()->lock(); \
-		FAST::Logger::getLogger()->log_error() << x << std::endl; \
+		FAST::Logger::getLogger()->log_error() << x << std::endl << std::flush; \
 		FAST::Logger::getLogger()->unlock();}
 
 #else
@@ -53,7 +53,7 @@
 #define FAST_INFO(...) {}
 #define FAST_ERROR(x) {\
 		FAST::Logger::getLogger()->lock(); \
-		FAST::Logger::getLogger()->log_error() << x << std::endl; \
+		FAST::Logger::getLogger()->log_error() << x << std::endl << std::flush; \
 		FAST::Logger::getLogger()->unlock();}
 
 #endif
@@ -92,7 +92,7 @@ public:
 	 * @return
 	 */
 	std::ostream &log_error() {
-		return std::cerr << "[" << currentDateTime() << ", proc " << id <<"] ";
+		return std::cerr << " === [" << currentDateTime() << ", proc " << id <<"] === ";
 	}
 
 	/**
@@ -100,7 +100,7 @@ public:
 	 * @return
 	 */
 	std::ostream &log_output() {
-		return std::cout << "[" << currentDateTime() << ", proc " << id <<"] ";
+		return std::cout << " === [" << currentDateTime() << ", proc " << id <<"] === ";
 	}
 
 	/**

@@ -4,7 +4,7 @@ MXNET_LIBDIR=$FAST_ROOT/3rdparty/mxnet/lib
 LIBFABRIC_ROOT=/opt/libfabric
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$MXNET_LIBDIR:$LIBFABRIC_ROOT/lib
 
-export GAM_CARDINALITY=1
+export GAM_CARDINALITY=2
 export GAM_RUN_LOCAL=$FAST_ROOT/bin/fastrun-local
 export GAM_LOG_PREFIX=$PWD/logs
 
@@ -20,5 +20,4 @@ export GAM_SVC_DMN_1=6357
 export GAM_RANK=$1
 
 #valgrind ./bin/mxnet_aux_test
-#gdb ./bin/mxnet_aux_test
-$@
+gdb ./bin/gff_training_concurrent_2
