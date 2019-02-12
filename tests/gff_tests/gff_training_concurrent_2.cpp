@@ -45,14 +45,14 @@ class InputStage: public ff::ff_node {
 public:
 
 	void * svc(void * task) {
-		FAST_INFO("(INPUT STAGE): got pointer")
+		FAST_DEBUG("(INPUT STAGE): got pointer")
 		auto recv_ptr = ((PublicWrapper<float> *)task)->payload.local();
 		delete (PublicWrapper<float> *)task;
 
 		if (recv_ptr->size() == 0) {
-			FAST_INFO("(INPUT STAGE): got trigger")
+			FAST_DEBUG("(INPUT STAGE): got trigger")
 			this->ff_send_out(NEXT_ITERATION);
-			FAST_INFO("(INPUT STAGE): returned trigger")
+			FAST_DEBUG("(INPUT STAGE): returned trigger")
 			return ff::FF_GO_ON;
 		}
 
@@ -83,19 +83,19 @@ class TrainerStage: public ff::ff_minode {
 public:
 
 	void * svc(void * task) {
-		FAST_INFO("(COMPUTE STAGE): got pointer")
+		FAST_DEBUG("(COMPUTE STAGE): got pointer")
 		std::vector<float> * computed = new std::vector<float>(SIZE);
 
 		// Update internal state if received pointer
 		if (task != NEXT_ITERATION) {
-			FAST_INFO("(COMPUTE STAGE): got real vector")
+			FAST_DEBUG("(COMPUTE STAGE): got real vector")
 			std::vector<float> * internal = (std::vector<float> *)task;
 			for (int i = 0; i < SIZE; i++) {
 				internal_state.at(i) += internal->at(i);
 			}
 			delete internal;
 		}
-		FAST_INFO("(COMPUTE STAGE): running internal iter")
+		FAST_DEBUG("(COMPUTE STAGE): running internal iter")
 		// Compute internal iteration either if received pointer or feedback or trigger
 		for (int i = 0; i < SIZE; i++) {
 			internal_state.at(i) += 1.;
@@ -121,14 +121,11 @@ private:
 	int iter;
 
 	void eosnotify(ssize_t id) {
-	    FAST_INFO("(TRAINER STAGE): > [internal_in_stage] got EOS id=" << id);
 	    if (id == 0) {
 	    	// got EOS from input - forward END_OF_INPUT message
-	    	FAST_INFO("(TRAINER STAGE): > [internal_in_stage] sending END_OF_INPUT");
 	    	this->ff_send_out(END_OF_INPUT);
 	    } else {
 	    	// got EOS from feedback - forward downstream to trigger termination
-	    	FAST_INFO("(TRAINER STAGE): > [internal_in_stage] sending EOS");
 	    	this->ff_send_out(ff::FF_EOS);
 	    	// got both EOSs - node will be terminated here
 	    }
@@ -138,13 +135,11 @@ private:
 class internal_out_stage : public ff::ff_monode {
   void *svc(void *in) {
     if (in != END_OF_INPUT) {
-      printf("> [internal_out_stage] got %p\n", in);
       // send a NEXT_ITERATION message to the feedback channel
       ff_send_out_to(NEXT_ITERATION, 0);
       // forward the input pointer downstream
       ff_send_out_to(in, 1);
     } else {
-      printf("> [internal_out_stage] got END_OF_INPUT\n");
       // send EOS to the feedback channel
       ff_send_out_to(ff::FF_EOS, 0);
     }
@@ -156,12 +151,12 @@ class OutputStage: public ff::ff_node {
 public:
 
 	void * svc(void * task) {
-		FAST_INFO("(OUTPUT STAGE)");
+		FAST_DEBUG("(OUTPUT STAGE)");
 		std::vector<float> * internal = (std::vector<float> *)task;
 		FAST::gam_vector<float> * computed = new FAST::gam_vector<float>(SIZE);
 		for (int i = 0; i < SIZE; i++)
 			computed->at(i) = internal->at(i);
-		FAST_INFO("(OUTPUT STAGE): returning gradients");
+		FAST_DEBUG("(OUTPUT STAGE): returning gradients");
 		delete internal;
 		return (void*)computed;
 	}
@@ -188,11 +183,11 @@ public:
 	 * @return a gff token
 	 */
 	gff::token_t svc(gam::public_ptr<FAST::gam_vector<float>> &in, gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
-		FAST_INFO("Received pointer")
+		FAST_DEBUG("Received pointer")
 		PublicWrapper<float> * inp = new PublicWrapper<float>();
 		inp->payload = in;
 
-		FAST_INFO("Offloading pointer")
+		FAST_DEBUG("Offloading pointer")
 		pipe_->offload( (void*)inp );
 
 		void * outptr = nullptr;
@@ -228,7 +223,7 @@ public:
 		FAST::gam_vector<float> * ptr = new FAST::gam_vector<float>(0);
 		auto dummy_out = gam::public_ptr< FAST::gam_vector<float> >(ptr, [](FAST::gam_vector<float> * ptr){delete ptr;});
 		c.emit(dummy_out);
-		FAST_INFO("Emitted trigger")
+		FAST_DEBUG("Emitted trigger")
 	}
 
 	void svc_end(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
