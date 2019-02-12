@@ -34,29 +34,7 @@ struct PublicWrapper {
 	gam::public_ptr < FAST::gam_vector<T> > payload;
 };
 
-class InputStage: public ff::ff_node {
-public:
-
-	void * svc(void * task) {
-		auto recv_ptr = ((PublicWrapper<float> *)task)->payload.local();
-		delete (PublicWrapper<float> *)task;
-		FAST_DEBUG("(INPUT STAGE): got pointer")
-
-		if (recv_ptr->size() == 0) {
-			std::vector<float> * trigger = new std::vector<float>(0);
-			this->ff_send_out((void*)trigger);
-			return ff::FF_GO_ON;
-		}
-
-		std::vector<float> * internal = new std::vector<float>(SIZE);
-		for (int i = 0; i < SIZE; i++) {
-			internal->at(i) = recv_ptr->at(i);
-		}
-		this->ff_send_out((void*)internal);
-		return ff::FF_GO_ON;
-	}
-};
-
+// Direct send out
 //class InputStage: public ff::ff_node {
 //public:
 //
@@ -71,28 +49,52 @@ public:
 //			return ff::FF_GO_ON;
 //		}
 //
+//		std::vector<float> * internal = new std::vector<float>(SIZE);
 //		for (int i = 0; i < SIZE; i++) {
-//			buffer->at(i) += recv_ptr->at(i);
+//			internal->at(i) = recv_ptr->at(i);
 //		}
-//
-//		if (this->get_out_buffer()->empty()) {
-//			this->ff_send_out((void*)buffer);
-//			buffer = new std::vector<float>(SIZE);
-//			for (int i = 0; i < SIZE; i++)
-//				buffer->at(i) = 0.;
-//		}
+//		this->ff_send_out((void*)internal);
 //		return ff::FF_GO_ON;
 //	}
-//
-//	int svc_init() {
-//		buffer = new std::vector<float>(SIZE);
-//		for (int i = 0; i < SIZE; i++)
-//			buffer->at(i) = 0.;
-//		return 0;
-//	}
-//private:
-//	std::vector<float> * buffer;
 //};
+
+//Accumulating
+class InputStage: public ff::ff_node {
+public:
+
+	void * svc(void * task) {
+		FAST_DEBUG("(INPUT STAGE): got pointer")
+		auto recv_ptr = ((PublicWrapper<float> *)task)->payload.local();
+		delete (PublicWrapper<float> *)task;
+
+		if (recv_ptr->size() == 0) {
+			std::vector<float> * trigger = new std::vector<float>(0);
+			this->ff_send_out((void*)trigger);
+			return ff::FF_GO_ON;
+		}
+
+		for (int i = 0; i < SIZE; i++) {
+			buffer->at(i) += recv_ptr->at(i);
+		}
+
+		if (this->get_out_buffer()->empty()) {
+			this->ff_send_out((void*)buffer);
+			buffer = new std::vector<float>(SIZE);
+			for (int i = 0; i < SIZE; i++)
+				buffer->at(i) = 0.;
+		}
+		return ff::FF_GO_ON;
+	}
+
+	int svc_init() {
+		buffer = new std::vector<float>(SIZE);
+		for (int i = 0; i < SIZE; i++)
+			buffer->at(i) = 0.;
+		return 0;
+	}
+private:
+	std::vector<float> * buffer;
+};
 
 class ComputeStage: public ff::ff_node {
 public:
@@ -155,10 +157,9 @@ public:
 	 * @return a gff token
 	 */
 	gff::token_t svc(gam::public_ptr<FAST::gam_vector<float>> &in, gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
-
+		FAST_INFO("Received pointer")
 		PublicWrapper<float> * inp = new PublicWrapper<float>();
 		inp->payload = in;
-		FAST_INFO("Received pointer")
 
 		pipe_->offload( (void*)inp );
 
@@ -177,7 +178,6 @@ public:
 	}
 
 	void svc_init(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
-		internal_state_.resize(10);
 
 		pipe_ = new ff::ff_pipeline(true);
 		pipe_->add_stage(new InputStage());
@@ -197,7 +197,6 @@ public:
 //		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 	}
 private:
-	vector< float > internal_state_;
 	int iter = 0;
 	ff::ff_pipeline * pipe_;
 };

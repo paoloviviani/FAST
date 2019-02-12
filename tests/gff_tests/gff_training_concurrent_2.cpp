@@ -45,13 +45,14 @@ class InputStage: public ff::ff_node {
 public:
 
 	void * svc(void * task) {
+		FAST_INFO("(INPUT STAGE): got pointer")
 		auto recv_ptr = ((PublicWrapper<float> *)task)->payload.local();
 		delete (PublicWrapper<float> *)task;
-		FAST_DEBUG("(INPUT STAGE): got pointer")
 
 		if (recv_ptr->size() == 0) {
-			std::vector<float> * trigger = new std::vector<float>(0);
-			this->ff_send_out((void*)trigger);
+			FAST_INFO("(INPUT STAGE): got trigger")
+			this->ff_send_out(NEXT_ITERATION);
+			FAST_INFO("(INPUT STAGE): returned trigger")
 			return ff::FF_GO_ON;
 		}
 
@@ -82,40 +83,32 @@ class TrainerStage: public ff::ff_minode {
 public:
 
 	void * svc(void * task) {
-		std::vector<float> * internal = (std::vector<float> *)task;
+		FAST_INFO("(COMPUTE STAGE): got pointer")
 		std::vector<float> * computed = new std::vector<float>(SIZE);
 
-		// Compute first internal iteration
-		if (internal->size() == 0) {
-			FAST_DEBUG("(COMPUTE STAGE): got trigger pointer");
-			for (int i = 0; i < SIZE; i++) {
-				computed->at(i) = 1.;
-			}
-			delete internal;
-			this->ff_send_out((void*)computed);
-			return ff::FF_GO_ON;
-		}
-
 		// Update internal state if received pointer
-		if (this->get_channel_id() == -1) {
+		if (task != NEXT_ITERATION) {
+			FAST_INFO("(COMPUTE STAGE): got real vector")
+			std::vector<float> * internal = (std::vector<float> *)task;
 			for (int i = 0; i < SIZE; i++) {
 				internal_state.at(i) += internal->at(i);
 			}
-			iter++;
+			delete internal;
 		}
-
-		// Compute internal iteration either if received pointer or feedback
+		FAST_INFO("(COMPUTE STAGE): running internal iter")
+		// Compute internal iteration either if received pointer or feedback or trigger
 		for (int i = 0; i < SIZE; i++) {
 			internal_state.at(i) += 1.;
 			computed->at(i) = 0.5;
 		}
-		delete internal;
+		iter++;
 		this->ff_send_out((void*)computed);
 
 		return ff::FF_GO_ON;
 	}
 
 	int svc_init() {
+		internal_state.resize(SIZE);
 		for (int i = 0; i < SIZE; i++) {
 			internal_state.at(i) = 1.;
 		}
@@ -128,14 +121,14 @@ private:
 	int iter;
 
 	void eosnotify(ssize_t id) {
-	    FAST_DEBUG("(TRAINER STAGE): > [internal_in_stage] got EOS id=" << id);
+	    FAST_INFO("(TRAINER STAGE): > [internal_in_stage] got EOS id=" << id);
 	    if (id == 0) {
 	    	// got EOS from input - forward END_OF_INPUT message
-	    	FAST_DEBUG("(TRAINER STAGE): > [internal_in_stage] sending END_OF_INPUT");
+	    	FAST_INFO("(TRAINER STAGE): > [internal_in_stage] sending END_OF_INPUT");
 	    	this->ff_send_out(END_OF_INPUT);
 	    } else {
 	    	// got EOS from feedback - forward downstream to trigger termination
-	    	FAST_DEBUG("(TRAINER STAGE): > [internal_in_stage] sending EOS");
+	    	FAST_INFO("(TRAINER STAGE): > [internal_in_stage] sending EOS");
 	    	this->ff_send_out(ff::FF_EOS);
 	    	// got both EOSs - node will be terminated here
 	    }
@@ -163,12 +156,13 @@ class OutputStage: public ff::ff_node {
 public:
 
 	void * svc(void * task) {
+		FAST_INFO("(OUTPUT STAGE)");
 		std::vector<float> * internal = (std::vector<float> *)task;
 		FAST::gam_vector<float> * computed = new FAST::gam_vector<float>(SIZE);
-
 		for (int i = 0; i < SIZE; i++)
 			computed->at(i) = internal->at(i);
-
+		FAST_INFO("(OUTPUT STAGE): returning gradients");
+		delete internal;
 		return (void*)computed;
 	}
 
@@ -194,11 +188,11 @@ public:
 	 * @return a gff token
 	 */
 	gff::token_t svc(gam::public_ptr<FAST::gam_vector<float>> &in, gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
-
+		FAST_INFO("Received pointer")
 		PublicWrapper<float> * inp = new PublicWrapper<float>();
 		inp->payload = in;
-		FAST_INFO("Received pointer")
 
+		FAST_INFO("Offloading pointer")
 		pipe_->offload( (void*)inp );
 
 		void * outptr = nullptr;
@@ -216,7 +210,6 @@ public:
 	}
 
 	void svc_init(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
-		internal_state_.resize(10);
 
 		pipe_ = new ff::ff_pipeline(true);
 		internal_ = new ff::ff_pipeline();
@@ -234,19 +227,18 @@ public:
 
 		FAST::gam_vector<float> * ptr = new FAST::gam_vector<float>(0);
 		auto dummy_out = gam::public_ptr< FAST::gam_vector<float> >(ptr, [](FAST::gam_vector<float> * ptr){delete ptr;});
-		FAST_INFO("Emitting trigger")
 		c.emit(dummy_out);
+		FAST_INFO("Emitted trigger")
 	}
 
 	void svc_end(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
 		pipe_->offload( ff::FF_EOS );
         if (pipe_->wait()<0) {
-        	FAST_DEBUG("(FINALIZATION): error wating pipe");
+        	FAST_INFO("(FINALIZATION): error wating pipe");
         }
 //		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 	}
 private:
-	vector< float > internal_state_;
 	int iter = 0;
 	ff::ff_pipeline * pipe_;
 	ff::ff_pipeline * internal_;

@@ -42,7 +42,7 @@ TARGET_OBJ            += $(TARGET_OBJ_TRAIN_MOCK)
 TARGET_OBJ_TRAIN_PIPE = gff_tests/gff_training_concurrent.o
 TARGET_OBJ            += $(TARGET_OBJ_TRAIN_PIPE)
 
-TARGET_OBJ_TRAIN_PIPE = gff_tests/gff_training_concurrent_2.o
+TARGET_OBJ_TRAIN_MULTIPIPE = gff_tests/gff_training_concurrent_2.o
 TARGET_OBJ            += $(TARGET_OBJ_TRAIN_MULTIPIPE)
 
 TARGET_OBJ_MXNET_AUX  = mxnet_test/mxnet_aux_test.o
