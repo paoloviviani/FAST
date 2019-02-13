@@ -217,7 +217,6 @@ public:
 					}
 					else {
 						FAST_INFO("CONSUMED");
-						return gff::go_on;
 					}
 
 				}
