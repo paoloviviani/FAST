@@ -93,7 +93,7 @@ public:
 					return CONSUMED_PTR;
 		}
 
-		if (*iter < MAX_ITER) {
+		if (*iter <= MAX_ITER) {
 			// Update internal state if received pointer
 			if (task != NEXT_ITERATION) {
 				FAST_INFO("(COMPUTE STAGE): got real vector")
