@@ -16,11 +16,18 @@
 
 #define CATCH_CONFIG_MAIN
 
-using namespace std;
+// global-scope using namespace is evil
+//using namespace std;
 
 #define NWORKERS    2
 #define SIZE      10
 #define MAX_ITER      100
+
+constexpr auto EOI_TOKEN = gff::go_on - 1;
+template<typename T>
+gam::public_ptr<T> token2public(uint64_t token) {
+	return gam::public_ptr<T>(gam::GlobalPointer(token));
+}
 
 /*
  *******************************************************************************
@@ -157,23 +164,32 @@ public:
 	 * @return a gff token
 	 */
 	gff::token_t svc(gam::public_ptr<FAST::gam_vector<float>> &in, gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
-		FAST_INFO("Received pointer")
-		PublicWrapper<float> * inp = new PublicWrapper<float>();
-		inp->payload = in;
+		if(in.get().is_address()) {
+			FAST_INFO("Received pointer")
+			PublicWrapper<float> * inp = new PublicWrapper<float>();
+			inp->payload = in;
 
-		pipe_->offload( (void*)inp );
+			pipe_->offload( (void*)inp );
 
-		void * outptr = nullptr;
-		pipe_->load_result(&outptr);
+			void * outptr = nullptr;
+			pipe_->load_result(&outptr);
 
-		iter++;
-		if (iter == MAX_ITER && FAST::rank() == 0)
-			return gff::eos;
+			if (++iter < MAX_ITER) {
+				FAST::gam_vector<float> * out_vec = (FAST::gam_vector<float> *)outptr;
 
-		FAST::gam_vector<float> * out_vec = (FAST::gam_vector<float> *)outptr;
+				auto out_ptr = gam::public_ptr< FAST::gam_vector<float> >(out_vec, [](FAST::gam_vector<float> * ptr){delete ptr;});
+				c.emit(out_ptr);
+			}
+			else c.emit(token2public<FAST::gam_vector<float>>(EOI_TOKEN));
+		}
 
-		auto out_ptr = gam::public_ptr< FAST::gam_vector<float> >(out_vec, [](FAST::gam_vector<float> * ptr){delete ptr;});
-		c.emit(out_ptr);
+		else {
+			assert(in.get().address() == EOI_TOKEN);
+			FAST_INFO("Received EOI token")
+			assert(eoi_cnt_ < (NWORKERS - 1));
+			if(++eoi_cnt_ == NWORKERS - 1 && FAST::rank() == 0)
+				return gff::eos;
+		}
 		return gff::go_on;
 	}
 
@@ -198,6 +214,7 @@ public:
 	}
 private:
 	int iter = 0;
+	size_t eoi_cnt_ = 0;
 	ff::ff_pipeline * pipe_;
 };
 
