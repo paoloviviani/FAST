@@ -90,30 +90,28 @@ public:
 
 		if (task == CONSUMED_PTR) {
 			FAST_INFO("(COMPUTE STAGE): got CONSUMED")
-					return CONSUMED_PTR;
+			return CONSUMED_PTR;
 		}
 
-		if (*iter <= MAX_ITER) {
-			// Update internal state if received pointer
-			if (task != NEXT_ITERATION) {
-				FAST_INFO("(COMPUTE STAGE): got real vector")
-					std::vector<float> * internal = (std::vector<float> *)task;
-				for (int i = 0; i < SIZE; i++) {
-					internal_state.at(i) += internal->at(i);
-				}
-				delete internal;
-			}
-			// Compute internal iteration either if received pointer or feedback or trigger
-			FAST_INFO("(COMPUTE STAGE): running iter: " << *iter)
-			std::this_thread::sleep_for(std::chrono::milliseconds(200));
-			std::vector<float> * computed = new std::vector<float>(SIZE);
+		// Update internal state if received pointer
+		if (task != NEXT_ITERATION) {
+			FAST_INFO("(COMPUTE STAGE): got real vector")
+			std::vector<float> * internal = (std::vector<float> *)task;
 			for (int i = 0; i < SIZE; i++) {
-				internal_state.at(i) += 1.;
-				computed->at(i) = 0.5;
+				internal_state.at(i) += internal->at(i);
 			}
-			(*iter)++;
-			this->ff_send_out((void*)computed);
+			delete internal;
 		}
+		// Compute internal iteration either if received pointer or feedback or trigger
+		FAST_INFO("(COMPUTE STAGE): running iter: " << *iter)
+		std::this_thread::sleep_for(std::chrono::milliseconds(200));
+		std::vector<float> * computed = new std::vector<float>(SIZE);
+		for (int i = 0; i < SIZE; i++) {
+			internal_state.at(i) += 1.;
+			computed->at(i) = 0.5;
+		}
+		(*iter)++;
+		this->ff_send_out((void*)computed);
 
 		return ff::FF_GO_ON;
 	}
@@ -204,25 +202,28 @@ public:
 			FAST_INFO("Offloading pointer");
 			pipe_->offload( (void*)(buffer_.get()) );
 
+			if (iter_ < MAX_ITER ) {
 
-			void * outptr = nullptr;
+				void * outptr = nullptr;
 
-			while (iter_ < MAX_ITER ) {
-				pipe_->load_result(&outptr);
-				if (outptr != CONSUMED_PTR) {
-					FAST_INFO("Running iter " << iter_);
-					FAST::gam_vector<float> * out_vec = (FAST::gam_vector<float> *)outptr;
-					auto out_ptr = gam::public_ptr< FAST::gam_vector<float> >(out_vec, [](FAST::gam_vector<float> * ptr){delete ptr;});
-					c.emit(out_ptr);
-					return gff::go_on;
+				while (true) {
+					pipe_->load_result(&outptr);
+					if (outptr != CONSUMED_PTR) {
+						FAST_INFO("Running iter " << iter_);
+						FAST::gam_vector<float> * out_vec = (FAST::gam_vector<float> *)outptr;
+						auto out_ptr = gam::public_ptr< FAST::gam_vector<float> >(out_vec, [](FAST::gam_vector<float> * ptr){delete ptr;});
+						c.emit(out_ptr);
+						return gff::go_on;
+					}
+					else {
+						FAST_INFO("CONSUMED");
+						return gff::go_on;
+					}
+
 				}
-				else {
-					FAST_INFO("CONSUMED");
-					return gff::go_on;
-				}
-
 			}
-			c.emit(token2public<FAST::gam_vector<float>>(EOI_TOKEN));
+			else
+				c.emit(token2public<FAST::gam_vector<float>>(EOI_TOKEN));
 
 		}
 		else {
