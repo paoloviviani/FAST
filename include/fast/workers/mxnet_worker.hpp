@@ -64,12 +64,12 @@ public:
 	InputStage(ModelLogic * logic) : logic_(logic), buffer_(nullptr), first_push_(true) {}
 
 	void * svc(void * task) {
-		FAST_INFO("(INPUT STAGE): started svc")
+		FAST_DEBUG("(INPUT STAGE): started svc")
 		auto recv_ptr = (FAST::gam_vector<float> *)task;
-		FAST_INFO("(INPUT STAGE): got pointer")
+		FAST_DEBUG("(INPUT STAGE): got pointer")
 
 		if (recv_ptr == NEXT_ITERATION) {
-			FAST_INFO("(INPUT STAGE): got trigger")
+			FAST_DEBUG("(INPUT STAGE): got trigger")
 			if (first_push_){
 				this->ff_send_out( NEXT_ITERATION );
 				first_push_ = false;
@@ -77,13 +77,13 @@ public:
 			return ff::FF_GO_ON;
 		}
 
-		FAST_INFO("(INPUT STAGE): got real pointer of size " << (*recv_ptr).size())
+		FAST_DEBUG("(INPUT STAGE): got real pointer of size " << (*recv_ptr).size())
 		FAST::accumToNDVec( *recv_ptr, *buffer_, logic_->arg_names, "DATA_TAG", "OUTPUT_TAG", mxnet::cpp::Context::cpu() );
-		FAST_INFO("(INPUT STAGE): accumulated gradients")
+		FAST_DEBUG("(INPUT STAGE): accumulated gradients")
 		this->ff_send_out( CONSUMED_PTR );
 
 		if (this->get_out_buffer()->empty()) {
-			FAST_INFO("(INPUT STAGE): push gradients")
+			FAST_DEBUG("(INPUT STAGE): push gradients")
 			this->ff_send_out((void *)buffer_);
 			buffer_ = new NDAvector(0);
 			FAST::buildNDVec( *buffer_, logic_->exec->grad_arrays, logic_->arg_names, "DATA_TAG", "OUTPUT_TAG", mxnet::cpp::Context::cpu() );
@@ -92,10 +92,10 @@ public:
 	}
 
 	int svc_init() {
-		FAST_INFO("(INPUT STAGE): init stage")
+		FAST_DEBUG("(INPUT STAGE): init stage")
 		buffer_ = new NDAvector(0);
 		FAST::buildNDVec( *buffer_, logic_->exec->grad_arrays, logic_->arg_names, "DATA_TAG", "OUTPUT_TAG", mxnet::cpp::Context::cpu() );
-		FAST_INFO("(INPUT STAGE): Built NDVec");
+		FAST_DEBUG("(INPUT STAGE): Built NDVec");
 		return 0;
 	}
 private:
@@ -111,22 +111,22 @@ public:
 	TrainerStage(ModelLogic * logic) : logic_(logic) {}
 
 	void * svc(void * task) {
-		FAST_INFO("(TRAINER STAGE): started svc");
+		FAST_DEBUG("(TRAINER STAGE): started svc");
 		if (task == CONSUMED_PTR) {
-			FAST_INFO("(TRAINER STAGE): got CONSUMED")
+			FAST_DEBUG("(TRAINER STAGE): got CONSUMED")
 			return CONSUMED_PTR;
 		}
 
 		if (!logic_->max_epoch_reached) {
 			if (task != NEXT_ITERATION) {
 				// got a pointer from the input stage
-				FAST_INFO("(TRAINER STAGE): got gradients");
+				FAST_DEBUG("(TRAINER STAGE): got gradients");
 				NDAvector * in_ptr = (NDAvector  *)task;
 				logic_->update( *in_ptr );
 			}
-			FAST_INFO("(TRAINER STAGE): updated");
+			FAST_DEBUG("(TRAINER STAGE): updated");
 			logic_->run_batch();
-			FAST_INFO("(TRAINER STAGE): executed batch from gradients");
+			FAST_DEBUG("(TRAINER STAGE): executed batch from gradients");
 			return NEXT_ITERATION;
 		}
 		return ff::FF_GO_ON;
@@ -178,11 +178,11 @@ public:
 	void * svc(void * task) {
 		if (task == CONSUMED_PTR)
 			return CONSUMED_PTR;
-		FAST_INFO("(OUTPUT STAGE): got pointer");
+		FAST_DEBUG("(OUTPUT STAGE): got pointer");
 		gam_vector<T> * out = new gam_vector<T>();
 		NDVecToVec( logic_->exec->grad_arrays, logic_->arg_names, *out, "DATA_TAG", "OUTPUT_TAG");
-		FAST_INFO("(OUTPUT STAGE): allocated size " << out->size());
-		FAST_INFO("(OUTPUT STAGE): serialized gradients");
+		FAST_DEBUG("(OUTPUT STAGE): allocated size " << out->size());
+		FAST_DEBUG("(OUTPUT STAGE): serialized gradients");
 		return (void*)out;
 	}
 
@@ -203,7 +203,7 @@ public:
 		// Check if getting eoi
 		if (in.get().address() == EOI_TOKEN) {
 			assert(in.get().address() == EOI_TOKEN);
-			FAST_INFO("Received EOI token")
+			FAST_DEBUG("Received EOI token")
 			assert(eoi_cnt_ < (FAST::cardinality() - 1));
 			if(++eoi_cnt_ == FAST::cardinality() - 1)
 				return gff::eos;
@@ -214,7 +214,7 @@ public:
 					pipe_->offload(NEXT_ITERATION);
 				}
 				else {
-					FAST_INFO("Received pointer");
+					FAST_DEBUG("Received pointer");
 					buffer_.push( in.local() );
 					pipe_->offload( (void*)(buffer_.back().get()) );
 				}
@@ -224,7 +224,7 @@ public:
 					pipe_->load_result(&outptr);
 					if (outptr == CONSUMED_PTR) {
 						buffer_.pop();
-						FAST_INFO("CONSUMED");
+						FAST_DEBUG("CONSUMED");
 					}
 					else {
 						FAST::gam_vector<float> * out_vec = (FAST::gam_vector<float> *)outptr;
@@ -236,7 +236,7 @@ public:
 			}
 
 			if (!eoi_out) {
-				FAST_INFO("EMIT EOI");
+				FAST_DEBUG("EMIT EOI");
 				c.emit(token2public<FAST::gam_vector<float>>(EOI_TOKEN));
 				eoi_out = true;
 			}
@@ -251,11 +251,11 @@ public:
 
 		gam_vector<T> * ptr = new gam_vector<T>(0);
 
-		FAST_INFO("(MXNET WORKER): Initializing model logic")
+		FAST_DEBUG("(MXNET WORKER): Initializing model logic")
 		logic_.init();
-		FAST_INFO("(MXNET WORKER): Initialized model logic")
+		FAST_DEBUG("(MXNET WORKER): Initialized model logic")
 
-		FAST_INFO("(MXNET WORKER): Creating pipeline")
+		FAST_DEBUG("(MXNET WORKER): Creating pipeline")
 		pipe_->add_stage( new InputStage<ModelLogic, T>(&logic_) );
 		training_->add_stage( new TrainerStage<ModelLogic, T>(&logic_) );
 		training_->add_stage( new internal_out_stage() );
@@ -266,18 +266,18 @@ public:
 		pipe_->cleanup_nodes();
 		training_->cleanup_nodes();
 
-		FAST_INFO("(MXNET WORKER): Launching pipeline")
+		FAST_DEBUG("(MXNET WORKER): Launching pipeline")
 		pipe_->run();
 
-		FAST_INFO("(MXNET WORKER): Emitting trigger")
+		FAST_DEBUG("(MXNET WORKER): Emitting trigger")
 		c.emit(token2public<FAST::gam_vector<float>>(TRIGGER_TOKEN));
 	}
 
 	void svc_end(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
-		FAST_INFO("(FINALIZATION)");
+		FAST_DEBUG("(FINALIZATION)");
 		pipe_->offload( ff::FF_EOS );
 		if (pipe_->wait()<0) {
-			FAST_INFO("(FINALIZATION): error waiting pipe");
+			FAST_DEBUG("(FINALIZATION): error waiting pipe");
 		}
 		while (!buffer_.empty())
 			buffer_.pop();
