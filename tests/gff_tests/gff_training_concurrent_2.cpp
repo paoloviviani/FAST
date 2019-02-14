@@ -52,7 +52,7 @@ public:
 
 		if (recv_ptr == NEXT_ITERATION) {
 			FAST_INFO("(INPUT STAGE): got trigger")
-			this->ff_send_out( CONSUMED_PTR );
+			this->ff_send_out( NEXT_ITERATION );
 			return ff::FF_GO_ON;
 		}
 
@@ -204,21 +204,25 @@ public:
 	 */
 	gff::token_t svc(gam::public_ptr<FAST::gam_vector<float>> &in, gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
 		// Check if getting eoi
-		if(in.get().is_address()) {
-
-			FAST_INFO("Received pointer");
-			buffer_.push( in.local() );
-
-			FAST_INFO("Offloading pointer");
-			if (buffer_.back()->size() == 0)
-				pipe_->offload(NEXT_ITERATION);
-			else
-				pipe_->offload( (void*)(buffer_.back().get()) );
-
+		if (in.get().address() == EOI_TOKEN) {
+			assert(in.get().address() == EOI_TOKEN);
+			FAST_INFO("Received EOI token")
+			assert(eoi_cnt_ < (NWORKERS - 1));
+			if(++eoi_cnt_ == NWORKERS - 1)
+				return gff::eos;
+		}
+		else { // Run iteration
 			if (iter_ < MAX_ITER ) {
+				if (in.get().address() == TRIGGER_TOKEN) {
+					pipe_->offload(NEXT_ITERATION);
+				}
+				else {
+					FAST_INFO("Received pointer");
+					buffer_.push( in.local() );
+					pipe_->offload( (void*)(buffer_.back().get()) );
+				}
 
 				void * outptr = nullptr;
-
 				while (true) {
 					pipe_->load_result(&outptr);
 					if (outptr == CONSUMED_PTR) {
@@ -226,28 +230,21 @@ public:
 						FAST_INFO("CONSUMED");
 					}
 					else {
-
 						FAST_INFO("Running iter " << iter_);
 						FAST::gam_vector<float> * out_vec = (FAST::gam_vector<float> *)outptr;
 						auto out_ptr = gam::public_ptr< FAST::gam_vector<float> >(out_vec, [](FAST::gam_vector<float> * ptr){delete ptr;});
 						c.emit(out_ptr);
 						return gff::go_on;
 					}
-
 				}
 			}
-			else {
+
+			if (!eoi_out) {
 				FAST_INFO("EMIT EOI");
 				c.emit(token2public<FAST::gam_vector<float>>(EOI_TOKEN));
+				eoi_out = true;
 			}
 
-		}
-		else {
-			assert(in.get().address() == EOI_TOKEN);
-			FAST_INFO("Received EOI token")
-			assert(eoi_cnt_ < (NWORKERS - 1));
-			if(++eoi_cnt_ == NWORKERS - 1 && FAST::rank() == 0)
-				return gff::eos;
 		}
 		return gff::go_on;
 	}
@@ -268,9 +265,7 @@ public:
 		internal_->cleanup_nodes();
 		pipe_->run();
 
-		FAST::gam_vector<float> * ptr = new FAST::gam_vector<float>(0);
-		auto dummy_out = gam::public_ptr< FAST::gam_vector<float> >(ptr, [](FAST::gam_vector<float> * ptr){delete ptr;});
-		c.emit(dummy_out);
+		c.emit(token2public<FAST::gam_vector<float>>(TRIGGER_TOKEN));
 		FAST_INFO("Emitted trigger")
 	}
 
@@ -286,6 +281,7 @@ public:
 private:
 	std::queue < std::shared_ptr<FAST::gam_vector<float>> > buffer_;
 	int eoi_cnt_ = 0;
+	bool eoi_out = false;
 	int iter_ = 0;
 	ff::ff_pipeline * pipe_;
 	ff::ff_pipeline * internal_;
