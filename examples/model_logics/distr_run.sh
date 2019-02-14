@@ -8,3 +8,4 @@ export GAM_CARDINALITY=16
 export GAM_RUN_LOCAL=$FAST_ROOT/bin/fastrun-local
 
 $FAST_ROOT/bin/fastrun-mpi -H hosts -n $GAM_CARDINALITY "$PWD/$1 4 4"
+$FAST_ROOT/bin/fastrun-slurm -H hosts -n $GAM_CARDINALITY "$PWD/$1 4 4"

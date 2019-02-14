@@ -29,8 +29,8 @@ class ModelLogic {
 public:
 	void init() {
 		const int image_size = 28;
-		const std::vector<int> layers{16, 16, 10};
-		batch_size_ = 32;
+		const std::vector<int> layers{64, 32, 16, 10};
+		batch_size_ = 64;
 		const float learning_rate = 0.001;
 
 		net = mlp(layers);
@@ -102,10 +102,12 @@ public:
 			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 		}
 		FAST_DEBUG("(LOGIC): processed batch");
-		if (iter_ % 20 == 0)
+		if (iter_ % 20 == 0) {
 			FAST_INFO("=======================================================");
+			FAST_INFO("Epoch = " << epoch_ );
 			FAST_INFO("Iter = " << iter_ << " Accuracy = " << train_acc.Get() );
 			FAST_INFO("=======================================================");
+		}
 		iter_++;
 	}
 

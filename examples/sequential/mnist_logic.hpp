@@ -1,3 +1,4 @@
+#include <fast.hpp>
 #include "mxnet-cpp/MxNetCpp.h"
 
 using namespace mxnet::cpp;
@@ -28,16 +29,16 @@ class ModelLogic {
 public:
 	void init() {
 		const int image_size = 28;
-		const std::vector<int> layers{16, 16, 10};
-		batch_size_ = 32;
+		const std::vector<int> layers{64, 32, 16, 10};
+		batch_size_ = 64;
 		const float learning_rate = 0.001;
 
 		net = mlp(layers);
 
 		Context ctx = Context::cpu();  // Use CPU for training
 
-		train_iter.SetParam("image", "../../mnist_data/train-images-idx3-ubyte")
-			  .SetParam("label", "../../mnist_data/train-labels-idx1-ubyte")
+		train_iter.SetParam("image", "../mnist_data/train-images-idx3-ubyte")
+			  .SetParam("label", "../mnist_data/train-labels-idx1-ubyte")
 			  .SetParam("batch_size", batch_size_)
 			  .SetParam("flat", 1)
 			  .CreateDataIter();
@@ -59,11 +60,12 @@ public:
 		exec = net.SimpleBind(ctx, args);
 		arg_names = net.ListArguments();
 
-		std::cout <<"Logic initialized" << std::endl;
+		FAST_DEBUG("Logic initialized")
 	}
 
 
 	void run_batch() {
+		FAST_DEBUG("(LOGIC): run batch, iteration = " << iter_);
 
 		if (!train_iter.Next()) {
 			std::cout << "(LOGIC): next epoch" << std::endl;
@@ -75,48 +77,55 @@ public:
 		    train_acc.Reset();
 		}
 
+
 		if (epoch_ == 10){
-			std::cout << "(LOGIC): MAX EPOCH REACHED" << std::endl;
+			FAST_DEBUG("(LOGIC): MAX EPOCH REACHED");
 			max_epoch_reached = true; // Terminate
 			return;
 		}
 
 		// Simulate granularity
+//		std::this_thread::sleep_for(std::chrono::milliseconds(300));
 		auto data_batch = train_iter.GetDataBatch();
-
 		// Set data and label
 		data_batch.data.CopyTo(&args["X"]);
 		data_batch.label.CopyTo(&args["label"]);
 
+		FAST_DEBUG("(LOGIC): running");
 		// Compute gradients
 		exec->Forward(true);
 		exec->Backward();
 		train_acc.Update(data_batch.label, exec->outputs[0]);
-
 		// Update parameters
 		for (size_t i = 0; i < arg_names.size(); ++i) {
 			if (arg_names[i] == "X" || arg_names[i] == "label") continue;
 			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 		}
-		if (iter_ % 100 == 0)
-			std::cout << "Iter = " << iter_ << " Accuracy = " << train_acc.Get() << std::endl;
+		FAST_DEBUG("(LOGIC): processed batch");
+		if (iter_ % 20 == 0) {
+			FAST_INFO("=======================================================");
+			FAST_INFO("Epoch = " << epoch_ );
+			FAST_INFO("Iter = " << iter_ << " Accuracy = " << train_acc.Get() );
+			FAST_INFO("=======================================================");
+		}
 		iter_++;
 	}
 
 	void update(std::vector<mxnet::cpp::NDArray> &in) {
+		FAST_DEBUG("(LOGIC UPDATE): updating")
 		if (in.size() > 0) {
 			for (size_t i = 0; i < arg_names.size(); ++i) {
 				if (arg_names[i] == "X" || arg_names[i] == "label") continue;
 				opt->Update(i, exec->arg_arrays[i], in[i]);
 			}
-			std::cout << "(LOGIC UPDATE): updated" << std::endl;
+			FAST_DEBUG("(LOGIC UPDATE): updated")
 		}
 	}
 
 	void finalize() {
 		  auto val_iter = MXDataIter("MNISTIter")
-		      .SetParam("image", "../../data/mnist_data/t10k-images-idx3-ubyte")
-		      .SetParam("label", "../../data/mnist_data/t10k-labels-idx1-ubyte")
+		      .SetParam("image", "../data/mnist_data/t10k-images-idx3-ubyte")
+		      .SetParam("label", "../data/mnist_data/t10k-labels-idx1-ubyte")
 			  .SetParam("batch_size", batch_size_)
 			  .SetParam("flat", 1)
 			  .CreateDataIter();
@@ -130,7 +139,7 @@ public:
 		  	exec->Forward(false);
 		  	acc.Update(data_batch.label, exec->outputs[0]);
 		    }
-		    std::cout << "=== VALIDATION ACCURACY === " << train_acc.Get() << std::endl;
+		    FAST_INFO("=== VALIDATION ACCURACY === " << train_acc.Get());
 	}
 
 	Symbol net;
