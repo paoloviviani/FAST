@@ -93,25 +93,33 @@ public:
 			return CONSUMED_PTR;
 		}
 
-		// Update internal state if received pointer
-		if (task != NEXT_ITERATION) {
-			FAST_INFO("(COMPUTE STAGE): got real vector")
-			std::vector<float> * internal = (std::vector<float> *)task;
-			for (int i = 0; i < SIZE; i++) {
-				internal_state.at(i) += internal->at(i);
+		if (*iter <= MAX_ITER+1) {
+			// Update internal state if received pointer
+			if (task != NEXT_ITERATION) {
+				FAST_INFO("(COMPUTE STAGE): got real vector")
+				std::vector<float> * internal = (std::vector<float> *)task;
+				for (int i = 0; i < SIZE; i++) {
+					internal_state.at(i) += internal->at(i);
+				}
+				delete internal;
 			}
-			delete internal;
+			// Compute internal iteration either if received pointer or feedback or trigger
+			FAST_INFO("(COMPUTE STAGE): running iter: " << *iter)
+			std::this_thread::sleep_for(std::chrono::milliseconds(200));
+			std::vector<float> * computed = new std::vector<float>(SIZE);
+			for (int i = 0; i < SIZE; i++) {
+				internal_state.at(i) += 1.;
+				computed->at(i) = 0.5;
+			}
+			(*iter)++;
+			this->ff_send_out((void*)computed);
 		}
-		// Compute internal iteration either if received pointer or feedback or trigger
-		FAST_INFO("(COMPUTE STAGE): running iter: " << *iter)
-		std::this_thread::sleep_for(std::chrono::milliseconds(200));
-		std::vector<float> * computed = new std::vector<float>(SIZE);
-		for (int i = 0; i < SIZE; i++) {
-			internal_state.at(i) += 1.;
-			computed->at(i) = 0.5;
+		else {
+			if (task != NEXT_ITERATION) {
+				std::vector<float> * internal = (std::vector<float> *)task;
+				delete internal;
+			}
 		}
-		(*iter)++;
-		this->ff_send_out((void*)computed);
 
 		return ff::FF_GO_ON;
 	}
@@ -197,10 +205,10 @@ public:
 		if(in.get().is_address()) {
 
 			FAST_INFO("Received pointer");
-			buffer_ = in.local();
+			buffer_.push( in.local() );
 
 			FAST_INFO("Offloading pointer");
-			pipe_->offload( (void*)(buffer_.get()) );
+			pipe_->offload( (void*)(buffer_.back().get()) );
 
 			if (iter_ < MAX_ITER ) {
 
@@ -216,7 +224,9 @@ public:
 						return gff::go_on;
 					}
 					else {
+						buffer_.pop();
 						FAST_INFO("CONSUMED");
+//						return gff::go_on;
 					}
 
 				}
@@ -266,7 +276,7 @@ public:
 		//		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 	}
 private:
-	std::shared_ptr<FAST::gam_vector<float>> buffer_;
+	std::queue < std::shared_ptr<FAST::gam_vector<float>> > buffer_;
 	int eoi_cnt_ = 0;
 	int iter_ = 0;
 	ff::ff_pipeline * pipe_;
