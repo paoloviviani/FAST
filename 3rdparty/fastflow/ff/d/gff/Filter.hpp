@@ -170,8 +170,8 @@ private:
 		/* poll for outstanding eos */
 		while(received_eos < in_comm.internals.in_cardinality()) {
 			in = in_comm.internals.template get<in_t>();
-			if (is_eos(in))
-				received_eos++;
+			assert(is_eos(in));
+			received_eos++;
 		}
 
 		/* write profiling */

@@ -236,13 +236,11 @@ public:
 					}
 				}
 			}
-
-			if (!eoi_out) {
-				FAST_INFO("EMIT EOI");
-				c.emit(token2public<FAST::gam_vector<float>>(EOI_TOKEN));
-				eoi_out = true;
-			}
-
+		}
+		if (!eoi_out) {
+			FAST_INFO("EMIT EOI");
+			c.emit(token2public<FAST::gam_vector<float>>(EOI_TOKEN));
+			eoi_out = true;
 		}
 		return gff::go_on;
 	}
