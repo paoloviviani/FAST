@@ -33,9 +33,9 @@ public:
 
 		exec = new Dummy();
 		arg_names.push_back("first");
-//		arg_names.push_back("second");
-//		arg_names.push_back("third");
-//		arg_names.push_back("fourth");
+		arg_names.push_back("second");
+		arg_names.push_back("third");
+		arg_names.push_back("fourth");
 
 		for (size_t i = 0; i < arg_names.size(); ++i) {
 			exec->grad_arrays.push_back( NDArray(Shape(8, 2), ctx) );
@@ -51,7 +51,7 @@ public:
 		for (size_t i = 0; i < arg_names.size(); ++i) {
 			exec->grad_arrays[i] += 0.1;
 			FAST_DEBUG("(LOGIC RUN): gradients new values = " << exec->grad_arrays[i])
-			std::this_thread::sleep_for(std::chrono::milliseconds(200));
+			std::this_thread::sleep_for(std::chrono::milliseconds(50));
 		}
 		iter_++;
 		if (iter_ == 150)
