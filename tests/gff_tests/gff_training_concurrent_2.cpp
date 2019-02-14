@@ -206,7 +206,7 @@ public:
 			assert(in.get().address() == EOI_TOKEN);
 			FAST_INFO("Received EOI token")
 			assert(eoi_cnt_ < (NWORKERS - 1));
-			if(++eoi_cnt_ == NWORKERS - 1)
+			if(++eoi_cnt_ == NWORKERS - 1 && FAST::rank() == 0)
 				return gff::eos;
 		}
 		else { // Run iteration

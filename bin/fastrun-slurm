@@ -6,27 +6,24 @@ show_help ()
 {
   echo "Usage:
 
-  ${0##*/} [-h][-H HOSTFILE][-n numprocs] executable
+  ${0##*/} [-h][-n numprocs] executable
 
 Options:
 
   -h, --help
     display this help and exit
 
-  -H, --hostfile
-    file containing hostnames/IPs of compute nodes
-
   -n, --numproc
     number of processes
   "
 }
 
-EXECUTABLE=${@: -1}
-
 if [[ $# -eq 0 ]]; then
 	show_help
 	exit
 fi
+
+EXECUTABLE=${@: -1}
 
 POSITIONAL=()
 while [[ $# -gt 0 ]]
@@ -34,22 +31,16 @@ do
 key="$1"
 
 case $key in
-    -H|--hostfile)
-    export HOSTFILE="$2"
-    shift # past argument
-    shift # past value
-    ;;
     -n|--numproc)
     export GAM_CARDINALITY="$2"
     shift # past argument
     shift # past value
     ;;
     -h|--help)
-    show_help
-    exit
+	show_help
+	exit
     ;;
     *)    # unknown option
-    show_help
     POSITIONAL+=("$1") # save it in an array for later
     shift # past argument
     ;;
@@ -79,7 +70,8 @@ do
 	export GAM_SVC_DMN_$i=$BASE_DMN
 done
 
-for i in `eval echo {0..$TASK_COUNT}` 
+echo "0  bash -c '$DIRECTORY/slurmnode $EXECUTABLE'" > commands.conf
+for i in `eval echo {1..$TASK_COUNT}` 
 do
 echo "$i  bash -c '$DIRECTORY/slurmnode $EXECUTABLE'" >> commands.conf
 done

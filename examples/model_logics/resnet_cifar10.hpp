@@ -97,10 +97,11 @@ public:
 			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 		}
 
-		if (iter_ % 100 == 0) {
+		if (iter_ % 20 == 0) {
+			FAST_INFO("=======================================================");
+			FAST_INFO("Epoch = " << epoch_ );
 			FAST_INFO("Iter = " << iter_ << " Accuracy = " << train_acc.Get() );
-			std::string name = std::to_string(FAST::rank())+"_"+std::to_string(iter_)+"weights.bin";
-			mxnet::cpp::NDArray::Save(name, args);
+			FAST_INFO("=======================================================");
 		}
 		FAST_DEBUG("(LOGIC): processed batch");
 		iter_++;
