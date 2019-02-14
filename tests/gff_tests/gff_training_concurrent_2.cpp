@@ -102,7 +102,6 @@ public:
 				for (int i = 0; i < SIZE; i++) {
 					internal_state.at(i) += internal->at(i);
 				}
-				delete internal;
 			}
 			// Compute internal iteration either if received pointer
 			// Simulate some work
@@ -177,7 +176,6 @@ public:
 		for (int i = 0; i < SIZE; i++)
 			computed->at(i) = internal->at(i);
 		FAST_INFO("(OUTPUT STAGE): returning gradients");
-		delete internal;
 		return (void*)computed;
 	}
 
