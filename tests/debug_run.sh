@@ -19,5 +19,5 @@ export GAM_SVC_MEM_1=6229
 export GAM_SVC_DMN_1=6357
 export GAM_RANK=$1
 
-#valgrind ./bin/mxnet_aux_test
-gdb ./bin/gff_training_concurrent_2
+./bin/gff_training_concurrent_2
+#gdb ./bin/gff_training_concurrent_2
