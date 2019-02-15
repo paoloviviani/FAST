@@ -18,7 +18,6 @@
 
 using namespace std;
 
-#define NWORKERS    2
 #define SIZE      10
 #define MAX_ITER      40
 
@@ -205,8 +204,8 @@ public:
 		if (in.get().address() == EOI_TOKEN) {
 			assert(in.get().address() == EOI_TOKEN);
 			FAST_INFO("Received EOI token")
-			assert(eoi_cnt_ < (NWORKERS - 1));
-			if(++eoi_cnt_ == NWORKERS - 1 && FAST::rank() == 0)
+			assert(eoi_cnt_ < (FAST::cardinality() - 1));
+			if(++eoi_cnt_ == FAST::cardinality() - 1 && FAST::rank() == 0)
 				return gff::eos;
 		}
 		else { // Run iteration
@@ -317,8 +316,8 @@ TEST_CASE( "gff training mockup concurrent 2D", "gam,gff,multi" ) {
 	FAST_LOG_INIT
 	FAST_INFO(Catch::getResultCapture().getCurrentTestName());
 
-	size_t grid_h = 3;
-	size_t grid_w = 3;
+	size_t grid_h = 2;
+	size_t grid_w = 2;
 	size_t workers = grid_h*grid_w;
 
 	// Row major ordering
