@@ -14,6 +14,8 @@ public:
 		const float weight_decay = 1e-4;
 
 		net = Symbol::Load("../symbols/resnet50_v2.json");
+		Symbol label = Symbol::Variable("label");
+		net = SoftmaxOutput(net, label);
 
 		MXRandomSeed(42);
 
