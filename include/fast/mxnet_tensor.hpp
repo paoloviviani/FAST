@@ -61,7 +61,6 @@ void vecToNDVec(gam_vector<T> & vec, std::vector<mxnet::cpp::NDArray> & grad_arr
 template <typename T>
 void accumToNDVec(gam_vector<T> & vec, std::vector<mxnet::cpp::NDArray> & grad_arrays, const std::vector<std::string> arg_names,//
 		 const std::string inp="X", const std::string out="label", const mxnet::cpp::Context & ctx=mxnet::cpp::Context::cpu()) {
-
 	size_t offset = 0;
 	for (size_t i = 0; i < grad_arrays.size(); i++) {
 		if (arg_names[i] == inp || arg_names[i] == out) continue;
@@ -72,11 +71,9 @@ void accumToNDVec(gam_vector<T> & vec, std::vector<mxnet::cpp::NDArray> & grad_a
 }
 
 void buildNDVec(std::vector<mxnet::cpp::NDArray> & grad_arrays, const std::vector<mxnet::cpp::NDArray> & exec_grads, //
-		const std::vector<std::string> arg_names, const std::string inp="X", const std::string out="label", //
-		const mxnet::cpp::Context & ctx=mxnet::cpp::Context::cpu()) {
+		const std::vector<std::string> arg_names, const mxnet::cpp::Context & ctx=mxnet::cpp::Context::cpu()) {
 
 	for (size_t i = 0; i < arg_names.size(); i++) {
-//		if (arg_names[i] == inp || arg_names[i] == out) continue;
 		grad_arrays.push_back( mxnet::cpp::NDArray(mxnet::cpp::Shape(exec_grads[i].GetShape()), ctx) );
 		grad_arrays.back() = 0;
 	}

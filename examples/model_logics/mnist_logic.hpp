@@ -153,4 +153,6 @@ public:
 	MXDataIter train_iter = MXDataIter("MNISTIter");
 	Accuracy train_acc;
 	int batch_size_ = 32;
+	const std::string data_tag = "X";
+	const std::string label_tag = "label";
 };
