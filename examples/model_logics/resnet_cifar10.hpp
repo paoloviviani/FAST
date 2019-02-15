@@ -49,7 +49,7 @@ public:
 		args = mxnet::cpp::NDArray::LoadToMap("../initialized_weights/resnet18_cifar10_epoch0.bin");
 
 
-		opt = OptimizerRegistry::Find("sgd");
+		opt = OptimizerRegistry::Find("adam");
 		opt->SetParam("lr", learning_rate);
 //		opt->SetParam("wd", weight_decay);
 

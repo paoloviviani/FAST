@@ -41,6 +41,9 @@ public:
 			  .SetParam("label", "../mnist_data/train-labels-idx1-ubyte")
 			  .SetParam("batch_size", batch_size_)
 			  .SetParam("flat", 1)
+			  .SetParam("shuffle", 1)
+			  .SetParam("num_parts", FAST::cardinality())
+			  .SetParam("part_index", FAST::rank())
 			  .CreateDataIter();
 
 		args["X"] = NDArray(Shape(batch_size_, image_size*image_size), ctx);
@@ -72,20 +75,18 @@ public:
 			iter_ = 0;
 			epoch_++;
 			std::cout << "=== TRAINING ACCURACY === " << train_acc.Get() << std::endl;
+			if (epoch_ == 10){
+				FAST_INFO("(LOGIC): MAX EPOCH REACHED");
+				max_epoch_reached = true; // Terminate
+			}
 			train_iter.Reset();
 			train_iter.Next();
 		    train_acc.Reset();
 		}
 
 
-		if (epoch_ == 10){
-			FAST_DEBUG("(LOGIC): MAX EPOCH REACHED");
-			max_epoch_reached = true; // Terminate
-			return;
-		}
-
 		// Simulate granularity
-//		std::this_thread::sleep_for(std::chrono::milliseconds(300));
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		auto data_batch = train_iter.GetDataBatch();
 		// Set data and label
 		data_batch.data.CopyTo(&args["X"]);
