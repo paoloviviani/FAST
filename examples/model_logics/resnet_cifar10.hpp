@@ -13,7 +13,7 @@ public:
 		const float learning_rate = 0.01;
 		const float weight_decay = 1e-4;
 
-		net = Symbol::Load("../symbols/resnet50_v2.json");
+		net = Symbol::Load("../symbols/resnet5018_v2.json");
 		Symbol label = Symbol::Variable("label");
 		net = SoftmaxOutput(net, label);
 
@@ -90,7 +90,7 @@ public:
 		// Compute gradients
 		exec->Forward(true);
 		exec->Backward();
-		NDArray::WaitAll();
+//		NDArray::WaitAll();
 
 		train_acc.Update(data_batch.label, exec->outputs[0]);
 		// Update parameters
@@ -99,14 +99,13 @@ public:
 			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 		}
 
+		iter_++;
 		if (iter_ % 10 == 0) {
 			FAST_INFO("=======================================================");
 			FAST_INFO("Epoch = " << epoch_ );
 			FAST_INFO("Samples = " << iter_*batch_size_ << " Accuracy = " << train_acc.Get() );
 			FAST_INFO("=======================================================");
 		}
-		FAST_DEBUG("(LOGIC): processed batch");
-		iter_++;
 	}
 
 	void update(std::vector<mxnet::cpp::NDArray> &in) {
