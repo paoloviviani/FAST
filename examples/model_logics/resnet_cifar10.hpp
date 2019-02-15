@@ -101,7 +101,6 @@ public:
 		if (iter_ % 20 == 0) {
 			FAST_INFO("=======================================================");
 			FAST_INFO("Epoch = " << epoch_ << "Samples = " << iter_*batch_size_ );
-			FAST_INFO("Iter = " << iter_ << " Accuracy = " << train_acc.Get() );
 			FAST_INFO("=======================================================");
 		}
 		FAST_DEBUG("(LOGIC): processed batch");

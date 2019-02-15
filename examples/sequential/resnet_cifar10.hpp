@@ -15,7 +15,7 @@ inline const std::string currentDateTime() {
 class ModelLogic {
 public:
 	void init() {
-		batch_size_ = 256;
+		batch_size_ = 128;
 		const int image_size = 32;
 		const float learning_rate = 0.01;
 		const float weight_decay = 1e-4;
