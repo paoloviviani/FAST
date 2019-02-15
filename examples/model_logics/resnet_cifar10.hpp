@@ -90,6 +90,8 @@ public:
 		// Compute gradients
 		exec->Forward(true);
 		exec->Backward();
+		NDArray::WaitAll();
+
 		train_acc.Update(data_batch.label, exec->outputs[0]);
 		// Update parameters
 		for (size_t i = 0; i < arg_names.size(); ++i) {
