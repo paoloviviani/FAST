@@ -87,7 +87,6 @@ public:
 		// Set data and label
 		data_batch.data.CopyTo(&args["data"]);
 		data_batch.label.CopyTo(&args["label"]);
-		NDArray::WaitAll();
 
 		// Compute gradients
 		exec->Forward(true);
