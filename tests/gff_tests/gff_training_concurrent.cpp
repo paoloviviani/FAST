@@ -21,7 +21,7 @@
 
 #define NWORKERS    2
 #define SIZE      10
-#define MAX_ITER      100
+#define MAX_ITER      40
 
 constexpr auto EOI_TOKEN = gff::go_on - 1;
 template<typename T>

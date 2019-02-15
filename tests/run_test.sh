@@ -1,8 +1,8 @@
 #!/bin/bash
 FAST_ROOT=$(cd ..; pwd)
-MXNET_LIBDIR=$FAST_ROOT/3rdparty/mxnet/lib
-#MXNET_LIBDIR=/opt/incubator-mxnet/lib
-#LIBFABRIC_ROOT=/opt/libfabric
+#MXNET_LIBDIR=$FAST_ROOT/3rdparty/mxnet/lib
+MXNET_LIBDIR=/opt/incubator-mxnet/lib
+LIBFABRIC_ROOT=/opt/libfabric
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$MXNET_LIBDIR
 
 # PARSE ARGUMENTS
@@ -71,9 +71,6 @@ if [[ $LAUNCHER == localhost ]]; then
 	#$FAST_RUN_LOCAL -v -n 1 -l $GAM_LOCALHOST ./bin/unit_test
 	#$FAST_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/gam_unit_test
 	#$FAST_RUN_LOCAL -v -n 5 -l $GAM_LOCALHOST ./bin/gff_farm
-	#$FAST_RUN_LOCAL -v -n 3 -l $GAM_LOCALHOST ./bin/gff_all_reduce
-	#$FAST_RUN_LOCAL -v -n 3 -l $GAM_LOCALHOST ./bin/gff_all_reduce_multi
-	#$FAST_RUN_LOCAL -v -n 3 -l $GAM_LOCALHOST ./bin/gff_all_reduce_vector
 	#$FAST_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/gff_training_mockup
 	#$FAST_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/gff_training_concurrent
 	$FAST_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/gff_training_concurrent_2
@@ -82,17 +79,14 @@ if [[ $LAUNCHER == localhost ]]; then
 elif [[ $LAUNCHER == mpi ]]; then
 	$FAST_RUN_MPI -H hosts -n 2 $PWD/bin/gam_unit_test
 	$FAST_RUN_MPI -H hosts -n 5 $PWD/bin/gff_farm
-	$FAST_RUN_MPI -H hosts -n 3 $PWD/bin/gff_all_reduce
-	$FAST_RUN_MPI -H hosts -n 3 $PWD/bin/gff_all_reduce_multi
-	$FAST_RUN_MPI -H hosts -n 3 $PWD/bin/gff_all_reduce_vector
-	$FAST_RUN_MPI -H hosts -n 2 $PWD/bin/mxnet_worker_test
 	$FAST_RUN_MPI -H hosts -n 2 $PWD/bin/gff_training_mockup
+	$FAST_RUN_MPI -H hosts -n 2 $PWD/bin/gff_training_concurrent
+	$FAST_RUN_MPI -H hosts -n 2 $PWD/bin/gff_training_concurrent_2
+	$FAST_RUN_MPI -H hosts -n 2 $PWD/bin/mxnet_aux_test
+	$FAST_RUN_MPI -H hosts -n 2 $PWD/bin/mxnet_worker_test
 elif [[ $LAUNCHER == slurm ]]; then
 	$FAST_RUN_SLURM -H hosts -n 2 $PWD/bin/gam_unit_test
 	$FAST_RUN_SLURM -H hosts -n 5 $PWD/bin/gff_farm
-	$FAST_RUN_SLURM -H hosts -n 3 $PWD/bin/gff_all_reduce
-	$FAST_RUN_SLURM -H hosts -n 3 $PWD/bin/gff_all_reduce_multi
-	$FAST_RUN_SLURM -H hosts -n 3 $PWD/bin/gff_all_reduce_vector
 	$FAST_RUN_SLURM -H hosts -n 2 $PWD/bin/mxnet_worker_test
 	$FAST_RUN_SLURM -H hosts -n 2 $PWD/bin/gff_training_mockup
 fi

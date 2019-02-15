@@ -20,7 +20,7 @@ using namespace std;
 
 #define NWORKERS    2
 #define SIZE      10
-#define MAX_ITER      100
+#define MAX_ITER      40
 
 /*
  *******************************************************************************

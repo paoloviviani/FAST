@@ -6,9 +6,6 @@ INCLUDES             += -I$(FAST_ROOT)/tests/catch2
 EXECS                = unit_test
 EXECS                += gam_unit_test
 EXECS                += gff_farm
-EXECS                += gff_all_reduce
-EXECS                += gff_all_reduce_multi
-EXECS                += gff_all_reduce_vector
 EXECS                += gff_training_mockup
 EXECS                += gff_training_concurrent
 EXECS                += gff_training_concurrent_2
@@ -26,15 +23,6 @@ TARGET_OBJ            += $(TARGET_OBJ_GAM)
 
 TARGET_OBJ_GFF_FARM   = gff_tests/basic_farm.o
 TARGET_OBJ            += $(TARGET_OBJ_GFF_FARM)
-
-TARGET_OBJ_GFF_ALL    = gff_tests/all_reduce.o
-TARGET_OBJ            += $(TARGET_OBJ_GFF_ALL)
-
-TARGET_OBJ_GFF_MULTI  = gff_tests/all_reduce_multi.o
-TARGET_OBJ            += $(TARGET_OBJ_GFF_MULTI)
-
-TARGET_OBJ_GFF_VECT   = gff_tests/all_reduce_vector.o
-TARGET_OBJ            += $(TARGET_OBJ_GFF_VECT)
 
 TARGET_OBJ_TRAIN_MOCK = gff_tests/gff_training_mockup.o
 TARGET_OBJ            += $(TARGET_OBJ_TRAIN_MOCK)
@@ -72,12 +60,6 @@ unit_test: $(TARGET_OBJ_UNIT) $(TEST_DRIVER_OBJ)
 gam_unit_test: $(TARGET_OBJ_GAM) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
 gff_farm: $(TARGET_OBJ_GFF_FARM) $(TEST_DRIVER_OBJ)
-	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
-gff_all_reduce: $(TARGET_OBJ_GFF_ALL) $(TEST_DRIVER_OBJ)
-	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
-gff_all_reduce_multi: $(TARGET_OBJ_GFF_MULTI) $(TEST_DRIVER_OBJ)
-	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
-gff_all_reduce_vector: $(TARGET_OBJ_GFF_VECT) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
 gff_training_mockup: $(TARGET_OBJ_TRAIN_MOCK) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)	

@@ -54,7 +54,7 @@ public:
 			std::this_thread::sleep_for(std::chrono::milliseconds(50));
 		}
 		iter_++;
-		if (iter_ == 150)
+		if (iter_ == 50)
 			max_epoch_reached = true; // Terminate
 	}
 
