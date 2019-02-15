@@ -8,7 +8,7 @@ Context ctx = Context::cpu();  // Use CPU for training
 class ModelLogic {
 public:
 	void init() {
-		batch_size_ = 32;
+		batch_size_ = 64;
 		const int image_size = 32;
 		const float learning_rate = 0.01;
 		const float weight_decay = 1e-4;
@@ -97,10 +97,10 @@ public:
 			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 		}
 
-		if (iter_ % 20 == 0) {
+		if (iter_ % 10 == 0) {
 			FAST_INFO("=======================================================");
 			FAST_INFO("Epoch = " << epoch_ );
-			FAST_INFO("Iter = " << iter_ << " Accuracy = " << train_acc.Get() );
+			FAST_INFO("Samples = " << iter_*batch_size_ << " Accuracy = " << train_acc.Get() );
 			FAST_INFO("=======================================================");
 		}
 		FAST_DEBUG("(LOGIC): processed batch");
