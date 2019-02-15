@@ -87,6 +87,7 @@ public:
 		// Set data and label
 		data_batch.data.CopyTo(&args["data"]);
 		data_batch.label.CopyTo(&args["label"]);
+		NDArray::WaitAll();
 
 		// Compute gradients
 		exec->Forward(true);
@@ -103,8 +104,8 @@ public:
 			std::cerr << "Initialized weights saved as \"../initialized_weights/resnet50_cifar10_epoch0.bin\". Continue training or stop the application\n";
 			std::cin.get();
 		}
-		iter_++;
 		std::cout << "[ " << currentDateTime() << "] Samples = " << iter_*batch_size_ << " Accuracy = " << train_acc.Get() << std::endl;
+		iter_++;
 	}
 
 	void update(std::vector<mxnet::cpp::NDArray> &in) {
@@ -125,7 +126,7 @@ public:
 			.SetParam("data_shape", Shape(3, 32, 32))
 			.SetParam("batch_size", batch_size_)
 			.SetParam("round_batch", 0)
-			.SetParam("preprocess_threads", 1)
+			.SetParam("preprocess_threads", 24)
 			.SetParam("pad", 2)
 			.CreateDataIter();
 
