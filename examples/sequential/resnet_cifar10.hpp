@@ -2,8 +2,6 @@
 
 using namespace mxnet::cpp;
 
-Context ctx = Context::cpu();  // Use CPU for training
-
 // Get current date/time, format is YYYY-MM-DD.HH:mm:ss
 inline const std::string currentDateTime() {
 	time_t     now = time(0);
@@ -17,14 +15,15 @@ inline const std::string currentDateTime() {
 class ModelLogic {
 public:
 	void init() {
-		batch_size_ = 64;
+		batch_size_ = 256;
 		const int image_size = 32;
-		const float learning_rate = 0.001;
+		const float learning_rate = 0.01;
 		const float weight_decay = 1e-4;
 
-		net = Symbol::Load("../symbols/resnet18_v2.json");
+		net = Symbol::Load("../symbols/resnet50_v2.json");
 
 		MXRandomSeed(42);
+		Context ctx = Context::cpu();  // Use CPU for training
 
 		train_iter = MXDataIter("ImageRecordIter")
 			.SetParam("path_imglist", "../cifar10/cifar10_train.lst")
@@ -36,8 +35,6 @@ public:
 			.SetParam("shuffle", 1)
 			.SetParam("preprocess_threads", 24)
 			.CreateDataIter();
-
-
 
 		args["data"] = NDArray(Shape(batch_size_, 3, image_size, image_size), ctx);
 		args["label"] = NDArray(Shape(batch_size_), ctx);
@@ -51,9 +48,9 @@ public:
 			initializer(arg.first, &arg.second);
 		}
 
-		opt = OptimizerRegistry::Find("sgd");
+		opt = OptimizerRegistry::Find("adam");
 		opt->SetParam("lr", learning_rate);
-//		opt->SetParam("wd", weight_decay);
+		opt->SetParam("wd", weight_decay);
 
 		exec = net.SimpleBind(ctx, args);
 		arg_names = net.ListArguments();
@@ -70,6 +67,9 @@ public:
 			epoch_++;
 			std::cout << "=== Epoch === " << epoch_ << std::endl;
 			std::cout << "=== TRAINING ACCURACY === " << train_acc.Get() << std::endl;
+			mxnet::cpp::NDArray::Save("../initialized_weights/resnet50_cifar10_epoch"+std::to_string(epoch_)+".bin", args);
+			std::cerr << "Initialized weights saved as \"../initialized_weights/resnet50_cifar10_epoch0.bin\". Continue training or stop the application\n";
+			std::cin.get();
 			train_iter.Reset();
 			train_iter.Next();
 			train_acc.Reset();
@@ -89,6 +89,8 @@ public:
 		// Compute gradients
 		exec->Forward(true);
 		exec->Backward();
+	      NDArray::WaitAll();
+
 		train_acc.Update(data_batch.label, exec->outputs[0]);
 		// Update parameters
 		for (size_t i = 0; i < arg_names.size(); ++i) {
@@ -96,22 +98,21 @@ public:
 			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 		}
 		if (iter_ == 0) {
-			mxnet::cpp::NDArray::Save("../initialized_weights/resnet18_cifar10_epoch0.bin", args);
-			std::cerr << "Initialized weights saved as \"../initialized_weights/resnet18_cifar10_epoch0.bin\". Continue training or stop the application\n";
+			mxnet::cpp::NDArray::Save("../initialized_weights/resnet50_cifar10_epoch0.bin", args);
+			std::cerr << "Initialized weights saved as \"../initialized_weights/resnet50_cifar10_epoch0.bin\". Continue training or stop the application\n";
 			std::cin.get();
 		}
-		if (iter_ % 10 == 0)
-			std::cout << "[ " << currentDateTime() << "] Iter = " << iter_ << " Accuracy = " << train_acc.Get() << std::endl;
 		iter_++;
+		std::cout << "[ " << currentDateTime() << "] Samples = " << iter_*batch_size_ << " Accuracy = " << train_acc.Get() << std::endl;
 	}
 
 	void update(std::vector<mxnet::cpp::NDArray> &in) {
-				if (in.size() > 0) {
-					for (size_t i = 0; i < arg_names.size(); ++i) {
-						if (arg_names[i] == "data" || arg_names[i] == "label") continue;
-						opt->Update(i, exec->arg_arrays[i], in[i]);
-					}
-				}
+		if (in.size() > 0) {
+			for (size_t i = 0; i < arg_names.size(); ++i) {
+				if (arg_names[i] == "data" || arg_names[i] == "label") continue;
+				opt->Update(i, exec->arg_arrays[i], in[i]);
+			}
+		}
 	}
 
 	void finalize() {

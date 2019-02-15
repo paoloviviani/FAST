@@ -173,7 +173,7 @@ public:
 			return CONSUMED_PTR;
 		FAST_DEBUG("(OUTPUT STAGE): got pointer");
 		gam_vector<T> * out = new gam_vector<T>();
-		NDVecToVec( logic_->exec->grad_arrays, logic_->arg_names, *out, logic_->data_tag, logic_->label_tag, logic_->train_acc.Get());
+		NDVecToVec( logic_->exec->grad_arrays, logic_->arg_names, *out, logic_->data_tag, logic_->label_tag, 0.25);
 		FAST_DEBUG("(OUTPUT STAGE): allocated size " << out->size());
 		FAST_DEBUG("(OUTPUT STAGE): serialized gradients");
 		return (void*)out;
