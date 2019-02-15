@@ -8,7 +8,7 @@ Context ctx = Context::cpu();  // Use CPU for training
 class ModelLogic {
 public:
 	void init() {
-		batch_size_ = 256;
+		batch_size_ = 128;
 		const int image_size = 32;
 		const float learning_rate = 0.01;
 		const float weight_decay = 1e-4;
@@ -68,6 +68,7 @@ public:
 			FAST_DEBUG("(LOGIC): next epoch");
 			iter_ = 0;
 			epoch_++;
+			NDArray::WaitAll();
 			std::cout << "=== Epoch === " << epoch_ << std::endl;
 			std::cout << "=== TRAINING ACCURACY === " << train_acc.Get() << std::endl;
 			if (epoch_ == max_epoch_){
