@@ -77,6 +77,8 @@ public:
 	vector<string> arg_names;
 	unsigned int iter_ = 0;
 	bool max_epoch_reached = false;
+	const std::string data_tag = "X";
+	const std::string label_tag = "label";
 };
 
 typedef gff::Filter<gff::NondeterminateMerge, gff::OutBundleBroadcast<gff::NondeterminateMerge>,//
