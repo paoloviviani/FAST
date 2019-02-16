@@ -70,8 +70,6 @@ public:
 			std::cout << "=== Epoch === " << epoch_ << std::endl;
 			std::cout << "=== TRAINING ACCURACY === " << train_acc.Get() << std::endl;
 			mxnet::cpp::NDArray::Save("../initialized_weights/resnet50_cifar10_epoch"+std::to_string(epoch_)+".bin", args);
-			std::cerr << "Initialized weights saved as \"../initialized_weights/resnet50_cifar10_epoch0.bin\". Continue training or stop the application\n";
-			std::cin.get();
 			train_iter.Reset();
 			train_iter.Next();
 			train_acc.Reset();

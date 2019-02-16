@@ -294,30 +294,12 @@ typedef gff::Filter<gff::NondeterminateMerge, gff::OutBundleBroadcast<gff::Nonde
  *******************************************************************************
  */
 
-//TEST_CASE( "gff training mockup concurrent", "gam,gff,multi" ) {
-//	FAST_LOG_INIT
-//	FAST_INFO(Catch::getResultCapture().getCurrentTestName());
-//
-//	gff::NondeterminateMerge to_one, to_two;
-//	gff::OutBundleBroadcast<gff::NondeterminateMerge> one, two;
-//
-//	one.add_comm(to_two);
-//	two.add_comm(to_one);
-//
-//	gff::add(TrainingWorker(to_one,one));
-//	gff::add(TrainingWorker(to_two,two));
-//
-//	/* execute the network */
-//	gff::run();
-//
-//}
-
 TEST_CASE( "gff training mockup concurrent 2D", "gam,gff,multi" ) {
 	FAST_LOG_INIT
 	FAST_INFO(Catch::getResultCapture().getCurrentTestName());
 
-	size_t grid_h = 2;
-	size_t grid_w = 2;
+	const size_t grid_h = 3;
+	const size_t grid_w = 3;
 	size_t workers = grid_h*grid_w;
 
 	// Row major ordering
