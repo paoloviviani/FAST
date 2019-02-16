@@ -294,18 +294,64 @@ typedef gff::Filter<gff::NondeterminateMerge, gff::OutBundleBroadcast<gff::Nonde
  *******************************************************************************
  */
 
-TEST_CASE( "gff training mockup concurrent", "gam,gff,multi" ) {
+//TEST_CASE( "gff training mockup concurrent", "gam,gff,multi" ) {
+//	FAST_LOG_INIT
+//	FAST_INFO(Catch::getResultCapture().getCurrentTestName());
+//
+//	gff::NondeterminateMerge to_one, to_two;
+//	gff::OutBundleBroadcast<gff::NondeterminateMerge> one, two;
+//
+//	one.add_comm(to_two);
+//	two.add_comm(to_one);
+//
+//	gff::add(TrainingWorker(to_one,one));
+//	gff::add(TrainingWorker(to_two,two));
+//
+//	/* execute the network */
+//	gff::run();
+//
+//}
+
+TEST_CASE( "gff training mockup concurrent 2D", "gam,gff,multi" ) {
 	FAST_LOG_INIT
 	FAST_INFO(Catch::getResultCapture().getCurrentTestName());
 
-	gff::NondeterminateMerge to_one, to_two;
-	gff::OutBundleBroadcast<gff::NondeterminateMerge> one, two;
+	size_t grid_h = 2;
+	size_t grid_w = 2;
+	size_t workers = grid_h*grid_w;
 
-	one.add_comm(to_two);
-	two.add_comm(to_one);
+	// Row major ordering
+	std::vector < std::vector< gff::NondeterminateMerge > > incoming_channels(grid_h);
+	std::vector < std::vector< gff::OutBundleBroadcast<gff::NondeterminateMerge> > > outgoing_channels(grid_h);
 
-	gff::add(TrainingWorker(to_one,one));
-	gff::add(TrainingWorker(to_two,two));
+	for (int i = 0; i < grid_h; i++) {
+		for (int j = 0; j < grid_w; j++) {
+			incoming_channels.at(i).emplace_back();
+		}
+	}
+
+	for (unsigned int i = 0; i < grid_h; i++) {
+		for (unsigned int j = 0; j < grid_w; j++) {
+			outgoing_channels.at(i).emplace_back();
+			// Add neighboring channels (i+1,j),(i-1,j),(i,j+1),(i,j-1) in torus topology
+
+			unsigned int up,right,down,left;
+			i == grid_h-1 ? down=0 : down=i+1;
+			i == 0 ? up=grid_h-1 : up=i-1;
+			j == grid_w-1 ? right=0 : right=j+1;
+			j == 0 ? left=grid_w-1 : left=j-1;
+			outgoing_channels.at(i).at(j).add_comm(incoming_channels.at(up).at(j));
+			outgoing_channels.at(i).at(j).add_comm(incoming_channels.at(down).at(j));
+			outgoing_channels.at(i).at(j).add_comm(incoming_channels.at(i).at(right));
+			outgoing_channels.at(i).at(j).add_comm(incoming_channels.at(i).at(left));
+		}
+	}
+
+	for (unsigned int i = 0; i < grid_h; i++) {
+		for (unsigned int j = 0; j < grid_w; j++) {
+			gff::add(TrainingWorker(incoming_channels.at(i).at(j),outgoing_channels.at(i).at(j)));
+		}
+	}
 
 	/* execute the network */
 	gff::run();
