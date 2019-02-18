@@ -8,7 +8,7 @@ Context ctx = Context::cpu();  // Use CPU for training
 class ModelLogic {
 public:
 	void init() {
-		batch_size_ = 64;
+		batch_size_ = 128;
 		const int image_size = 32;
 		const float learning_rate = 0.01;
 		const float weight_decay = 1e-4;
@@ -50,7 +50,7 @@ public:
 //		}
 		// Load same weights for all the workers
 
-		args = mxnet::cpp::NDArray::LoadToMap("../initialized_weights/resnet50_cifar10_epoch1.bin");
+		args = mxnet::cpp::NDArray::LoadToMap("../initialized_weights/resnet50_cifar10_epoch0.bin");
 
 
 		opt = OptimizerRegistry::Find("adam");
@@ -71,7 +71,7 @@ public:
 			FAST_DEBUG("(LOGIC): next epoch");
 			iter_ = 0;
 			epoch_++;
-//			NDArray::WaitAll();
+			NDArray::WaitAll();
 			std::cout << "=== Epoch === " << epoch_ << std::endl;
 			std::cout << "=== TRAINING ACCURACY === " << train_acc.Get() << std::endl;
 			if (epoch_ == max_epoch_){
@@ -100,7 +100,6 @@ public:
 			if (arg_names[i] == "data" || arg_names[i] == "label") continue;
 			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 		}
-		NDArray::WaitAll();
 		FAST_INFO("=======================================================");
 		FAST_INFO("Epoch = " << epoch_ << "Samples = " << iter_*batch_size_ );
 		FAST_INFO("Accuracy = " << train_acc.Get());

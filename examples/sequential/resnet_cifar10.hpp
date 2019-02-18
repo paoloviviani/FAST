@@ -69,7 +69,8 @@ public:
 			epoch_++;
 			std::cout << "=== Epoch === " << epoch_ << std::endl;
 			std::cout << "=== TRAINING ACCURACY === " << train_acc.Get() << std::endl;
-			mxnet::cpp::NDArray::Save("../initialized_weights/resnet50_cifar10_epoch"+std::to_string(epoch_)+".bin", args);
+			if (epoch_ == 1)
+				mxnet::cpp::NDArray::Save("../initialized_weights/resnet50_cifar10_epoch1.bin", args);
 			train_iter.Reset();
 			train_iter.Next();
 			train_acc.Reset();
@@ -99,7 +100,7 @@ public:
 		if (iter_ == 0) {
 			mxnet::cpp::NDArray::Save("../initialized_weights/resnet50_cifar10_epoch0.bin", args);
 			std::cerr << "Initialized weights saved as \"../initialized_weights/resnet50_cifar10_epoch0.bin\". Continue training or stop the application\n";
-			std::cin.get();
+//			std::cin.get();
 		}
 		std::cout << "[ " << currentDateTime() << "] Samples = " << iter_*batch_size_ << " Accuracy = " << train_acc.Get() << std::endl;
 		iter_++;
@@ -151,7 +152,7 @@ public:
 	MXDataIter train_iter = MXDataIter("ImageRecordIter");
 	Accuracy train_acc;
 	int batch_size_ = 32;
-	const int max_epoch_ = 200;
+	const int max_epoch_ = 50;
 	const std::string data_tag = "data";
 	const std::string label_tag = "label";
 };
