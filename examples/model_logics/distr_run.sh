@@ -9,5 +9,5 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$MXNET_LIBDIR:$LIBFABRIC_ROOT/lib
 
 export GAM_RUN_LOCAL=$FAST_ROOT/bin/fastrun-local
 
-$FAST_ROOT/bin/fastrun-mpi -H hosts -n 16 "$PWD/$1 4 4"
+$FAST_ROOT/bin/fastrun-mpi -H hosts -n 9 "$PWD/$1 3 3"
 #$FAST_ROOT/bin/fastrun-slurm -n 2 "$PWD/$1"

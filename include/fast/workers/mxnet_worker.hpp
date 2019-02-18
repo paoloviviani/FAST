@@ -24,9 +24,10 @@ namespace FAST {
 /**
  * Fastflow auxiliary stuff
  */
+static auto TERMINATION_TAG = ff::FF_TAG_MIN;
 static auto NEXT_ITERATION = (void *)((uint64_t)ff::FF_TAG_MIN + 1);
 static auto CONSUMED_PTR = (void *)((uint64_t)ff::FF_TAG_MIN + 2);
-static auto END_OF_INPUT = ff::FF_TAG_MIN;
+static auto END_OF_INPUT = (void *)((uint64_t)ff::FF_TAG_MIN + 3);
 
 constexpr auto EOI_TOKEN = gff::go_on - 1;
 constexpr auto TRIGGER_TOKEN = gff::go_on - 2;
@@ -122,6 +123,10 @@ public:
 			FAST_DEBUG("(TRAINER STAGE): executed batch from gradients");
 			return NEXT_ITERATION;
 		}
+		else {
+			FAST_DEBUG("(TRAINER STAGE): returned end of input");
+			return END_OF_INPUT;
+		}
 		return ff::FF_GO_ON;
 	}
 private:
@@ -129,8 +134,8 @@ private:
 
 	void eosnotify(ssize_t id) {
 		if (id == 0) {
-			// got EOS from input - forward END_OF_INPUT message
-			this->ff_send_out(END_OF_INPUT);
+			// got EOS from input - forward TERMINATION_TAG message
+			this->ff_send_out(TERMINATION_TAG);
 		} else {
 			// got EOS from feedback - forward downstream to trigger termination
 			this->ff_send_out(ff::FF_EOS);
@@ -141,9 +146,9 @@ private:
 
 class internal_out_stage : public ff::ff_monode {
 	void *svc(void *in) {
-		if (in != END_OF_INPUT) {
+		if (in != TERMINATION_TAG) {
 			// send a NEXT_ITERATION message to the feedback channel
-			if (outnodes_[0]->get_out_buffer()->empty())
+			if (outnodes_[0]->get_out_buffer()->empty()  && in != END_OF_INPUT)
 				ff_send_out_to(NEXT_ITERATION, 0);
 			// forward the input pointer downstream
 			ff_send_out_to(in, 1);
@@ -171,6 +176,8 @@ public:
 	void * svc(void * task) {
 		if (task == CONSUMED_PTR)
 			return CONSUMED_PTR;
+		if (task == END_OF_INPUT)
+			return END_OF_INPUT;
 		FAST_DEBUG("(OUTPUT STAGE): got pointer");
 		gam_vector<T> * out = new gam_vector<T>();
 		NDVecToVec( logic_->exec->grad_arrays, logic_->arg_names, *out, logic_->data_tag, logic_->label_tag);
@@ -193,48 +200,48 @@ class MXNetWorkerLogic {
 public:
 
 	gff::token_t svc(gam::public_ptr< gam_vector<T> > &in, gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
-		// Check if getting eoi
-		if (in.get().address() == EOI_TOKEN) {
-			assert(in.get().address() == EOI_TOKEN);
-			FAST_DEBUG("Received EOI token")
-			assert(eoi_cnt_ < (FAST::cardinality() - 1));
-			if(++eoi_cnt_ == FAST::cardinality() - 1 && FAST::rank() == 0)
-				return gff::eos;
-		}
-		else {
-			if ( !logic_.max_epoch_reached ) {
-				if (in.get().address() == TRIGGER_TOKEN) {
+		// Check message and offload to pipe
+				switch(in.get().address()) {
+				case TRIGGER_TOKEN: {
 					pipe_->offload(NEXT_ITERATION);
+					break;
+				} // scope of 'x' ends here
+				case EOI_TOKEN: {
+					FAST_INFO("Received EOI token")
+					assert(eoi_cnt_ < (c.internals.out_cardinality() ));
+					if (!eoi_out)
+						c.emit(token2public<FAST::gam_vector<float>>(EOI_TOKEN));
+					if(++eoi_cnt_ == c.internals.out_cardinality())
+						return gff::eos;
+					return gff::go_on;
 				}
-				else {
-					FAST_DEBUG("Received pointer");
+				default: { //data
 					buffer_.push( in.local() );
 					pipe_->offload( (void*)(buffer_.back().get()) );
 				}
+				}
 
 				void * outptr = nullptr;
-				while (true) {
+				while (true && !eoi_out) {
 					pipe_->load_result(&outptr);
+
 					if (outptr == CONSUMED_PTR) {
 						buffer_.pop();
-						FAST_DEBUG("CONSUMED");
 					}
-					else {
+					else if (outptr == END_OF_INPUT) {
+						if (!eoi_out)
+							c.emit(token2public<FAST::gam_vector<float>>(EOI_TOKEN));
+						eoi_out = true;
+						return gff::go_on;
+					}
+					else { //out data
 						FAST::gam_vector<float> * out_vec = (FAST::gam_vector<float> *)outptr;
 						auto out_ptr = gam::public_ptr< FAST::gam_vector<float> >(out_vec, [](FAST::gam_vector<float> * ptr){delete ptr;});
 						c.emit(out_ptr);
 						return gff::go_on;
 					}
 				}
-			}
-
-			if (!eoi_out) {
-				FAST_DEBUG("EMIT EOI");
-				c.emit(token2public<FAST::gam_vector<float>>(EOI_TOKEN));
-				eoi_out = true;
-			}
-		}
-		return gff::go_on;
+				return gff::go_on;
 	}
 
 	void svc_init(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {

@@ -86,7 +86,7 @@ public:
 
 
 		// Simulate granularity
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+//		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		auto data_batch = train_iter.GetDataBatch();
 		// Set data and label
 		data_batch.data.CopyTo(&args["X"]);
@@ -124,23 +124,25 @@ public:
 	}
 
 	void finalize() {
-		  auto val_iter = MXDataIter("MNISTIter")
-		      .SetParam("image", "../data/mnist_data/t10k-images-idx3-ubyte")
-		      .SetParam("label", "../data/mnist_data/t10k-labels-idx1-ubyte")
+		FAST_INFO("FINALIZATION")
+		auto val_iter = MXDataIter("MNISTIter")
+			  .SetParam("image", "../data/mnist_data/t10k-images-idx3-ubyte")
+			  .SetParam("label", "../data/mnist_data/t10k-labels-idx1-ubyte")
 			  .SetParam("batch_size", batch_size_)
 			  .SetParam("flat", 1)
 			  .CreateDataIter();
 		  Accuracy acc;
-		    val_iter.Reset();
-		    while (val_iter.Next()) {
-		  	auto data_batch = val_iter.GetDataBatch();
-		  	data_batch.data.CopyTo(&args["X"]);
-		  	data_batch.label.CopyTo(&args["label"]);
-		  	// Forward pass is enough as no gradient is needed when evaluating
-		  	exec->Forward(false);
-		  	acc.Update(data_batch.label, exec->outputs[0]);
-		    }
-		    FAST_INFO("=== VALIDATION ACCURACY === " << train_acc.Get());
+		  val_iter.Reset();
+		  while (val_iter.Next()) {
+			  auto data_batch = val_iter.GetDataBatch();
+			  data_batch.data.CopyTo(&args["X"]);
+			  data_batch.label.CopyTo(&args["label"]);
+			  // Forward pass is enough as no gradient is needed when evaluating
+			  exec->Forward(false);
+			  acc.Update(data_batch.label, exec->outputs[0]);
+		  }
+		  NDArray::WaitAll();
+		  FAST_INFO("=== VALIDATION ACCURACY === " << train_acc.Get());
 	}
 
 	Symbol net;
