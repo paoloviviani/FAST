@@ -219,7 +219,7 @@ public:
 				c.emit(token2public<FAST::gam_vector<float>>(EOI_TOKEN));
 			if(++eoi_cnt_ == c.internals.out_cardinality()  && FAST::rank() == 0)
 				return gff::eos;
-			break;
+			return gff::go_on;
 		}
 		default: { //data
 			buffer_.push( in.local() );
