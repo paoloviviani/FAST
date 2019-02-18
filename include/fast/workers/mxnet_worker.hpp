@@ -281,7 +281,7 @@ public:
 		}
 		while (!buffer_.empty())
 			buffer_.pop();
-		logic_->finalize();
+		logic_.finalize();
 	}
 private:
 	ff::ff_pipeline * pipe_;

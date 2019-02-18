@@ -126,8 +126,8 @@ public:
 	void finalize() {
 		FAST_INFO("FINALIZATION")
 		auto val_iter = MXDataIter("MNISTIter")
-			  .SetParam("image", "../data/mnist_data/t10k-images-idx3-ubyte")
-			  .SetParam("label", "../data/mnist_data/t10k-labels-idx1-ubyte")
+			  .SetParam("image", "../mnist_data/t10k-images-idx3-ubyte")
+			  .SetParam("label", "../mnist_data/t10k-labels-idx1-ubyte")
 			  .SetParam("batch_size", batch_size_)
 			  .SetParam("flat", 1)
 			  .CreateDataIter();
