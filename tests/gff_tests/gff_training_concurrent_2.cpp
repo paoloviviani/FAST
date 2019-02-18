@@ -106,7 +106,7 @@ public:
 			}
 			// Compute internal iteration either if received pointer
 			// Simulate some work
-			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+//			std::this_thread::sleep_for(std::chrono::milliseconds(50));
 			std::vector<float> * computed = new std::vector<float>(SIZE);
 			for (int i = 0; i < SIZE; i++) {
 				internal_state.at(i) += 1.;
