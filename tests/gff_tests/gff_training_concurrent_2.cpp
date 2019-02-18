@@ -115,8 +115,10 @@ public:
 			(*iter)++;
 			this->ff_send_out((void*)computed);
 		}
-		else
+		else {
+			FAST_INFO("(COMPUTE STAGE): Return End Of Input")
 			return END_OF_INPUT;
+		}
 
 		return ff::FF_GO_ON;
 	}
@@ -149,7 +151,7 @@ class internal_out_stage : public ff::ff_monode {
 	void *svc(void *in) {
 		if (in != TERMINATION_TAG) {
 			// send a NEXT_ITERATION message to the feedback channel
-			if (outnodes_[0]->get_out_buffer()->empty())
+			if (outnodes_[0]->get_out_buffer()->empty() && in != END_OF_INPUT)
 				ff_send_out_to(NEXT_ITERATION, 0);
 			// forward the input pointer downstream
 			ff_send_out_to(in, 1);
@@ -217,7 +219,9 @@ public:
 			assert(eoi_cnt_ < (c.internals.out_cardinality() ));
 			if (!eoi_out)
 				c.emit(token2public<FAST::gam_vector<float>>(EOI_TOKEN));
-			if(++eoi_cnt_ == c.internals.out_cardinality()  && FAST::rank() == 0)
+			FAST_INFO("EOI COUNT: " << eoi_cnt_)
+			FAST_INFO("NEIGHBORS COUNT: " << c.internals.out_cardinality())
+			if(++eoi_cnt_ == c.internals.out_cardinality() && FAST::rank() == 0)
 				return gff::eos;
 			return gff::go_on;
 		}
@@ -228,7 +232,7 @@ public:
 		}
 
 		void * outptr = nullptr;
-		while (true) {
+		while (true && !eoi_out) {
 			pipe_->load_result(&outptr);
 
 			if (outptr == CONSUMED_PTR) {
@@ -249,7 +253,7 @@ public:
 				return gff::go_on;
 			}
 		}
-
+		return gff::go_on;
 	}
 
 	void svc_init(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {

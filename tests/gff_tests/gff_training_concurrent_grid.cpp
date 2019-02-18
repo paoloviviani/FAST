@@ -19,7 +19,7 @@
 using namespace std;
 
 #define SIZE      10
-#define MAX_ITER      40
+#define MAX_ITER      3
 
 constexpr auto EOI_TOKEN = gff::go_on - 1;
 constexpr auto TRIGGER_TOKEN = gff::go_on - 2;
@@ -39,9 +39,10 @@ gam::public_ptr<T> token2public(uint64_t token) {
 /**
  * Fastflow auxiliary stuff
  */
+static auto TERMINATION_TAG = ff::FF_TAG_MIN;
 static auto NEXT_ITERATION = (void *)((uint64_t)ff::FF_TAG_MIN + 1);
 static auto CONSUMED_PTR = (void *)((uint64_t)ff::FF_TAG_MIN + 2);
-static auto END_OF_INPUT = ff::FF_TAG_MIN;
+static auto END_OF_INPUT = (void *)((uint64_t)ff::FF_TAG_MIN + 3);
 
 class InputStage: public ff::ff_node {
 public:
@@ -93,7 +94,7 @@ public:
 			return CONSUMED_PTR;
 		}
 
-		if (*iter <= MAX_ITER+1) {
+		if (*iter <= MAX_ITER) {
 			// Update internal state if received pointer
 			if (task != NEXT_ITERATION) {
 				FAST_INFO("(COMPUTE STAGE): got real vector")
@@ -104,7 +105,7 @@ public:
 			}
 			// Compute internal iteration either if received pointer
 			// Simulate some work
-//			std::this_thread::sleep_for(std::chrono::milliseconds(200));
+//			std::this_thread::sleep_for(std::chrono::milliseconds(50));
 			std::vector<float> * computed = new std::vector<float>(SIZE);
 			for (int i = 0; i < SIZE; i++) {
 				internal_state.at(i) += 1.;
@@ -112,6 +113,10 @@ public:
 			}
 			(*iter)++;
 			this->ff_send_out((void*)computed);
+		}
+		else {
+			FAST_INFO("(COMPUTE STAGE): Return End Of Input")
+			return END_OF_INPUT;
 		}
 
 		return ff::FF_GO_ON;
@@ -131,8 +136,8 @@ private:
 
 	void eosnotify(ssize_t id) {
 		if (id == 0) {
-			// got EOS from input - forward END_OF_INPUT message
-			this->ff_send_out(END_OF_INPUT);
+			// got EOS from input - forward TERMINATION_TAG message
+			this->ff_send_out(TERMINATION_TAG);
 		} else {
 			// got EOS from feedback - forward downstream to trigger termination
 			this->ff_send_out(ff::FF_EOS);
@@ -143,9 +148,9 @@ private:
 
 class internal_out_stage : public ff::ff_monode {
 	void *svc(void *in) {
-		if (in != END_OF_INPUT) {
+		if (in != TERMINATION_TAG) {
 			// send a NEXT_ITERATION message to the feedback channel
-			if (outnodes_[0]->get_out_buffer()->empty())
+			if (outnodes_[0]->get_out_buffer()->empty() && in != END_OF_INPUT)
 				ff_send_out_to(NEXT_ITERATION, 0);
 			// forward the input pointer downstream
 			ff_send_out_to(in, 1);
@@ -170,6 +175,8 @@ public:
 	void * svc(void * task) {
 		if (task == CONSUMED_PTR)
 			return CONSUMED_PTR;
+		if (task == END_OF_INPUT)
+			return END_OF_INPUT;
 		std::vector<float> * internal = (std::vector<float> *)task;
 		FAST::gam_vector<float> * computed = new FAST::gam_vector<float>(SIZE);
 		for (int i = 0; i < SIZE; i++)
@@ -200,46 +207,50 @@ public:
 	 * @return a gff token
 	 */
 	gff::token_t svc(gam::public_ptr<FAST::gam_vector<float>> &in, gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
-		// Check if getting eoi
-		if (in.get().address() == EOI_TOKEN) {
-			assert(in.get().address() == EOI_TOKEN);
+		// Check message and offload to pipe
+		switch(in.get().address()) {
+		case TRIGGER_TOKEN: {
+			pipe_->offload(NEXT_ITERATION);
+			break;
+		} // scope of 'x' ends here
+		case EOI_TOKEN: {
 			FAST_INFO("Received EOI token")
-			assert(eoi_cnt_ < (FAST::cardinality() - 1));
-			if(++eoi_cnt_ == FAST::cardinality() - 1 && FAST::rank() == 0)
+			assert(eoi_cnt_ < (c.internals.out_cardinality() ));
+			if (!eoi_out)
+				c.emit(token2public<FAST::gam_vector<float>>(EOI_TOKEN));
+			FAST_INFO("EOI COUNT: " << eoi_cnt_)
+			FAST_INFO("NEIGHBORS COUNT: " << c.internals.out_cardinality())
+			if(++eoi_cnt_ == c.internals.out_cardinality() && FAST::rank() == 0)
 				return gff::eos;
+			return gff::go_on;
 		}
-		else { // Run iteration
-			if (iter_ < MAX_ITER ) {
-				if (in.get().address() == TRIGGER_TOKEN) {
-					pipe_->offload(NEXT_ITERATION);
-				}
-				else {
-					FAST_INFO("Received pointer");
-					buffer_.push( in.local() );
-					pipe_->offload( (void*)(buffer_.back().get()) );
-				}
+		default: { //data
+			buffer_.push( in.local() );
+			pipe_->offload( (void*)(buffer_.back().get()) );
+		}
+		}
 
-				void * outptr = nullptr;
-				while (true) {
-					pipe_->load_result(&outptr);
-					if (outptr == CONSUMED_PTR) {
-						buffer_.pop();
-						FAST_INFO("CONSUMED");
-					}
-					else {
-						FAST_INFO("Running iter " << iter_);
-						FAST::gam_vector<float> * out_vec = (FAST::gam_vector<float> *)outptr;
-						auto out_ptr = gam::public_ptr< FAST::gam_vector<float> >(out_vec, [](FAST::gam_vector<float> * ptr){delete ptr;});
-						c.emit(out_ptr);
-						return gff::go_on;
-					}
-				}
+		void * outptr = nullptr;
+		while (true && !eoi_out) {
+			pipe_->load_result(&outptr);
+
+			if (outptr == CONSUMED_PTR) {
+				buffer_.pop();
+				FAST_INFO("CONSUMED");
 			}
-		}
-		if (!eoi_out) {
-			FAST_INFO("EMIT EOI");
-			c.emit(token2public<FAST::gam_vector<float>>(EOI_TOKEN));
-			eoi_out = true;
+			else if (outptr == END_OF_INPUT) {
+				FAST_INFO("EMIT EOI");
+				if (!eoi_out)
+					c.emit(token2public<FAST::gam_vector<float>>(EOI_TOKEN));
+				eoi_out = true;
+				return gff::go_on;
+			}
+			else { //out data
+				FAST::gam_vector<float> * out_vec = (FAST::gam_vector<float> *)outptr;
+				auto out_ptr = gam::public_ptr< FAST::gam_vector<float> >(out_vec, [](FAST::gam_vector<float> * ptr){delete ptr;});
+				c.emit(out_ptr);
+				return gff::go_on;
+			}
 		}
 		return gff::go_on;
 	}
