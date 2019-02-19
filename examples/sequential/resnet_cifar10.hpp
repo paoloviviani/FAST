@@ -97,10 +97,9 @@ public:
 			if (arg_names[i] == "data" || arg_names[i] == "label") continue;
 			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 		}
-		if (iter_ == 0) {
+		if (iter_ == 0 && epoch_ == 0) {
 			mxnet::cpp::NDArray::Save("../initialized_weights/resnet50_cifar10_epoch0.bin", args);
 			std::cerr << "Initialized weights saved as \"../initialized_weights/resnet50_cifar10_epoch0.bin\". Continue training or stop the application\n";
-//			std::cin.get();
 		}
 		std::cout << "[ " << currentDateTime() << "] Samples = " << iter_*batch_size_ << " Accuracy = " << train_acc.Get() << std::endl;
 		iter_++;
