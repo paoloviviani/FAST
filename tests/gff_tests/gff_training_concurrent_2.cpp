@@ -217,8 +217,10 @@ public:
 		case EOI_TOKEN: {
 			FAST_INFO("Received EOI token")
 			assert(eoi_cnt_ < (c.internals.out_cardinality() ));
-			if (!eoi_out)
+			if (!eoi_out) {
 				c.emit(token2public<FAST::gam_vector<float>>(EOI_TOKEN));
+				eoi_out = true;
+			}
 			FAST_INFO("EOI COUNT: " << eoi_cnt_)
 			FAST_INFO("NEIGHBORS COUNT: " << c.internals.out_cardinality())
 			if(++eoi_cnt_ == c.internals.out_cardinality() && FAST::rank() == 0)
@@ -226,13 +228,14 @@ public:
 			return gff::go_on;
 		}
 		default: { //data
+			assert(eoi_cnt_ < c.internals.out_cardinality());
 			buffer_.push( in.local() );
 			pipe_->offload( (void*)(buffer_.back().get()) );
 		}
 		}
 
 		void * outptr = nullptr;
-		while (true && !eoi_out) {
+		while (!eoi_out) {
 			pipe_->load_result(&outptr);
 
 			if (outptr == CONSUMED_PTR) {
@@ -241,10 +244,9 @@ public:
 			}
 			else if (outptr == END_OF_INPUT) {
 				FAST_INFO("EMIT EOI");
-				if (!eoi_out)
-					c.emit(token2public<FAST::gam_vector<float>>(EOI_TOKEN));
+				assert(!eoi_out);
+				c.emit(token2public<FAST::gam_vector<float>>(EOI_TOKEN));
 				eoi_out = true;
-				return gff::go_on;
 			}
 			else { //out data
 				FAST::gam_vector<float> * out_vec = (FAST::gam_vector<float> *)outptr;
