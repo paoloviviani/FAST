@@ -222,7 +222,7 @@ public:
 			}
 			FAST_INFO("EOI COUNT: " << eoi_cnt_)
 			FAST_INFO("NEIGHBORS COUNT: " << c.internals.out_cardinality())
-			if(++eoi_cnt_ == c.internals.out_cardinality() && FAST::rank() == 0)
+			if(++eoi_cnt_ == c.internals.out_cardinality())
 				return gff::eos;
 			return gff::go_on;
 		}
