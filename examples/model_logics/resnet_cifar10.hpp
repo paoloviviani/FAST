@@ -1,3 +1,4 @@
+#include <chrono>
 #include <fast.hpp>
 #include "mxnet-cpp/MxNetCpp.h"
 
@@ -84,6 +85,7 @@ public:
 		log_file << "Epoch\tTime\tTraining accuracy\tTest accuracy" << std::endl;
 
 		FAST_DEBUG("Logic initialized")
+	    init_time = chrono::system_clock::now();
 	}
 
 	void run_batch() {
@@ -107,7 +109,12 @@ public:
 			std::cerr << "=== Epoch === " << epoch_ << std::endl;
 			std::cerr << "=== TRAINING ACCURACY === " << train_acc.Get() << std::endl;
 			std::cerr << "=== TEST ACCURACY === " << val_acc.Get() << std::endl;
-			log_file << epoch_ << "\t" << total_time << "\t" << train_acc.Get() << "\t\t" << acc.Get() << endl;
+
+		    auto toc = chrono::system_clock::now();
+		    float duration = chrono::duration_cast<chrono::milliseconds>(toc - init_time).count() / 1000.0;
+			log_file << epoch_ << "\t" << duration << "\t" << train_acc.Get() << "\t\t" << val_acc.Get() << std::endl;
+			log_file.flush();
+
 			if (epoch_ == max_epoch_){
 				FAST_DEBUG("(LOGIC): MAX EPOCH REACHED");
 				max_epoch_reached = true; // Terminate
@@ -182,4 +189,5 @@ public:
 	const std::string label_tag = "label";
 	float total_time;
 	ofstream log_file;
+	std::chrono::_V2::system_clock::time_point init_time;
 };
