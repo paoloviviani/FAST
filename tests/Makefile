@@ -79,9 +79,9 @@ mxnet_worker_test: $(TARGET_OBJ_MXNET_TEST) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
 
 clean:
-	rm -rf *.o *~ $(TARGET_OBJ)
+	rm -f *.o *~ $(TARGET_OBJ)
 
 cleanall: clean
-	rm -rf bin/$(EXECS)
-	rm -rf $(TARGET_OBJ) *.d *.btr
+	rm -f bin/*
+	rm -f $(TARGET_OBJ) *.d *.btr
 
