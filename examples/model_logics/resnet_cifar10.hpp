@@ -31,8 +31,8 @@ public:
 			.SetParam("batch_size", batch_size_)
 			.SetParam("shuffle", 1)
 			.SetParam("preprocess_threads", 24)
-			.SetParam("num_parts", FAST::cardinality())
-			.SetParam("part_index", FAST::rank())
+//			.SetParam("num_parts", FAST::cardinality())
+//			.SetParam("part_index", FAST::rank())
 			.CreateDataIter();
 
 		FAST_DEBUG("(LOGIC): Loaded data ");
