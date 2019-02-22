@@ -92,6 +92,12 @@ public:
 		FAST_DEBUG("(INPUT STAGE): Built NDVec");
 		return 0;
 	}
+
+	int svc_end() {
+		if(buffer_)
+			delete buffer_;
+		return 0;
+	}
 private:
 	ModelLogic * logic_;
 	NDAvector * buffer_;
@@ -117,6 +123,7 @@ public:
 				FAST_DEBUG("(TRAINER STAGE): got gradients");
 				NDAvector * in_ptr = (NDAvector  *)task;
 				logic_->update( *in_ptr );
+				delete in_ptr;
 			}
 			FAST_DEBUG("(TRAINER STAGE): updated");
 			logic_->run_batch();
