@@ -185,8 +185,8 @@ public:
 
 	void * svc(void * task) {
 		if (task == CONSUMED_PTR) {
-			return CONSUMED_PTR;
 			FAST_DEBUG("(OUTPUT STAGE): returning CONSUMED")
+			return CONSUMED_PTR;
 		}
 		if (task == END_OF_INPUT)
 			return END_OF_INPUT;
@@ -238,9 +238,7 @@ public:
 					pipe_->load_result(&outptr);
 					FAST_INFO("GOT RESULT ")
 					if (outptr == CONSUMED_PTR) {
-						FAST_INFO("USE COUNT ====> " << buffer_.front().use_count())
 						buffer_.pop();
-						FAST_INFO("USE COUNT ====> " << buffer_.front().use_count())
 					}
 					else if (outptr == END_OF_INPUT) {
 						if (!eoi_out)
