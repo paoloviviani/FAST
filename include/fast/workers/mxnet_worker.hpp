@@ -73,7 +73,7 @@ public:
 
 		FAST_DEBUG("(INPUT STAGE): got real pointer of size " << (*recv_ptr).size())
 		FAST::accumToNDVec( *recv_ptr, *buffer_, logic_->arg_names, logic_->data_tag, logic_->label_tag, mxnet::cpp::Context::cpu() );
-		FAST_DEBUG("(INPUT STAGE): accumulated gradients")
+		FAST_DEBUG("(INPUT STAGE): accumulated gradients, sending consumed")
 		this->ff_send_out( CONSUMED_PTR );
 
 		if (this->get_out_buffer()->empty()) {
@@ -93,10 +93,9 @@ public:
 		return 0;
 	}
 
-	int svc_end() {
+	void svc_end() {
 		if(buffer_)
 			delete buffer_;
-		return 0;
 	}
 private:
 	ModelLogic * logic_;
@@ -123,11 +122,10 @@ public:
 				FAST_DEBUG("(TRAINER STAGE): got gradients");
 				NDAvector * in_ptr = (NDAvector  *)task;
 				logic_->update( *in_ptr );
+				FAST_DEBUG("(TRAINER STAGE): executed batch from gradients");
 				delete in_ptr;
 			}
-			FAST_DEBUG("(TRAINER STAGE): updated");
 			logic_->run_batch();
-			FAST_DEBUG("(TRAINER STAGE): executed batch from gradients");
 			return NEXT_ITERATION;
 		}
 		else {
@@ -153,15 +151,20 @@ private:
 
 class internal_out_stage : public ff::ff_monode {
 	void *svc(void *in) {
-		if (in != TERMINATION_TAG) {
+		if (in == CONSUMED_PTR) {
+			FAST_DEBUG("(INTERNAL STAGE): got CONSUMED")
+			return CONSUMED_PTR;
+		}
+		else if (in == TERMINATION_TAG){
+			// send EOS to the feedback channel
+			ff_send_out_to(ff::FF_EOS, 0);
+		}
+		else {
 			// send a NEXT_ITERATION message to the feedback channel
 			if (outnodes_[0]->get_out_buffer()->empty()  && in != END_OF_INPUT)
 				ff_send_out_to(NEXT_ITERATION, 0);
 			// forward the input pointer downstream
 			ff_send_out_to(in, 1);
-		} else {
-			// send EOS to the feedback channel
-			ff_send_out_to(ff::FF_EOS, 0);
 		}
 		return ff::FF_GO_ON;
 	}
@@ -181,8 +184,10 @@ public:
 	OutputStage(ModelLogic * logic) : logic_(logic){}
 
 	void * svc(void * task) {
-		if (task == CONSUMED_PTR)
+		if (task == CONSUMED_PTR) {
 			return CONSUMED_PTR;
+			FAST_DEBUG("(OUTPUT STAGE): returning CONSUMED")
+		}
 		if (task == END_OF_INPUT)
 			return END_OF_INPUT;
 		FAST_DEBUG("(OUTPUT STAGE): got pointer");
@@ -229,11 +234,13 @@ public:
 				}
 
 				void * outptr = nullptr;
-				while (true && !eoi_out) {
+				while (!eoi_out) {
 					pipe_->load_result(&outptr);
-
+					FAST_INFO("GOT RESULT ")
 					if (outptr == CONSUMED_PTR) {
+						FAST_INFO("USE COUNT ====> " << buffer_.front().use_count())
 						buffer_.pop();
+						FAST_INFO("USE COUNT ====> " << buffer_.front().use_count())
 					}
 					else if (outptr == END_OF_INPUT) {
 						if (!eoi_out)
@@ -255,8 +262,6 @@ public:
 
 		pipe_ = new ff::ff_pipeline(true);
 		training_ = new ff::ff_pipeline();
-
-		gam_vector<T> * ptr = new gam_vector<T>(0);
 
 		FAST_DEBUG("(MXNET WORKER): Initializing model logic")
 		logic_.init();
