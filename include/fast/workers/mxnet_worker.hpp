@@ -243,9 +243,10 @@ public:
 
                 c.emit(out_buffer_.back().second);
 
-                if (out_buffer_.size() == 4) {
+                if (out_buffer_.size() > 4) {
                     out_buffer_.back().first->resize(0);
                     out_buffer_.back().second.reset();
+                    out_buffer.pop();
                 }
                 return gff::go_on;
             }
