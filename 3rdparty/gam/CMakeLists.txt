@@ -74,6 +74,10 @@ if (GAM_RUNTIME_SYSTEM STREQUAL "libfabric")
   target_link_libraries(gam INTERFACE libfabric::libfabric)
 endif()
 
+# target attributes: compiler flags
+target_compile_definitions(gam INTERFACE
+                           $<$<CONFIG:Debug>:GAM_LOG>)
+
 # Unit tests
 if (GAM_ENABLE_UNIT_TEST)
   include(CTest)

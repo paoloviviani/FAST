@@ -1,7 +1,7 @@
 # single-translation-units tests
 set(STU_TESTS pingpong
           simple_public simple_private simple_publish
-          non_trivially_copyable)
+          non_trivially_copyable unique_local_public)
 foreach(t ${STU_TESTS})
     add_executable(${t} ${t}.cpp)
     target_link_libraries(${t} gam)
@@ -26,5 +26,7 @@ add_test(NAME simple_publish
          COMMAND ${GAMRUN} -v -n 3 -l localhost ${CMAKE_CURRENT_BINARY_DIR}/simple_publish)
 add_test(NAME non_trivially_copyable
          COMMAND ${GAMRUN} -v -n 2 -l localhost ${CMAKE_CURRENT_BINARY_DIR}/non_trivially_copyable)
+add_test(NAME unique_local_public
+         COMMAND ${GAMRUN} -v -n 3 -l localhost ${CMAKE_CURRENT_BINARY_DIR}/unique_local_public)
 add_test(NAME mtu
          COMMAND ${GAMRUN} -v -n 3 -l localhost ${CMAKE_CURRENT_BINARY_DIR}/mtu)

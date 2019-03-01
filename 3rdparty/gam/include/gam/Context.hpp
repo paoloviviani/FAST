@@ -421,6 +421,31 @@ class Context {
     return std::shared_ptr<T>((T *)lp, [](T *p_) { DELETE(p_); });
   }
 
+  template <typename T>
+  inline std::unique_ptr<T, void (*)(T *)> unique_local_public(
+      const GlobalPointer &p) {
+    assert(p.is_address());
+
+    LOGLN_OS("CTX local public " << p);
+    uint64_t a = p.address();
+    assert(view.access_level(a) == AL_PUBLIC);
+
+    /* allocate local memory */
+    T *lp = (T *)local_new<T>();
+
+    /* load either locally or remotely */
+    if (view.author(a) == rank_)
+      local_load(lp, a);
+    else if (!cache.load(lp, a)) {
+      forward_load(lp, p);
+      cache.store(a, lp);
+    }
+
+    /* generate a smart pointer with custom deleter to match allocation */
+    return std::unique_ptr<T, void (*)(T *)>((T *)lp,
+                                             [](T *p_) { DELETE(p_); });
+  }
+
   /*
    * local_private returns the pointer associated to (private) global address
    */

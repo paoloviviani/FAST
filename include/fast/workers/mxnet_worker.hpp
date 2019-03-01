@@ -153,7 +153,7 @@ class internal_out_stage : public ff::ff_monode {
 	void *svc(void *in) {
 		if (in == CONSUMED_PTR) {
 			FAST_DEBUG("(INTERNAL STAGE): got CONSUMED")
-			return CONSUMED_PTR;
+				ff_send_out_to(CONSUMED_PTR, 1);
 		}
 		else if (in == TERMINATION_TAG){
 			// send EOS to the feedback channel
@@ -236,17 +236,19 @@ public:
 				void * outptr = nullptr;
 				while (!eoi_out) {
 					pipe_->load_result(&outptr);
-					FAST_INFO("GOT RESULT ")
 					if (outptr == CONSUMED_PTR) {
+						FAST_DEBUG("(MXNET WORKER): Got CONSUMED")
 						buffer_.pop();
 					}
 					else if (outptr == END_OF_INPUT) {
+						FAST_DEBUG("(MXNET WORKER): Got EOI")
 						if (!eoi_out)
 							c.emit(token2public<FAST::gam_vector<float>>(EOI_TOKEN));
 						eoi_out = true;
 						return gff::go_on;
 					}
 					else { //out data
+						FAST_DEBUG("(MXNET WORKER): Got data")
 						FAST::gam_vector<float> * out_vec = (FAST::gam_vector<float> *)outptr;
 						auto out_ptr = gam::public_ptr< FAST::gam_vector<float> >(out_vec, [](FAST::gam_vector<float> * ptr){delete ptr;});
 						c.emit(out_ptr);

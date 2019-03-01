@@ -214,6 +214,20 @@ class public_ptr {
   }
 
   /**
+   * @brief generates a local copy as unique pointer
+   *
+   * local makes a local copy of the memory pointed by the public pointer and
+   * returns it as a shared pointer.
+   */
+  gam_unique_ptr<T> unique_local() const {
+    if (internal_gp.is_address())
+      return ctx().unique_local_public<T>(internal_gp);
+    std::cerr << "> unique_local local() for non-address pointer:\n"
+              << internal_gp << std::endl;
+    return gam_unique_ptr<T>(nullptr, [](T *){});
+  }
+
+  /**
    * @ brief pushes the pointer to another executor
    *
    * @param to is the executor to push to
