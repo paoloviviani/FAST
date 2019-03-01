@@ -20,7 +20,7 @@ using namespace mxnet::cpp;
 
 #define CATCH_CONFIG_MAIN
 
-#define BATCH_SIZE 4096
+#define BATCH_SIZE 100000
 
 Context ctx = Context::cpu();  // Use CPU for training
 

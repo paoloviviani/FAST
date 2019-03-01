@@ -71,8 +71,9 @@ public:
 		auto recv_ptr = (FAST::gam_vector<float> *)task;
 
 		FAST_DEBUG("(INPUT STAGE): got real pointer of size " << (*recv_ptr).size())
-		FAST::accumToNDVec( *recv_ptr, *buffer_, logic_->arg_names, logic_->data_tag, logic_->label_tag, mxnet::cpp::Context::cpu() );
-		delete recv_ptr;
+		FAST::accumToNDVec( *recv_ptr, *buffer_, logic_->arg_names, logic_->data_tag, logic_->label_tag, 1., mxnet::cpp::Context::cpu() );
+//		delete recv_ptr;
+		gam::DELETE(recv_ptr);
 
 		if (this->get_out_buffer()->empty()) {
 			FAST_DEBUG("(INPUT STAGE): push gradients")
@@ -151,7 +152,7 @@ class internal_out_stage : public ff::ff_monode {
 		}
 		else {
 			// send a NEXT_ITERATION message to the feedback channel
-			if (outnodes_[0]->get_out_buffer()->empty()  && in != END_OF_INPUT)
+			if (outnodes_[0]->get_out_buffer()->empty() && in != END_OF_INPUT)
 				ff_send_out_to(NEXT_ITERATION, 0);
 			// forward the input pointer downstream
 			ff_send_out_to(in, 1);
@@ -206,10 +207,10 @@ public:
 				} // scope of 'x' ends here
 				case EOI_TOKEN: {
 					FAST_INFO("Received EOI token")
-					assert(eoi_cnt_ < (c.internals.out_cardinality() ));
+					assert(eoi_cnt_ < ( neighbors ));
 					if (!eoi_out)
 						c.emit(token2public<FAST::gam_vector<float>>(EOI_TOKEN));
-					if(++eoi_cnt_ == c.internals.out_cardinality())
+					if(++eoi_cnt_ == neighbors)
 						return gff::eos;
 					return gff::go_on;
 				}
@@ -234,6 +235,7 @@ public:
 						FAST::gam_vector<float> * out_vec = (FAST::gam_vector<float> *)outptr;
 						auto out_ptr = gam::public_ptr< FAST::gam_vector<float> >(out_vec, [](FAST::gam_vector<float> * ptr){delete ptr;});
 						c.emit(out_ptr);
+						out_ptr.reset();
 						return gff::go_on;
 					}
 				}
@@ -241,6 +243,8 @@ public:
 	}
 
 	void svc_init(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c) {
+
+		neighbors = c.internals.out_cardinality();
 
 		pipe_ = new ff::ff_pipeline(true);
 		training_ = new ff::ff_pipeline();
@@ -281,6 +285,8 @@ private:
 	ModelLogic logic_;
 	int eoi_cnt_ = 0;
 	bool eoi_out = false;
+	int neighbors;
+	std::vector< gam::public_ptr< FAST::gam_vector<float> > > out_buffer_;
 };
 
 } // namespace FAST
