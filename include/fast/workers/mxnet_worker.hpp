@@ -26,7 +26,6 @@ namespace FAST {
  */
 static auto TERMINATION_TAG = ff::FF_TAG_MIN;
 static auto NEXT_ITERATION = (void *)((uint64_t)ff::FF_TAG_MIN + 1);
-static auto CONSUMED_PTR = (void *)((uint64_t)ff::FF_TAG_MIN + 2);
 static auto END_OF_INPUT = (void *)((uint64_t)ff::FF_TAG_MIN + 3);
 
 constexpr auto EOI_TOKEN = gff::go_on - 1;
@@ -59,10 +58,8 @@ public:
 
 	void * svc(void * task) {
 		FAST_DEBUG("(INPUT STAGE): started svc")
-		auto recv_ptr = (FAST::gam_vector<float> *)task;
-		FAST_DEBUG("(INPUT STAGE): got pointer")
 
-		if (recv_ptr == NEXT_ITERATION) {
+		if (task == NEXT_ITERATION) {
 			FAST_DEBUG("(INPUT STAGE): got trigger")
 			if (first_push_){
 				this->ff_send_out( NEXT_ITERATION );
@@ -71,10 +68,11 @@ public:
 			return ff::FF_GO_ON;
 		}
 
+		auto recv_ptr = (FAST::gam_vector<float> *)task;
+
 		FAST_DEBUG("(INPUT STAGE): got real pointer of size " << (*recv_ptr).size())
 		FAST::accumToNDVec( *recv_ptr, *buffer_, logic_->arg_names, logic_->data_tag, logic_->label_tag, mxnet::cpp::Context::cpu() );
-		FAST_DEBUG("(INPUT STAGE): accumulated gradients, sending consumed")
-		this->ff_send_out( CONSUMED_PTR );
+		delete recv_ptr;
 
 		if (this->get_out_buffer()->empty()) {
 			FAST_DEBUG("(INPUT STAGE): push gradients")
@@ -111,10 +109,6 @@ public:
 
 	void * svc(void * task) {
 		FAST_DEBUG("(TRAINER STAGE): started svc");
-		if (task == CONSUMED_PTR) {
-			FAST_DEBUG("(TRAINER STAGE): got CONSUMED")
-			return CONSUMED_PTR;
-		}
 
 		if (!logic_->max_epoch_reached) {
 			if (task != NEXT_ITERATION) {
@@ -151,11 +145,7 @@ private:
 
 class internal_out_stage : public ff::ff_monode {
 	void *svc(void *in) {
-		if (in == CONSUMED_PTR) {
-			FAST_DEBUG("(INTERNAL STAGE): got CONSUMED")
-				ff_send_out_to(CONSUMED_PTR, 1);
-		}
-		else if (in == TERMINATION_TAG){
+		if (in == TERMINATION_TAG){
 			// send EOS to the feedback channel
 			ff_send_out_to(ff::FF_EOS, 0);
 		}
@@ -184,10 +174,6 @@ public:
 	OutputStage(ModelLogic * logic) : logic_(logic){}
 
 	void * svc(void * task) {
-		if (task == CONSUMED_PTR) {
-			FAST_DEBUG("(OUTPUT STAGE): returning CONSUMED")
-			return CONSUMED_PTR;
-		}
 		if (task == END_OF_INPUT)
 			return END_OF_INPUT;
 		FAST_DEBUG("(OUTPUT STAGE): got pointer");
@@ -228,19 +214,15 @@ public:
 					return gff::go_on;
 				}
 				default: { //data
-					buffer_.push( in.local() );
-					pipe_->offload( (void*)(buffer_.back().get()) );
+					auto in_ptr = in.unique_local().release();
+					pipe_->offload( (void*)in_ptr );
 				}
 				}
 
 				void * outptr = nullptr;
 				while (!eoi_out) {
 					pipe_->load_result(&outptr);
-					if (outptr == CONSUMED_PTR) {
-						FAST_DEBUG("(MXNET WORKER): Got CONSUMED")
-						buffer_.pop();
-					}
-					else if (outptr == END_OF_INPUT) {
+					if (outptr == END_OF_INPUT) {
 						FAST_DEBUG("(MXNET WORKER): Got EOI")
 						if (!eoi_out)
 							c.emit(token2public<FAST::gam_vector<float>>(EOI_TOKEN));
@@ -291,15 +273,12 @@ public:
 		if (pipe_->wait()<0) {
 			FAST_DEBUG("(FINALIZATION): error waiting pipe");
 		}
-		while (!buffer_.empty())
-			buffer_.pop();
 		logic_.finalize();
 	}
 private:
 	ff::ff_pipeline * pipe_;
 	ff::ff_pipeline * training_;
 	ModelLogic logic_;
-	std::queue < std::shared_ptr<FAST::gam_vector<float>> > buffer_;
 	int eoi_cnt_ = 0;
 	bool eoi_out = false;
 };

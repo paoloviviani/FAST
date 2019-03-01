@@ -20,7 +20,7 @@ using namespace mxnet::cpp;
 
 #define CATCH_CONFIG_MAIN
 
-#define BATCH_SIZE 100000
+#define BATCH_SIZE 4096
 
 Context ctx = Context::cpu();  // Use CPU for training
 
@@ -56,7 +56,7 @@ public:
 			std::this_thread::sleep_for(std::chrono::milliseconds(200));
 		}
 		iter_++;
-		if (iter_ == 50)
+		if (iter_ == 5000)
 			max_epoch_reached = true; // Terminate
 	}
 
