@@ -179,8 +179,7 @@ public:
         FAST_DEBUG("(OUTPUT STAGE): got pointer");
         gam_vector<T> * out = new gam_vector<T>();
         NDVecToVec( logic_->exec->grad_arrays, logic_->arg_names, *out, logic_->data_tag, logic_->label_tag);
-        FAST_DEBUG("(OUTPUT STAGE): allocated size " << out->size());
-        FAST_DEBUG("(OUTPUT STAGE): serialized gradients");
+        FAST_DEBUG("(OUTPUT STAGE): serialized size " << out->size());
         return (void*)out;
     }
 
@@ -218,8 +217,10 @@ public:
         }
         default: { //data
             auto in_ptr = in.unique_local().release();
-            if (in_ptr->size() == 0)
-                return gff::go_on;
+            if (in_ptr->size() == 0) {
+                pipe_->offload(NEXT_ITERATION);
+                break;
+            }
             pipe_->offload( (void*)in_ptr );
         }
         }
@@ -246,7 +247,7 @@ public:
                 if (out_buffer_.size() > 4) {
                     out_buffer_.back().first->resize(0);
                     out_buffer_.back().second.reset();
-                    out_buffer.pop();
+                    out_buffer_.pop();
                 }
                 return gff::go_on;
             }
