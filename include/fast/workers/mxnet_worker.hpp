@@ -19,8 +19,6 @@
 #include <ff/pipeline.hpp>
 #include <ff/node.hpp>
 
-#define RAW_PUBLIC_PAIR FAST::gam_vector<T> * , gam::public_ptr< FAST::gam_vector<T>
-
 namespace FAST {
 
 /**
@@ -71,7 +69,6 @@ public:
 
         FAST_DEBUG("(INPUT STAGE): got real pointer of size " << (*recv_ptr).size())
         FAST::accumToNDVec( *recv_ptr, *buffer_, logic_->arg_names, logic_->data_tag, logic_->label_tag, 1., mxnet::cpp::Context::cpu() );
-        //		delete recv_ptr;
         gam::DELETE(recv_ptr);
 
         if (this->get_out_buffer()->empty()) {
@@ -217,6 +214,7 @@ public:
         }
         default: { //data
             auto in_ptr = in.unique_local().release();
+            in.reset();
             if (in_ptr->size() == 0) {
                 pipe_->offload(NEXT_ITERATION);
                 break;
@@ -240,15 +238,8 @@ public:
                 FAST::gam_vector<T> * out_vec = (FAST::gam_vector<T> *)outptr;
                 auto out_ptr = gam::public_ptr< FAST::gam_vector<T> >(out_vec, [](FAST::gam_vector<T> * ptr){delete ptr;});
 
-                out_buffer_.push(std::make_pair(out_vec, out_ptr));
+                c.emit(std::move(out_ptr));
 
-                c.emit(out_buffer_.back().second);
-
-                if (out_buffer_.size() > 4) {
-                    out_buffer_.back().first->resize(0);
-                    out_buffer_.back().second.reset();
-                    out_buffer_.pop();
-                }
                 return gff::go_on;
             }
         }
@@ -299,7 +290,6 @@ private:
     int eoi_cnt_ = 0;
     bool eoi_out = false;
     int neighbors;
-    std::queue< std::pair< RAW_PUBLIC_PAIR > > > out_buffer_;
 };
 
 } // namespace FAST
