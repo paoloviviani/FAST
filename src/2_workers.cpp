@@ -34,9 +34,13 @@ int main(int argc, char** argv) {
 	FAST_LOG_INIT
 
 	gff::NondeterminateMerge to_one, to_two;
+	gff::OutBundleBroadcast<gff::NondeterminateMerge> one, two;
 
-	gff::add(MxNetWorker(to_one,to_two));
-	gff::add(MxNetWorker(to_two,to_one));
+	one.add_comm(to_two);
+	two.add_comm(to_one);
+
+	gff::add(MxNetWorker(to_one,one));
+	gff::add(MxNetWorker(to_two,two));
 
 	/* execute the network */
 	gff::run();
