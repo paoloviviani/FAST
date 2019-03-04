@@ -171,7 +171,7 @@ public:
     void * svc(void * task) {
         if (task == END_OF_INPUT)
             return END_OF_INPUT;
-        gam_vector<T> * out = new gam_vector<T>();
+        gam_vector<T> * out = gam::NEW<gam_vector<T>>();
         NDVecToVec( logic_->exec->grad_arrays, logic_->arg_names, *out, logic_->data_tag, logic_->label_tag, 0.25);
         FAST_DEBUG("(OUTPUT STAGE): serialized size " << out->size());
         return (void*)out;
@@ -229,7 +229,8 @@ public:
             else { //out data
                 FAST_DEBUG("(MXNET WORKER): Got data");
                 FAST::gam_vector<T> * out_vec = (FAST::gam_vector<T> *)outptr;
-                auto out_ptr = gam::public_ptr< FAST::gam_vector<T> >(out_vec, [](FAST::gam_vector<T> * ptr){delete ptr;});
+                gam::public_ptr<FAST::gam_vector<T>> out_ptr(out_vec, gam::DELETE<FAST::gam_vector<T> >);
+
                 c.emit(std::move(out_ptr));
                 return gff::go_on;
             }

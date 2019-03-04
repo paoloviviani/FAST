@@ -117,6 +117,7 @@ public:
             if (arg_names[i] == "data" || arg_names[i] == "label") continue;
             opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
         }
+        NDArray::WaitAll();
         FAST_ERROR("Epoch = " << epoch_ << "  Samples = " << iter_*batch_size_ );
         iter_++;
     }
