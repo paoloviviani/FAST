@@ -9,7 +9,7 @@ ifeq ($(DEBUG),error)
 OPTIMIZE_FLAGS       = -O3 -DLOGLEVEL_ERROR -g0
 endif
 ifeq ($(DEBUG),all_debug)
-OPTIMIZE_FLAGS       = -O0 -DLOGLEVEL_DEBUG -g3 -DGFF_LOG -DGAM_LOG
+OPTIMIZE_FLAGS       = -O0 -DLOGLEVEL_DEBUG -g3 -DGFF_LOG -DGAM_LOG -DGAM_DBG
 endif
 
 USE_GAM	             = 1

@@ -68,12 +68,13 @@ public:
 
         FAST_DEBUG("(INPUT STAGE): got real pointer of size " << (*recv_ptr).size())
         FAST::accumToNDVec( *recv_ptr, *buffer_, logic_->arg_names, logic_->data_tag, logic_->label_tag, 1., mxnet::cpp::Context::cpu() );
+        recv_ptr->clear();
         gam::DELETE(recv_ptr);
 
         if (this->get_out_buffer()->empty()) {
             FAST_DEBUG("(INPUT STAGE): push gradients");
             this->ff_send_out((void *)buffer_);
-            buffer_ = new NDAvector(0);
+            buffer_ = gam::NEW<NDAvector>();
             FAST::buildNDVec( *buffer_, logic_->exec->grad_arrays, logic_->arg_names, mxnet::cpp::Context::cpu() );
         }
         return ff::FF_GO_ON;
@@ -81,7 +82,7 @@ public:
 
     int svc_init() {
         FAST_DEBUG("(INPUT STAGE): init stage");
-        buffer_ = new NDAvector(0);
+        buffer_ = gam::NEW<NDAvector>();
         FAST::buildNDVec( *buffer_, logic_->exec->grad_arrays, logic_->arg_names, mxnet::cpp::Context::cpu() );
         FAST_DEBUG("(INPUT STAGE): Built NDVec");
         return 0;
@@ -111,7 +112,8 @@ public:
                 NDAvector * in_ptr = (NDAvector  *)task;
                 logic_->update( *in_ptr );
                 FAST_DEBUG("(TRAINER STAGE): executed batch from gradients");
-                delete in_ptr;
+                in_ptr->clear();
+                gam::DELETE(in_ptr);
             }
             logic_->run_batch();
             FAST_DEBUG("(TRAINER STAGE): executed local batch ");
