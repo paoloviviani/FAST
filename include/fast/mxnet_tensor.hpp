@@ -37,7 +37,7 @@ void NDVecToVec(std::vector<mxnet::cpp::NDArray> & grad_arrays, const std::vecto
 		if (arg_names[i] == inp || arg_names[i] == out) continue;
 		grad_size += grad_arrays[i].Size();
 	}
-	vec->reserve(grad_size);
+	vec.reserve(grad_size);
 	for (size_t i = 0; i < grad_arrays.size(); i++) {
 		if (arg_names[i] == inp || arg_names[i] == out)	continue;
 		appendToVec(vec, grad_arrays[i], factor);
