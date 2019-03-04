@@ -175,7 +175,7 @@ public:
             return END_OF_INPUT;
         FAST_DEBUG("(OUTPUT STAGE): got pointer");
         gam_vector<T> * out = new gam_vector<T>();
-        NDVecToVec( logic_->exec->grad_arrays, logic_->arg_names, out, logic_->data_tag, logic_->label_tag, 0.25);
+        NDVecToVec( logic_->exec->grad_arrays, logic_->arg_names, *out, logic_->data_tag, logic_->label_tag, 0.25);
         FAST_DEBUG("(OUTPUT STAGE): serialized size " << out->size());
         return (void*)out;
     }

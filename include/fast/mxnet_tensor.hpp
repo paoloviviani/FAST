@@ -15,11 +15,11 @@
 namespace FAST {
 
 template <typename T>
-void appendToVec(gam_vector<T> * vec, mxnet::cpp::NDArray & t, const float factor=1.){
+void appendToVec(gam_vector<T> & vec, mxnet::cpp::NDArray & t, const float factor=1.){
 	size_t append_size = t.Size();
-	size_t original_size = vec->size();
-	vec->resize(vec->size() + append_size);
-	(t*factor).SyncCopyToCPU(vec->data() + original_size,append_size);
+	size_t original_size = vec.size();
+	vec.resize(vec.size() + append_size);
+	(t*factor).SyncCopyToCPU(vec.data() + original_size,append_size);
 }
 
 template <typename T>
@@ -29,7 +29,7 @@ void vecToNDArray(gam_vector<T> & vec, mxnet::cpp::NDArray & t, size_t offset, s
 }
 
 template <typename T>
-void NDVecToVec(std::vector<mxnet::cpp::NDArray> & grad_arrays, const std::vector<std::string> arg_names, gam_vector<T> * vec, //
+void NDVecToVec(std::vector<mxnet::cpp::NDArray> & grad_arrays, const std::vector<std::string> arg_names, gam_vector<T> & vec, //
 		std::string inp="X", std::string out="label", const float factor=1.) {
 
 	size_t grad_size = 0;
