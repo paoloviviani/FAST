@@ -54,7 +54,6 @@ public:
     InputStage(ModelLogic * logic) : logic_(logic), buffer_(nullptr), first_push_(true) {}
 
     void * svc(void * task) {
-        FAST_DEBUG("(INPUT STAGE): started svc");
 
         if (task == NEXT_ITERATION) {
             FAST_DEBUG("(INPUT STAGE): got trigger");
@@ -105,18 +104,17 @@ public:
     TrainerStage(ModelLogic * logic) : logic_(logic) {}
 
     void * svc(void * task) {
-        FAST_DEBUG("(TRAINER STAGE): started svc");
 
         if (!logic_->max_epoch_reached) {
             if (task != NEXT_ITERATION) {
                 // got a pointer from the input stage
-                FAST_DEBUG("(TRAINER STAGE): got gradients");
                 NDAvector * in_ptr = (NDAvector  *)task;
                 logic_->update( *in_ptr );
                 FAST_DEBUG("(TRAINER STAGE): executed batch from gradients");
                 delete in_ptr;
             }
             logic_->run_batch();
+            FAST_DEBUG("(TRAINER STAGE): executed local batch ");
             return NEXT_ITERATION;
         }
         else {
@@ -173,7 +171,6 @@ public:
     void * svc(void * task) {
         if (task == END_OF_INPUT)
             return END_OF_INPUT;
-        FAST_DEBUG("(OUTPUT STAGE): got pointer");
         gam_vector<T> * out = new gam_vector<T>();
         NDVecToVec( logic_->exec->grad_arrays, logic_->arg_names, *out, logic_->data_tag, logic_->label_tag, 0.25);
         FAST_DEBUG("(OUTPUT STAGE): serialized size " << out->size());
@@ -247,7 +244,6 @@ public:
         pipe_ = new ff::ff_pipeline(true);
         training_ = new ff::ff_pipeline();
 
-        FAST_DEBUG("(MXNET WORKER): Initializing model logic");
         logic_.init();
         FAST_DEBUG("(MXNET WORKER): Initialized model logic");
 

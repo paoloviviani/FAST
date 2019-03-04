@@ -117,7 +117,7 @@ public:
             if (arg_names[i] == "data" || arg_names[i] == "label") continue;
             opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
         }
-        FAST_ERROR("Epoch = " << epoch_ << "Samples = " << iter_*batch_size_ );
+        FAST_ERROR("Epoch = " << epoch_ << "  Samples = " << iter_*batch_size_ );
         iter_++;
     }
 
@@ -172,7 +172,7 @@ public:
     MXDataIter val_iter = MXDataIter("ImageRecordIter");
     Accuracy train_acc, val_acc;
     int batch_size_ = 32;
-    const int max_epoch_ = 1;
+    const int max_epoch_ = 100;
     const std::string data_tag = "data";
     const std::string label_tag = "label";
     float total_time;
