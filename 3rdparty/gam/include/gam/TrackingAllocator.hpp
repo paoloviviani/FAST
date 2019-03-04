@@ -99,6 +99,7 @@ class TrackingAllocator {
     mtx.lock();
     inflight[p] = NEW_;
     mtx.unlock();
+    fprintf(stderr, "ALC %p %d\n", p, inflight[p]);
   }
 
   void delete_(void *p) {

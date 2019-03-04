@@ -75,6 +75,7 @@ public:
             FAST_DEBUG("(INPUT STAGE): push gradients");
             this->ff_send_out((void *)buffer_);
             buffer_ = gam::NEW<NDAvector>();
+//            buffer_ = new NDAvector();
             FAST::buildNDVec( *buffer_, logic_->exec->grad_arrays, logic_->arg_names, mxnet::cpp::Context::cpu() );
         }
         return ff::FF_GO_ON;
@@ -83,6 +84,7 @@ public:
     int svc_init() {
         FAST_DEBUG("(INPUT STAGE): init stage");
         buffer_ = gam::NEW<NDAvector>();
+//        buffer_ = new NDAvector();
         FAST::buildNDVec( *buffer_, logic_->exec->grad_arrays, logic_->arg_names, mxnet::cpp::Context::cpu() );
         FAST_DEBUG("(INPUT STAGE): Built NDVec");
         return 0;
@@ -90,7 +92,8 @@ public:
 
     void svc_end() {
         if(buffer_)
-            delete buffer_;
+//            delete buffer_;
+            gam::DELETE(buffer_);
     }
 private:
     ModelLogic * logic_;
@@ -113,6 +116,7 @@ public:
                 logic_->update( *in_ptr );
                 FAST_DEBUG("(TRAINER STAGE): executed batch from gradients");
                 in_ptr->clear();
+//                delete in_ptr;
                 gam::DELETE(in_ptr);
             }
             logic_->run_batch();
