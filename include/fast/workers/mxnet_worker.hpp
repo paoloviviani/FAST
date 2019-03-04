@@ -175,7 +175,7 @@ public:
             return END_OF_INPUT;
         FAST_DEBUG("(OUTPUT STAGE): got pointer");
         gam_vector<T> * out = new gam_vector<T>();
-        NDVecToVec( logic_->exec->grad_arrays, logic_->arg_names, *out, logic_->data_tag, logic_->label_tag);
+        NDVecToVec( logic_->exec->grad_arrays, logic_->arg_names, out, logic_->data_tag, logic_->label_tag, 0.25);
         FAST_DEBUG("(OUTPUT STAGE): serialized size " << out->size());
         return (void*)out;
     }
@@ -215,10 +215,6 @@ public:
         default: { //data
             auto in_ptr = in.unique_local().release();
             in.reset();
-            if (in_ptr->size() == 0) {
-                pipe_->offload(NEXT_ITERATION);
-                break;
-            }
             pipe_->offload( (void*)in_ptr );
         }
         }
@@ -237,9 +233,7 @@ public:
                 FAST_DEBUG("(MXNET WORKER): Got data");
                 FAST::gam_vector<T> * out_vec = (FAST::gam_vector<T> *)outptr;
                 auto out_ptr = gam::public_ptr< FAST::gam_vector<T> >(out_vec, [](FAST::gam_vector<T> * ptr){delete ptr;});
-
                 c.emit(std::move(out_ptr));
-
                 return gff::go_on;
             }
         }
