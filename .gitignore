@@ -16,3 +16,5 @@ mnist_gpu
 mnist_data/
 bin/
 .vscode
+*.lst
+*.rec
