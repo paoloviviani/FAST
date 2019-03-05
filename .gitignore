@@ -14,3 +14,4 @@ mnist_cpu
 mnist_gpu
 mnist_data/
 bin/
+.vscode
