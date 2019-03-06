@@ -81,7 +81,7 @@ class TrackingAllocator {
     mtx.unlock();
 
     assert(res > 0);
-
+    
     ::free(p);
   }
 
@@ -99,7 +99,7 @@ class TrackingAllocator {
     mtx.lock();
     inflight[p] = NEW_;
     mtx.unlock();
-    fprintf(stderr, "ALC %p %d\n", p, inflight[p]);
+    fprintf(stderr, "ALC NEW %p %d\n", p, inflight[p]);
   }
 
   void delete_(void *p) {
@@ -116,6 +116,7 @@ class TrackingAllocator {
     mtx.lock();
     inflight[p] = MALLOC_;
     mtx.unlock();
+    fprintf(stderr, "ALC DELETE %p %d\n", p, inflight[p]);
   }
 
  private:

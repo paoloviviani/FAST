@@ -61,7 +61,7 @@ class InputStage : public ff::ff_node
         if (task == NEXT_ITERATION)
         {
             FAST_DEBUG("(INPUT STAGE): got trigger");
-            if (true)
+            if (first_push_)
             {
                 this->ff_send_out(NEXT_ITERATION);
                 first_push_ = false;
@@ -251,10 +251,9 @@ class MXNetWorkerLogic
         }
         default:
         { //data
-            kauto in_ptr = in.unique_local().release();
-            gam::DELETE(in_ptr);
-            // pipe_->offload((void *)in_ptr.release());
-            pipe_->offload(NEXT_ITERATION);
+            auto in_ptr = in.unique_local().release();
+            pipe_->offload((void *)in_ptr.release());
+            // pipe_->offload(NEXT_ITERATION);
         }
         }
 
