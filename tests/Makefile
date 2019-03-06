@@ -5,6 +5,7 @@ INCLUDES             += -I$(FAST_ROOT)/tests/catch2
 
 EXECS                = unit_test
 EXECS                += gam_unit_test
+EXECS                += gam_alloc_test
 EXECS                += gff_farm
 EXECS                += gff_training_mockup
 EXECS                += gff_training_concurrent
@@ -21,6 +22,9 @@ TARGET_OBJ            += $(TARGET_OBJ_UNIT)
 
 TARGET_OBJ_GAM        = gam_tests/gam_unit_test.o
 TARGET_OBJ            += $(TARGET_OBJ_GAM)
+
+TARGET_OBJ_GAM_ALLOC  = gam_tests/gam_alloc_test.o
+TARGET_OBJ            += $(TARGET_OBJ_GAM_ALLOC)
 
 TARGET_OBJ_GFF_FARM   = gff_tests/basic_farm.o
 TARGET_OBJ            += $(TARGET_OBJ_GFF_FARM)
@@ -62,6 +66,8 @@ bin:
 unit_test: $(TARGET_OBJ_UNIT) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
 gam_unit_test: $(TARGET_OBJ_GAM) $(TEST_DRIVER_OBJ)
+	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
+gam_alloc_test: $(TARGET_OBJ_GAM_ALLOC) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
 gff_farm: $(TARGET_OBJ_GFF_FARM) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)

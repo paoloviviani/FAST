@@ -1,10 +1,10 @@
 #!/bin/bash
 FAST_ROOT=$(cd ..; pwd)
-#MXNET_LIBDIR=$FAST_ROOT/3rdparty/mxnet/lib
+MXNET_LIBDIR=$FAST_ROOT/3rdparty/mxnet/lib
 #MXNET_LIBDIR=/opt/incubator-mxnet/lib
 #LIBFABRIC_ROOT=/opt/libfabric
-MXNET_LIBDIR=/home/pviviani/pviviani/opt/magnus/mxnet/lib
-LIBFABRIC_ROOT=/home/pviviani/pviviani/opt/magnus/libfabric
+#MXNET_LIBDIR=/home/pviviani/pviviani/opt/magnus/mxnet/lib
+#LIBFABRIC_ROOT=/home/pviviani/pviviani/opt/magnus/libfabric
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$MXNET_LIBDIR
 
 # PARSE ARGUMENTS
@@ -72,13 +72,14 @@ export FAST_RUN_SLURM=$FAST_ROOT/bin/fastrun-slurm
 if [[ $LAUNCHER == localhost ]]; then
 	#$FAST_RUN_LOCAL -v -n 1 -l $GAM_LOCALHOST ./bin/unit_test
 	#$FAST_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/gam_unit_test
+  $FAST_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/gam_alloc_test
 	#$FAST_RUN_LOCAL -v -n 5 -l $GAM_LOCALHOST ./bin/gff_farm
 	#$FAST_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/gff_training_mockup
 	#$FAST_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/gff_training_concurrent
 	#$FAST_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/gff_training_concurrent_2
 	#$FAST_RUN_LOCAL -v -n 9 -l $GAM_LOCALHOST ./bin/gff_training_concurrent_grid
 	#$FAST_RUN_LOCAL -v -n 1 -l $GAM_LOCALHOST ./bin/mxnet_aux_test
-	$FAST_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/mxnet_worker_test
+	# $FAST_RUN_LOCAL -v -n 2 -l $GAM_LOCALHOST ./bin/mxnet_worker_test
 elif [[ $LAUNCHER == mpi ]]; then
 	$FAST_RUN_MPI -H hosts -n 2 $PWD/bin/gam_unit_test
 	$FAST_RUN_MPI -H hosts -n 5 $PWD/bin/gff_farm
