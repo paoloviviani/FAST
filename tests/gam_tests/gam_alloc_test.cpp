@@ -21,8 +21,8 @@ Context ctx = Context::cpu(); // Use CPU for training
 
 void fill(FAST::gam_vector<float> *in)
 {
-    in.resize(SIZE);
-    for (auto item : in)
+    in->resize(SIZE);
+    for (auto item : *in)
         item = 1.;
 }
 
@@ -41,32 +41,31 @@ TEST_CASE("SPMD public vector multiple ping-pong", "gam,vector,public")
             {
                 FAST::gam_vector<float> *out = new FAST::gam_vector<float>();
                 fill(out);
-                auto p = gam::public_ptr<FAST::gam_vector<float>>(out, [](float *p_) { delete p_; });
+                auto p_out = gam::public_ptr<FAST::gam_vector<float>>(out, [](FAST::gam_vector<float> *p_) { delete p_; });
 
-                p.push(1);
+                p_out.push(1);
 
-                std::shared_ptr<FAST::gam_vector<float>> lp = nullptr;
-                {
-                    auto p = gam::pull_public<FAST::gam_vector<float>>(1);
-                    lp = p.local();
-                    // here end-of-scope triggers the destructor on the original object
-                }
+                auto p_in = gam::pull_public<FAST::gam_vector<float>>(1);
+                auto lp = p_in.unique_local();
+                FAST_INFO("Iteration = " << i)
+                // here end-of-scope triggers the destructor on the objects
             }
             break;
         }
         case 1:
         {
-            std::shared_ptr<FAST::gam_vector<int>> lp = nullptr;
+            for (int i = 0; i < NUM_ITER; i++)
             {
-                auto p = gam::pull_public<FAST::gam_vector<int>>(0);
-                lp = p.local();
-                // here end-of-scope triggers the destructor on the original object
-            }
-            REQUIRE(*lp == ref);
+                auto p_in = gam::pull_public<FAST::gam_vector<float>>(0);
+                auto lp = p_in.unique_local();
+                FAST::gam_vector<float> *out = new FAST::gam_vector<float>();
+                fill(out);
+                auto p_out = gam::public_ptr<FAST::gam_vector<float>>(out, [](FAST::gam_vector<float> *p_) { delete p_; });
 
-            auto q = gam::pull_private<FAST::gam_vector<int>>(0);
-            auto lq = q.local();
-            REQUIRE(*lq == ref);
+                p_out.push(0);
+                FAST_INFO("Iteration = " << i)
+                // here end-of-scope triggers the destructor on the objects
+            }
             break;
         }
         }
