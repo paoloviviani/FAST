@@ -101,8 +101,6 @@ class InputStage : public ff::ff_node
     {
         if (buffer_)
         {
-            for (auto item : *buffer_)
-                MXNDArrayFree(item.GetHandle());
             buffer_->clear();
             delete buffer_;
             // gam::DELETE(buffer_);
@@ -235,7 +233,7 @@ class MXNetWorkerLogic
         {
             pipe_->offload(NEXT_ITERATION);
             break;
-        } // scope of 'x' ends here
+        }
         case EOI_TOKEN:
         {
             FAST_INFO("Received EOI token");
@@ -315,6 +313,31 @@ class MXNetWorkerLogic
         {
             FAST_DEBUG("(FINALIZATION): error waiting pipe");
         }
+        float test_acc = logic_.val_acc.Get();
+        auto accuracy = gam::make_public<float>(test_acc);
+        for(int i = 0; i < FAST::cardinality(); i++)
+        {
+            if (i != FAST::rank())
+                accuracy.push(i);
+                FAST_INFO("(BEST WORKER): sent accuracy = " << test_acc);
+        }
+        int best = FAST::rank();
+        float max = test_acc;
+                for(int i = 0; i < FAST::cardinality(); i++)
+        {
+            if (i != FAST::rank())
+            {
+                auto p = gam::pull_public<float>(i);
+                float acc = *(p.local());
+                FAST_INFO("(BEST WORKER): recived accuracy = " << acc);
+                if (max < acc)
+                {
+                    best = i;
+                    max = acc;
+                }
+            }
+        }
+        FAST_INFO("(BEST WORKER): " << best << "  accuracy = " << max);
         logic_.finalize();
     }
 
