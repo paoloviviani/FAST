@@ -24,3 +24,4 @@ examples/fast_mnist/hosts
 examples/model_logics/hosts
 examples/model_logics/resnet2nodes
 examples/model_logics/resnet2Dgrid
+examples/model_logics/mnistRing

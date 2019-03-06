@@ -128,20 +128,18 @@ class TrainerStage : public ff::ff_node
             this->ff_send_out(NEXT_ITERATION);
             FAST_DEBUG("(TRAINER STAGE): executed local batch ");
 
-            do
+            // get_in_buffer()->pop(&task);
+            this->Pop(&task);
+            if (task != NEXT_ITERATION)
             {
-                get_in_buffer()->pop(&task);
-                if (task != NEXT_ITERATION)
-                {
-                    // got a pointer from the input stage
-                    NDAvector *in_ptr = (NDAvector *)task;
-                    logic_->update(*in_ptr);
-                    FAST_DEBUG("(TRAINER STAGE): executed batch from gradients");
-                    in_ptr->clear();
-                    delete in_ptr;
-                    // gam::DELETE(in_ptr);
-                }
-            } while (get_in_buffer()->length() > 3);
+                // got a pointer from the input stage
+                NDAvector *in_ptr = (NDAvector *)task;
+                logic_->update(*in_ptr);
+                FAST_DEBUG("(TRAINER STAGE): executed batch from gradients");
+                in_ptr->clear();
+                delete in_ptr;
+                // gam::DELETE(in_ptr);
+            }
         }
 
         FAST_DEBUG("(TRAINER STAGE): returned end of input");

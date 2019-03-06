@@ -20,7 +20,7 @@ using namespace mxnet::cpp;
 
 #define CATCH_CONFIG_MAIN
 
-#define BATCH_SIZE 10
+#define BATCH_SIZE 50000
 
 Context ctx = Context::cpu(); // Use CPU for training
 
@@ -50,7 +50,7 @@ public:
 
     for (size_t i = 0; i < arg_names.size(); ++i)
     {
-      exec->grad_arrays.push_back(NDArray(Shape(BATCH_SIZE, 10), ctx));
+      exec->grad_arrays.push_back(NDArray(Shape(BATCH_SIZE, 100), ctx));
       exec->grad_arrays[i] = 0.;
     }
     val_acc.acc = FAST::rank();
