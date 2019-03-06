@@ -225,9 +225,6 @@ class OutputStage : public ff::ff_node
 template <typename ModelLogic, typename T>
 class MXNetWorkerLogic
 {
-
-    using public_raw_pair = std::pair<FAST::gam_vector<T> *, gam::public_ptr<FAST::gam_vector<T>>>;
-
   public:
     gff::token_t svc(gam::public_ptr<gam_vector<T>> &in, gff::OutBundleBroadcast<gff::NondeterminateMerge> &c)
     {
@@ -252,7 +249,7 @@ class MXNetWorkerLogic
         default:
         { //data
             auto in_ptr = in.unique_local().release();
-            pipe_->offload((void *)in_ptr.release());
+            pipe_->offload((void *)in_ptr);
             // pipe_->offload(NEXT_ITERATION);
         }
         }
