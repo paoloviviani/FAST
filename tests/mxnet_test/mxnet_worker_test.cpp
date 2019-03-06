@@ -20,13 +20,19 @@ using namespace mxnet::cpp;
 
 #define CATCH_CONFIG_MAIN
 
-#define BATCH_SIZE 50000
+#define BATCH_SIZE 10
 
 Context ctx = Context::cpu(); // Use CPU for training
 
 struct Dummy
 {
   std::vector<NDArray> grad_arrays;
+};
+
+struct DummyAcc
+{
+  float acc;
+  float Get() {return acc;};
 };
 
 class ModelLogic
@@ -44,9 +50,10 @@ public:
 
     for (size_t i = 0; i < arg_names.size(); ++i)
     {
-      exec->grad_arrays.push_back(NDArray(Shape(BATCH_SIZE, 100), ctx));
+      exec->grad_arrays.push_back(NDArray(Shape(BATCH_SIZE, 10), ctx));
       exec->grad_arrays[i] = 0.;
     }
+    val_acc.acc = FAST::rank();
     FAST_INFO("Logic initialized");
   }
 
@@ -86,6 +93,7 @@ public:
   bool max_epoch_reached = false;
   const std::string data_tag = "X";
   const std::string label_tag = "label";
+  DummyAcc val_acc;
 };
 
 typedef gff::Filter<gff::NondeterminateMerge, gff::OutBundleBroadcast<gff::NondeterminateMerge>,        //

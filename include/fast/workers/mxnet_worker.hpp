@@ -114,7 +114,7 @@ class InputStage : public ff::ff_node
 };
 
 template <typename ModelLogic, typename T>
-class TrainerStage : public ff::ff_minode
+class TrainerStage : public ff::ff_node
 {
   public:
     TrainerStage(ModelLogic *logic) : logic_(logic) {}
@@ -122,77 +122,34 @@ class TrainerStage : public ff::ff_minode
     void *svc(void *task)
     {
 
-        if (!logic_->max_epoch_reached)
+        while (!logic_->max_epoch_reached)
         {
-            if (task != NEXT_ITERATION)
-            {
-                // got a pointer from the input stage
-                NDAvector *in_ptr = (NDAvector *)task;
-                logic_->update(*in_ptr);
-                FAST_DEBUG("(TRAINER STAGE): executed batch from gradients");
-                in_ptr->clear();
-                delete in_ptr;
-                // gam::DELETE(in_ptr);
-            }
             logic_->run_batch();
+            this->ff_send_out(NEXT_ITERATION);
             FAST_DEBUG("(TRAINER STAGE): executed local batch ");
-            return NEXT_ITERATION;
+
+            do
+            {
+                get_in_buffer()->pop(&task);
+                if (task != NEXT_ITERATION)
+                {
+                    // got a pointer from the input stage
+                    NDAvector *in_ptr = (NDAvector *)task;
+                    logic_->update(*in_ptr);
+                    FAST_DEBUG("(TRAINER STAGE): executed batch from gradients");
+                    in_ptr->clear();
+                    delete in_ptr;
+                    // gam::DELETE(in_ptr);
+                }
+            } while (get_in_buffer()->length() > 3);
         }
-        else
-        {
-            FAST_DEBUG("(TRAINER STAGE): returned end of input");
-            return END_OF_INPUT;
-        }
-        return ff::FF_GO_ON;
+
+        FAST_DEBUG("(TRAINER STAGE): returned end of input");
+        return END_OF_INPUT;
     }
 
   private:
     ModelLogic *logic_;
-
-    void eosnotify(ssize_t id)
-    {
-        if (id == 0)
-        {
-            // got EOS from input - forward TERMINATION_TAG message
-            this->ff_send_out(TERMINATION_TAG);
-        }
-        else
-        {
-            // got EOS from feedback - forward downstream to trigger termination
-            this->ff_send_out(ff::FF_EOS);
-            // got both EOSs - node will be terminated here
-        }
-    }
-};
-
-class internal_out_stage : public ff::ff_monode
-{
-    void *svc(void *in)
-    {
-        if (in == TERMINATION_TAG)
-        {
-            // send EOS to the feedback channel
-            ff_send_out_to(ff::FF_EOS, 0);
-        }
-        else
-        {
-            // send a NEXT_ITERATION message to the feedback channel
-            if (outnodes_[0]->get_out_buffer()->empty() && in != END_OF_INPUT)
-                ff_send_out_to(NEXT_ITERATION, 0);
-            // forward the input pointer downstream
-            ff_send_out_to(in, 1);
-        }
-        return ff::FF_GO_ON;
-    }
-
-    int svc_init()
-    {
-        this->get_out_nodes(outnodes_);
-        return 0;
-    }
-
-  private:
-    ff::svector<ff_node *> outnodes_;
 };
 
 template <typename ModelLogic, typename T>
@@ -289,14 +246,10 @@ class MXNetWorkerLogic
 
         FAST_DEBUG("(MXNET WORKER): Creating pipeline")
         pipe_->add_stage(new InputStage<ModelLogic, T>(&logic_));
-        training_->add_stage(new TrainerStage<ModelLogic, T>(&logic_));
-        training_->add_stage(new internal_out_stage());
-        training_->wrap_around();
-        pipe_->add_stage(training_);
+        pipe_->add_stage(new TrainerStage<ModelLogic, T>(&logic_));
         pipe_->add_stage(new OutputStage<ModelLogic, T>(&logic_));
 
         pipe_->cleanup_nodes();
-        training_->cleanup_nodes();
 
         FAST_DEBUG("(MXNET WORKER): Launching pipeline");
         pipe_->run();
@@ -315,15 +268,15 @@ class MXNetWorkerLogic
         }
         float test_acc = logic_.val_acc.Get();
         auto accuracy = gam::make_public<float>(test_acc);
-        for(int i = 0; i < FAST::cardinality(); i++)
+        for (int i = 0; i < FAST::cardinality(); i++)
         {
             if (i != FAST::rank())
                 accuracy.push(i);
-                FAST_INFO("(BEST WORKER): sent accuracy = " << test_acc);
+            FAST_INFO("(BEST WORKER): sent accuracy = " << test_acc);
         }
         int best = FAST::rank();
         float max = test_acc;
-                for(int i = 0; i < FAST::cardinality(); i++)
+        for (int i = 0; i < FAST::cardinality(); i++)
         {
             if (i != FAST::rank())
             {

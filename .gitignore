@@ -22,3 +22,5 @@ examples/fast_mnist/fast_mnist
 examples/model_logics/mnist2nodes
 examples/fast_mnist/hosts
 examples/model_logics/hosts
+examples/model_logics/resnet2nodes
+examples/model_logics/resnet2Dgrid
