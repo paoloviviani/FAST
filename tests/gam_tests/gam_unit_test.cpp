@@ -8,7 +8,6 @@
 #include <iostream>
 #include <catch.hpp>
 #include "fast.hpp"
-#include "mxnet-cpp/MxNetCpp.h"
 #include <string>
 
 using namespace std;
