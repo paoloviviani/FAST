@@ -60,7 +60,7 @@ public:
 		return &logger;
 	}
 
-	void init(std::string fname, int id) {
+	void init(int id) {
 		//print header message
 		id_ = id;
 		log("I am GFF node %d", id);

@@ -6,7 +6,6 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$MXNET_LIBDIR:$LIBFABRIC_ROOT/lib
 
 export GAM_CARDINALITY=2
 export GAM_RUN_LOCAL=$FAST_ROOT/bin/fastrun-local
-export GAM_LOG_PREFIX=$PWD/logs
 
 export GAM_NODE_0=localhost
 export GAM_SVC_PAP_0=6100

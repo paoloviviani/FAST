@@ -14,10 +14,11 @@ gam_unit_test
 mnist_cpu
 mnist_gpu
 mnist_data/
-bin/
+tests/bin/
 .vscode
 *.lst
 *.rec
+*.pyc
 examples/fast_mnist/fast_mnist
 examples/model_logics/mnist2nodes
 examples/fast_mnist/hosts
@@ -25,3 +26,4 @@ examples/model_logics/hosts
 examples/model_logics/resnet2nodes
 examples/model_logics/resnet2Dgrid
 examples/model_logics/mnistRing
+fastjob-*

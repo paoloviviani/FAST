@@ -1,0 +1,146 @@
+#!/usr/bin/env python
+
+# Copyright (c) 2019 alpha group, CS department, University of Torino.
+# 
+# This file is part of gam 
+# (see https://github.com/alpha-unito/gam).
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+# 
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+import argparse
+#import subprocess
+import sys
+import os
+import time
+import signal
+from collections import deque
+import paramiko
+import signal
+
+# hard-code starting port numbers
+max_nodes_per_host = 128
+base_pap = 6000
+base_mem = base_pap + max_nodes_per_host
+base_dmn = base_mem + max_nodes_per_host
+
+inflight = deque()
+exec_map = dict()
+out_map = dict()
+
+def ssh_execute(host, port, cmd):
+    ssh = paramiko.SSHClient()
+    ssh.load_system_host_keys()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(host, port)
+    _in, _out, _err = ssh.exec_command(cmd, get_pty=True)
+    return ssh, _out.channel
+
+# handle termination
+def signal_handler(signal, frame):
+        print('Termination triggered by signal {0}'.format(signal))
+        killall()
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGHUP, signal_handler)
+
+def killall():
+    "terminate all inflight processes"
+    while len(inflight) > 0:
+        p = inflight.popleft()
+        print "killing executor {0}".format(exec_map[p])
+        p.close() #trigger server-side SIGHUP
+    assert len(inflight) == 0
+
+# parse command line
+parser = argparse.ArgumentParser(description='This is the gam launcher.')
+parser.add_argument('-n', '--cardinality', help='Number of executors',
+                    type=long, required=True)
+parser.add_argument('-f', '--topology', help='Topology file', required=True)
+parser.add_argument('-p', '--port', help='SSH port', type=long, default=22)
+parser.add_argument('-v', '--verbose', help='Set verbose mode',
+                    action="store_true")
+parser.add_argument('command', help='Command string', nargs='+')
+args = parser.parse_args()
+
+# read topology file
+f = open(args.topology, 'r')
+hostnames = []
+for hostname in f:
+    hostnames.append(hostname.strip())
+
+if(args.cardinality / len(hostnames) > max_nodes_per_host):
+    sys.exit('Error! Too many nodes per host')
+
+# prepare log dir
+log_prefix_ = os.environ['PWD'] + "/logs"
+log_prefix_ += "/" + os.path.basename(args.command[0])
+log_prefix = log_prefix_ + "/{0}".format(int(time.time()))
+latest_link = log_prefix_ + "/latest"
+
+# create log dir and link
+if not os.path.exists(log_prefix):
+    os.makedirs(log_prefix)
+if os.path.exists(latest_link):
+    os.remove(latest_link)
+os.symlink(log_prefix, latest_link)
+
+# launch processes
+for e in range(args.cardinality):
+    # compose remote command line
+    CMD = "cd {0}; ".format(os.environ['PWD'])
+    CMD += "GAM_LOG_PREFIX={0}".format(log_prefix)
+    CMD += " GAM_RANK={0} GAM_CARDINALITY={1}".format(e, args.cardinality)
+    for e_ in range(args.cardinality):
+        port_offset = e_ / len(hostnames)
+        CMD += " GAM_NODE_{0}={1}".format(e_, hostnames[e_ % len(hostnames)])
+        CMD += " GAM_SVC_PAP_{0}={1}".format(e_, base_pap + port_offset)
+        CMD += " GAM_SVC_MEM_{0}={1}".format(e_, base_mem + port_offset)
+        CMD += " GAM_SVC_DMN_{0}={1}".format(e_, base_dmn + port_offset)
+    CMD += " " + os.path.abspath(args.command[0])
+    for c in args.command[1:]:
+        CMD += " " + c
+    
+    # add output redirection
+    CMD += " > " + log_prefix + "/usr.{0}.out".format(e)
+    CMD += " 2> " + log_prefix + "/usr.{0}.err".format(e)
+
+    # execute via ssh
+    HOST = hostnames[e % len(hostnames)]
+    if(args.verbose):
+        print "> starting node = " + str(e) + " @ " + HOST
+        print CMD
+    
+    p, _out = ssh_execute(HOST, args.port, CMD)
+
+    inflight.append(p)
+    exec_map[p] = e
+    out_map[p] = _out
+
+
+while len(inflight) > 0:
+    p = inflight.popleft()
+    c = out_map[p]
+    
+    if(c.exit_status_ready()):
+        ret = c.recv_exit_status()
+        p.close()
+        
+        if(ret != 0):
+            print "ERROR: executor {0} returned {1}".format(exec_map[p], ret)
+            killall()
+        
+        else:
+            if(args.verbose):
+                print "> completed node = " + str(exec_map[p])
+    else:
+        inflight.append(p)

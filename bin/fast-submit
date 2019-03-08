@@ -1,0 +1,11 @@
+#!/usr/bin/env python
+import sys
+import os
+fast_bin_path = os.path.dirname(os.path.abspath(os.path.expanduser(__file__)))
+fast_root = os.path.abspath(os.path.join(fast_bin_path, os.pardir))
+fast_python = os.path.join(fast_root, "src", "python")
+sys.path.insert(0, fast_python)
+
+from fast_runner import submit
+
+submit.main(fast_bin_path)

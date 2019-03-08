@@ -1,0 +1,91 @@
+#!/bin/bash --login
+#SBATCH --job-name=job-mxnet
+#SBATCH --partition=workq
+#SBATCH --nodes=16
+#SBATCH --time=12:00:00
+#SBATCH --account=director2044
+#SBATCH --export=NONE
+
+# PARSE ARGUMENTS
+
+source /home/pviviani/magnus_env.sh
+
+show_help ()
+{
+  echo "Usage:
+
+  ${0##*/} [-h][-n numprocs] executable
+
+Options:
+
+  -h, --help
+    display this help and exit
+
+  -n, --numproc
+    number of processes
+  "
+}
+
+if [[ $# -eq 0 ]]; then
+	show_help
+	exit
+fi
+
+EXECUTABLE=${@: -1}
+
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+key="$1"
+
+case $key in
+    -n|--numproc)
+    export GAM_CARDINALITY="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -h|--help)
+	show_help
+	exit
+    ;;
+    *)    # unknown option
+    POSITIONAL+=("$1") # save it in an array for later
+    shift # past argument
+    ;;
+esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+DIRECTORY=`dirname $0`
+
+echo "running $EXECUTABLE on $SLURM_NODELIST"
+
+export HOSTS=`scontrol show hostnames $SLURM_NODELIST`
+
+export GAM_LOG_PREFIX=$PWD/logs
+export TASK_COUNT=`expr $GAM_CARDINALITY - 1`
+export BASE_PAP=6100
+export BASE_MEM=6228
+export BASE_DMN=6356
+
+for i in `eval echo {0..$TASK_COUNT}`
+do
+	IDX=`expr $i + 1`
+	HOST=`echo $HOSTS | cut -d " " -f $IDX`
+	export GAM_NODE_$i=$HOST
+	export GAM_SVC_PAP_$i=$BASE_PAP
+	export GAM_SVC_MEM_$i=$BASE_MEM
+	export GAM_SVC_DMN_$i=$BASE_DMN
+done
+
+echo "0  bash -c '$DIRECTORY/slurmnode $EXECUTABLE'" > commands.conf
+for i in `eval echo {1..$TASK_COUNT}` 
+do
+echo "$i  bash -c '$DIRECTORY/slurmnode $EXECUTABLE'" >> commands.conf
+done
+
+srun --export=ALL -N$GAM_CARDINALITY --ntasks-per-node=1 -l --multi-prog commands.conf
+rm commands.conf
+
+
+
