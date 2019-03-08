@@ -41,8 +41,8 @@ class ModelLogic
 
 		Context ctx = Context::cpu(); // Use CPU for training
 
-		train_iter.SetParam("image", "../mnist_data/train-images-idx3-ubyte")
-			.SetParam("label", "../mnist_data/train-labels-idx1-ubyte")
+		train_iter.SetParam("image", "../../mnist_data/train-images-idx3-ubyte")
+			.SetParam("label", "../../mnist_data/train-labels-idx1-ubyte")
 			.SetParam("batch_size", batch_size_)
 			.SetParam("flat", 1)
 			.SetParam("shuffle", 1)
@@ -50,8 +50,8 @@ class ModelLogic
 			.SetParam("part_index", FAST::rank())
 			.CreateDataIter();
 
-		val_iter.SetParam("image", "../mnist_data/t10k-images-idx3-ubyte")
-			.SetParam("label", "../mnist_data/t10k-labels-idx1-ubyte")
+		val_iter.SetParam("image", "../../mnist_data/t10k-images-idx3-ubyte")
+			.SetParam("label", "../../mnist_data/t10k-labels-idx1-ubyte")
 			.SetParam("batch_size", batch_size_)
 			.SetParam("flat", 1)
 			.CreateDataIter();
