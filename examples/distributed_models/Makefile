@@ -1,7 +1,7 @@
 include ../../make/config.mk
 include ../../make/Makefile.global
 
-EXECS      = mnist2Dgrid resnet2Dgrid mnistRing resnet2nodes
+EXECS      = mnist2Dgrid resnet2Dgrid mnistRing resnet2nodes cifar10_train
 
 .PHONY: all clean cleanall
 .SUFFIXES: .c .cpp .o
@@ -17,6 +17,8 @@ mnistRing.o: $(FAST_ROOT)/src/1D_ring.cpp mnist_logic.hpp $(FAST_ROOT)/include/f
 	$(CXX) $(INCLUDES) -include mnist_logic.hpp $(CCFLAGS) $(CFLAGS) $(OPTIMIZE_FLAGS) -c -o $@ $<
 resnet2nodes.o: $(FAST_ROOT)/src/2_workers.cpp resnet_cifar10.hpp $(FAST_ROOT)/include/fast/*.hpp $(FAST_ROOT)/include/fast/workers/mxnet_worker.hpp 
 	$(CXX) $(INCLUDES) -include resnet_cifar10.hpp $(CCFLAGS) $(CFLAGS) $(OPTIMIZE_FLAGS) -c -o $@ $<
+cifar10_train.o: cifar10_train.cpp resnet_cifar10.hpp $(FAST_ROOT)/include/fast/*.hpp $(FAST_ROOT)/include/fast/workers/mxnet_worker.hpp 
+	$(CXX) $(INCLUDES) $(CCFLAGS) $(CFLAGS) $(OPTIMIZE_FLAGS) -c -o $@ $<
 
 # Execs
 mnist2Dgrid: mnist2Dgrid.o
@@ -26,6 +28,8 @@ resnet2Dgrid: resnet2Dgrid.o
 mnistRing: mnistRing.o
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
 resnet2nodes: resnet2nodes.o
+	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
+cifar10_train: cifar10_train.o
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LIBS)
 
 clean:
