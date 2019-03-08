@@ -29,7 +29,6 @@ else:
     sys.exit('Error! No launcher specified in local environment')
 
 command = sys.argv[1:]
-print command, fast_rank
 
 if 'FAST_SYNCDIR' in os.environ:
     syncdir = os.environ['FAST_SYNCDIR']

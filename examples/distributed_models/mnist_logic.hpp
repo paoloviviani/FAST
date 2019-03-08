@@ -27,6 +27,11 @@ Symbol mlp(const std::vector<int> &layers)
 	return SoftmaxOutput(outputs.back(), label);
 }
 
+bool isFileExists(const std::string &filename) {
+  std::ifstream fhandle(filename.c_str());
+  return fhandle.good();
+}
+
 class ModelLogic
 {
   public:
@@ -46,7 +51,7 @@ class ModelLogic
 			.SetParam("batch_size", batch_size_)
 			.SetParam("flat", 1)
 			.SetParam("shuffle", 1)
-			.SetParam("num_parts", FAST::cardinality() * 10)
+			.SetParam("num_parts", FAST::cardinality())
 			.SetParam("part_index", FAST::rank())
 			.CreateDataIter();
 

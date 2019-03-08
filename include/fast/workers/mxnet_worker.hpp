@@ -241,13 +241,13 @@ class MXNetWorkerLogic
         pipe_ = new ff::ff_pipeline(true);
         training_ = new ff::ff_pipeline();
 
-        logic_->init();
+        logic_.init();
         FAST_DEBUG("(MXNET WORKER): Initialized model logic");
 
         FAST_DEBUG("(MXNET WORKER): Creating pipeline")
-        pipe_->add_stage(new InputStage<ModelLogic, T>(logic_));
-        pipe_->add_stage(new TrainerStage<ModelLogic, T>(logic_));
-        pipe_->add_stage(new OutputStage<ModelLogic, T>(logic_));
+        pipe_->add_stage(new InputStage<ModelLogic, T>(&logic_));
+        pipe_->add_stage(new TrainerStage<ModelLogic, T>(&logic_));
+        pipe_->add_stage(new OutputStage<ModelLogic, T>(&logic_));
 
         pipe_->cleanup_nodes();
 
@@ -266,7 +266,7 @@ class MXNetWorkerLogic
         {
             FAST_DEBUG("(FINALIZATION): error waiting pipe");
         }
-        float test_acc = logic_->val_acc.Get();
+        float test_acc = logic_.val_acc.Get();
         auto accuracy = gam::make_public<float>(test_acc);
         for (int i = 0; i < FAST::cardinality(); i++)
         {
@@ -291,13 +291,13 @@ class MXNetWorkerLogic
             }
         }
         FAST_INFO("(BEST WORKER): " << best << "  accuracy = " << max);
-        logic_->finalize();
+        logic_.finalize();
     }
 
   private:
     ff::ff_pipeline *pipe_;
     ff::ff_pipeline *training_;
-    ModelLogic * logic_;
+    ModelLogic logic_;
     int eoi_cnt_ = 0;
     bool eoi_out = false;
     int neighbors;
