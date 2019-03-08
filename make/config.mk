@@ -1,7 +1,7 @@
 FAST_ROOT			=	$(dir $(realpath $(lastword $(MAKEFILE_LIST))))..
 
 # Log and optimization level error (-O3, no logs), info (-O3, info messages), debug (-O0 -g, debug messages), all_debug (-O0 -g, debug messages from GAM backend too)
-DEBUG				=	debug
+DEBUG				=	info
 
 # Location of build dependencies
 MXNET_LIB_DIR		=	/opt/incubator-mxnet/lib

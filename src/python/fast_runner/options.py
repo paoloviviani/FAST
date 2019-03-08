@@ -47,8 +47,6 @@ def get_opts(args=None):
                   help=('Directory used for synchronization and storage of results'))
       parser.add_argument('--config-file', default=os.path.join(utils.scriptinfo()['dir'], 'config.json'), type=str,
                   help=('JSON config file for dependencies and global env '))
-      parser.add_argument('--node-driver', default='node-driver', type=none_or_str,
-                  help=('Use FAST builtin python script to drive node local execution of training, use None for tests'))
       parser.add_argument('-H', '--machinefile', '--hostfile', default=None, type=str,
                   help=('The file contains the list of hostnames, needed for MPI and ssh.'))
       parser.add_argument('--env', action='append', default=[],

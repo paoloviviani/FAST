@@ -48,8 +48,7 @@ def main(fast_bin_path):
         args.command[0] = utils.which(args.command[0])
     else:
         sys.exit('Error! Executable not found')
-    if args.node_driver != None:
-        args.command.insert(0, args.node_driver)
+    args.command.insert(0, os.path.join(fast_bin_path, 'node-driver'))
 
     if args.machinefile != None:
         args.machinefile = os.path.abspath(args.machinefile)

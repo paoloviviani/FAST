@@ -25,7 +25,7 @@ public:
         const float learning_rate = 0.01;
         const float weight_decay = 1e-4;
 
-        net = Symbol::Load("../symbols/resnet18_v2.json");
+        net = Symbol::Load("../../symbols/resnet18_v2.json");
 
         Symbol label = Symbol::Variable("label");
         net = SoftmaxOutput(net, label);
@@ -33,8 +33,8 @@ public:
         MXRandomSeed(42);
 
         train_iter = MXDataIter("ImageRecordIter")
-			        .SetParam("path_imglist", "../cifar10/cifar10_train.lst")
-			        .SetParam("path_imgrec", "../cifar10/cifar10_train.rec")
+			        .SetParam("path_imglist", "../../cifar10/cifar10_train.lst")
+			        .SetParam("path_imgrec", "../../cifar10/cifar10_train.rec")
 			        .SetParam("rand_crop", 1)
 			        .SetParam("rand_mirror", 1)
 			        .SetParam("data_shape", Shape(3, 32, 32))
@@ -60,7 +60,7 @@ public:
         //		}
         // Load same weights for all the workers
 
-        args = mxnet::cpp::NDArray::LoadToMap("../initialized_weights/resnet18_cifar10_init_"+std::to_string(batch_size_)+".bin");
+        args = mxnet::cpp::NDArray::LoadToMap("../../initialized_weights/resnet18_cifar10_init_"+std::to_string(batch_size_)+".bin");
 
 
         opt = OptimizerRegistry::Find("adam");
@@ -135,8 +135,8 @@ public:
 
     void finalize() {
         val_iter = MXDataIter("ImageRecordIter")
-          .SetParam("path_imglist", "../cifar10/cifar10_val.lst")
-          .SetParam("path_imgrec", "../cifar10/cifar10_val.rec")
+          .SetParam("path_imglist", "../../cifar10/cifar10_val.lst")
+          .SetParam("path_imgrec", "../../cifar10/cifar10_val.rec")
           .SetParam("rand_crop", 0)
           .SetParam("rand_mirror", 0)
           .SetParam("data_shape", Shape(3, 32, 32))
@@ -173,7 +173,7 @@ public:
     MXDataIter val_iter = MXDataIter("ImageRecordIter");
     Accuracy train_acc, val_acc;
     int batch_size_ = 32;
-    const int max_epoch_ = 100;
+    const int max_epoch_ = 1;
     const std::string data_tag = "data";
     const std::string label_tag = "label";
     float total_time;

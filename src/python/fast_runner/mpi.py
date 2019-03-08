@@ -9,10 +9,13 @@ from . import utils
 
 def submit(args, fast_bin_path):
     def killall():
-        print "Cleaning up MPI processes"
+        print "\n === Trying to clean up MPI processes ===\n"
         cleanup =  ['mpirun', '--pernode', '--hostfile', args.machinefile, 'orte-clean', '--verbose']
         ret = subprocess.call(
             cleanup, env=pass_env, stdout=sys.stdout, stderr=sys.stderr)
+        if ret != 0:
+            ret = subprocess.call(
+                cleanup, env=pass_env, stdout=sys.stdout, stderr=sys.stderr)
 
     def signal_handler(signal, frame):
         print('Termination triggered by signal {0}'.format(signal))
@@ -52,14 +55,14 @@ def submit(args, fast_bin_path):
     else:
         sys.exit('ERROR: host file not provided')
 
-    if len(hosts) != args.num_workers:
-        sys.exit('Error! Number of workers not equal to nodes')
+    if len(hosts) < args.num_workers:
+        sys.exit('Error! Not enough nodes')
 
     for e_ in range(args.num_workers):
         pass_env['GAM_NODE_{0}'.format(e_)] = hosts[e_]
-        pass_env['GAM_SVC_PAP_{0}'.format(e_)] = str(base_pap + e_)
-        pass_env['GAM_SVC_MEM_{0}'.format(e_)] = str(base_mem + e_)
-        pass_env['GAM_SVC_DMN_{0}'.format(e_)] = str(base_dmn + e_)
+        pass_env['GAM_SVC_PAP_{0}'.format(e_)] = str(base_pap)
+        pass_env['GAM_SVC_MEM_{0}'.format(e_)] = str(base_mem)
+        pass_env['GAM_SVC_DMN_{0}'.format(e_)] = str(base_dmn)
 
     cmd_list = []
     cmd_list.append('mpirun')
