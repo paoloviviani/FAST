@@ -10,7 +10,7 @@
 #include "fast.hpp"
 #include <string>
 
-#define NUM_ITER 100
+#define NUM_ITER 4
 #define SIZE 10000000
 
 using namespace std;

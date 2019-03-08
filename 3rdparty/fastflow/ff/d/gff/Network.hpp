@@ -85,12 +85,10 @@ public:
 		GFF_PROFILER_HRT(t0);
 
 		/* initialize the logger */
-		char *env = std::getenv("GAM_LOG_PREFIX");
-		assert(env);
-		GFF_LOGGER_INIT(env, gam::rank());
+		GFF_LOGGER_INIT(gam::rank());
 
 		/* initialize the profiler */
-		GFF_PROFILER_INIT(env, gam::rank());
+		GFF_PROFILER_INIT(gam::rank());
 
 		GFF_PROFILER_HRT(t_init);
 

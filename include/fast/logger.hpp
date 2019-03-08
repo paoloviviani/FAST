@@ -26,11 +26,11 @@
 #if defined LOGLEVEL_DEBUG
 #define FAST_DEBUG(x) {\
 		FAST::Logger::getLogger()->lock(); \
-		FAST::Logger::getLogger()->log_output() << x << std::endl << std::flush; \
+		FAST::Logger::getLogger()->log_debug() << x << std::endl << std::flush; \
 		FAST::Logger::getLogger()->unlock();}
 #define FAST_INFO(x) {\
 		FAST::Logger::getLogger()->lock(); \
-		FAST::Logger::getLogger()->log_output() << x << std::endl << std::flush; \
+		FAST::Logger::getLogger()->log_info() << x << std::endl << std::flush; \
 		FAST::Logger::getLogger()->unlock();}
 #define FAST_ERROR(x) {\
 		FAST::Logger::getLogger()->lock(); \
@@ -41,7 +41,7 @@
 #define FAST_DEBUG(...) {}
 #define FAST_INFO(x) {\
 		FAST::Logger::getLogger()->lock(); \
-		FAST::Logger::getLogger()->log_output() << x << std::endl; \
+		FAST::Logger::getLogger()->log_info() << x << std::endl; \
 		FAST::Logger::getLogger()->unlock();}
 #define FAST_ERROR(x) {\
 		FAST::Logger::getLogger()->lock(); \
@@ -92,15 +92,23 @@ public:
 	 * @return
 	 */
 	std::ostream &log_error() {
-		return std::cerr << " === [" << currentDateTime() << ", proc " << id <<"] === ";
+		return std::cerr << " (FAST ERROR) [" << currentDateTime() << ", proc " << id <<"] === ";
 	}
 
 	/**
 	 * Standard output stream provider
 	 * @return
 	 */
-	std::ostream &log_output() {
-		return std::cout << " === [" << currentDateTime() << ", proc " << id <<"] === ";
+	std::ostream &log_info() {
+		return std::cout << " (FAST INFO) [" << currentDateTime() << ", proc " << id <<"] === ";
+	}
+
+	/**
+	 * Standard output stream provider
+	 * @return
+	 */
+	std::ostream &log_debug() {
+		return std::cout << " (FAST DEBUG) [" << currentDateTime() << ", proc " << id <<"] === ";
 	}
 
 	/**
@@ -112,7 +120,7 @@ public:
 		va_start(args, format);
 		vsprintf(sMessage, format, args);
 		lock();
-		log_output() << sMessage << std::endl;
+		log_info() << sMessage << std::endl;
 		unlock();
 		va_end(args);
 	}

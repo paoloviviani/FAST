@@ -41,14 +41,6 @@ class ConcurrentMapWrap {
     return res;
   }
 
-  bool size() {
-    mtx.lock();
-    size_t size = map.size();
-    mtx.unlock();
-
-    return size;
-  }
-
   const_iterator begin() {
     mtx.lock();
     const_iterator res = map.begin();

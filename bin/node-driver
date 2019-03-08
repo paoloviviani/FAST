@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import subprocess
+
+fast_rank = 0
+
+""" Define local gam rank """
+if 'FAST_LAUNCHER' in os.environ:
+    if os.environ['FAST_LAUNCHER'] == 'local':
+        if 'GAM_RANK' in os.environ:
+            fast_rank = os.environ['GAM_RANK']
+        else:
+            sys.exit('Error! Gam rank not defined locally')
+    elif os.environ['FAST_LAUNCHER'] == 'mpi':
+        if 'OMPI_COMM_WORLD_RANK' in os.environ:
+            fast_rank = os.environ['OMPI_COMM_WORLD_RANK']
+            os.environ['GAM_RANK'] = fast_rank
+        else:
+            sys.exit('Error! MPI rank not defined locally')
+    elif os.environ['FAST_LAUNCHER'] == 'slurm':
+        if 'SLURM_PROCID' in os.environ:
+            fast_rank = os.environ['SLURM_PROCID']
+            os.environ['GAM_RANK'] = fast_rank
+        else:
+            sys.exit('Error! SLURM rank not defined locally')
+else:
+    sys.exit('Error! No launcher specified in local environment')
+
+command = sys.argv[1:]
+print command, fast_rank
+
+if 'FAST_SYNCDIR' in os.environ:
+    syncdir = os.environ['FAST_SYNCDIR']
+else:
+    sys.exit('Error! FAST_SYNCDIR not defined locally')
+
+ret = subprocess.call(command, env=os.environ, stdout=sys.stdout, stderr=sys.stderr, cwd=syncdir)
+
+if(ret != 0):
+    print 'LOCAL ERROR: process ' + str(fast_rank) + ' returned error ' + str(ret)

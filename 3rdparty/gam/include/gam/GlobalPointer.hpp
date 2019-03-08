@@ -31,6 +31,7 @@
 #include <cstdint>
 #include <limits>
 
+#include "gam/defs.hpp"
 #include "gam/Logger.hpp"
 
 namespace gam {

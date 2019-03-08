@@ -46,7 +46,6 @@
 #include <thread>
 #include <vector>
 
-#include "gam/Cache.hpp"
 #include "gam/GlobalPointer.hpp"
 #include "gam/Logger.hpp"
 #include "gam/MemoryController.hpp"
@@ -87,7 +86,7 @@ inline void DELETE(T *ptr);
  */
 class Context {
  public:
-  Context() : cache(local_allocator) {
+  Context() {
     char *env, *tmp;
 
     /*
@@ -190,11 +189,6 @@ class Context {
     daemon_termination = true;
     daemon->join();
     delete daemon;
-
-    /*
-     * finalize cache
-     */
-    cache.finalize();
 
     /*
      * finalize links
@@ -412,10 +406,8 @@ class Context {
     /* load either locally or remotely */
     if (view.author(a) == rank_)
       local_load(lp, a);
-    else if (!cache.load(lp, a)) {
+    else
       forward_load(lp, p);
-      cache.store(a, lp);
-    }
 
     /* generate a smart pointer with custom deleter to match allocation */
     return std::shared_ptr<T>((T *)lp, [](T *p_) { DELETE(p_); });
@@ -436,10 +428,8 @@ class Context {
     /* load either locally or remotely */
     if (view.author(a) == rank_)
       local_load(lp, a);
-    else if (!cache.load(lp, a)) {
+    else
       forward_load(lp, p);
-      cache.store(a, lp);
-    }
 
     /* generate a smart pointer with custom deleter to match allocation */
     return std::unique_ptr<T, void (*)(T *)>((T *)lp,
@@ -660,7 +650,6 @@ class Context {
 
   View view;            // concurrent memory table
   MemoryController mc;  // concurrent reference counting table
-  Cache cache;
 
   std::thread *daemon;
   std::atomic<char> daemon_termination;
