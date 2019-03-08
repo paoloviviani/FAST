@@ -4,28 +4,49 @@
 
 using namespace mxnet::cpp;
 
-Context ctx = Context::cpu();  // Use CPU for training
+Context ctx = Context::cpu(); // Use CPU for training
 
-class ModelLogic {
-public:
-	void init() {
-		if(const char* batch_env = std::getenv("BATCH_SIZE"))
+class ModelLogic
+{
+  public:
+	void init()
+	{
+
+		float learning_rate = 0.01;
+
+		// Parsing environment for config
+		if (const char *batch_env = std::getenv("BATCH_SIZE"))
 			batch_size_ = std::stoi(std::string(batch_env));
 		else
 			batch_size_ = 32;
+		assert(batch_size_ == 32 || batch_size_ == 64 || batch_size_ == 128 || batch_size_ == 256);
 
-		std::string filename = "resnet18_worker_" + std::to_string(FAST::rank()) + "_batch_" + std::to_string(batch_size_) + "_log.txt" ;
+		if (const char *learning_env = std::getenv("LEARNING_RATE"))
+			learning_rate = std::stof(std::string(learning_env));
+		else
+			learning_rate = 0.01;
+
+		std::string filename;
+		if (const char *log_env = std::getenv("LOG_FILE"))
+			filename = std::string(log_env);
+		else
+			std::exit;
+		if (const char *symbol_env = std::getenv("SYMBOL_JSON"))
+			net = Symbol::Load(std::string(symbol_env));
+		else
+			net = Symbol::Load("../symbols/resnet18_v2.json");
+		std::string init_filename;
+		if (const char *init_env = std::getenv("INIT_WEIGHTS"))
+			init_filename = std::string(init_env);
+		else
+			init_filename = "../../initialized_weights/resnet18_cifar10_init_" + std::to_string(batch_size_) + ".bin";
+
 		log_file = ofstream(filename);
 
 		FAST_INFO("Batch size = " << batch_size_)
 		FAST_INFO("Number of nodes = " << FAST::cardinality())
-		assert(batch_size_ == 32 || batch_size_ == 64 || batch_size_ == 128 || batch_size_ == 256);
 
 		const int image_size = 32;
-		const float learning_rate = 0.01;
-		const float weight_decay = 1e-4;
-
-		net = Symbol::Load("../symbols/resnet18_v2.json");
 
 		Symbol label = Symbol::Variable("label");
 		net = SoftmaxOutput(net, label);
@@ -33,29 +54,29 @@ public:
 		MXRandomSeed(42);
 
 		train_iter = MXDataIter("ImageRecordIter")
-			.SetParam("path_imglist", "../../cifar10/train.lst")
-			.SetParam("path_imgrec", "../../cifar10/train.rec")
-			.SetParam("rand_crop", 1)
-			.SetParam("rand_mirror", 1)
-			.SetParam("data_shape", Shape(3, 32, 32))
-			.SetParam("batch_size", batch_size_)
-			.SetParam("shuffle", 1)
-			.SetParam("preprocess_threads", 24)
-			.SetParam("num_parts", FAST::cardinality()*10) // SMALLER FOR DEBUG
-			.SetParam("part_index", FAST::rank())
-			.CreateDataIter();
+						 .SetParam("path_imglist", "../../cifar10/train.lst")
+						 .SetParam("path_imgrec", "../../cifar10/train.rec")
+						 .SetParam("rand_crop", 1)
+						 .SetParam("rand_mirror", 1)
+						 .SetParam("data_shape", Shape(3, 32, 32))
+						 .SetParam("batch_size", batch_size_)
+						 .SetParam("shuffle", 1)
+						 .SetParam("preprocess_threads", 24)
+						 .SetParam("num_parts", FAST::cardinality()) // SMALLER FOR DEBUG
+						 .SetParam("part_index", FAST::rank())
+						 .CreateDataIter();
 
 		val_iter = MXDataIter("ImageRecordIter")
-			.SetParam("path_imglist", "../../cifar10/test.lst")
-			.SetParam("path_imgrec", "../../cifar10/test.rec")
-			.SetParam("rand_crop", 0)
-			.SetParam("rand_mirror", 0)
-			.SetParam("data_shape", Shape(3, 32, 32))
-			.SetParam("batch_size", batch_size_)
-			.SetParam("round_batch", 0)
-			.SetParam("preprocess_threads", 24)
-			.SetParam("pad", 2)
-			.CreateDataIter();
+					   .SetParam("path_imglist", "../../cifar10/test.lst")
+					   .SetParam("path_imgrec", "../../cifar10/test.rec")
+					   .SetParam("rand_crop", 0)
+					   .SetParam("rand_mirror", 0)
+					   .SetParam("data_shape", Shape(3, 32, 32))
+					   .SetParam("batch_size", batch_size_)
+					   .SetParam("round_batch", 0)
+					   .SetParam("preprocess_threads", 24)
+					   .SetParam("pad", 2)
+					   .CreateDataIter();
 
 		FAST_DEBUG("(LOGIC): Loaded data ");
 
@@ -64,20 +85,10 @@ public:
 		//Let MXNet infer shapes other parameters such as weights
 		net.InferArgsMap(ctx, &args, args);
 
-		//Initialize all parameters with uniform distribution U(-0.01, 0.01)
-//		auto initializer = Xavier();
-//		for (auto& arg : args) {
-//			//arg.first is parameter name, and arg.second is the value
-//			initializer(arg.first, &arg.second);
-//		}
-		// Load same weights for all the workers
-
-		args = mxnet::cpp::NDArray::LoadToMap("../initialized_weights/resnet18_cifar10_init_"+std::to_string(batch_size_)+".bin");
-
+		args = mxnet::cpp::NDArray::LoadToMap(init_filename);
 
 		opt = OptimizerRegistry::Find("adam");
 		opt->SetParam("lr", learning_rate);
-		opt->SetParam("wd", weight_decay);
 
 		exec = net.SimpleBind(ctx, args);
 		arg_names = net.ListArguments();
@@ -85,10 +96,11 @@ public:
 		log_file << "Epoch\tTime\tTraining accuracy\tTest accuracy" << std::endl;
 
 		FAST_DEBUG("Logic initialized")
-	    init_time = chrono::system_clock::now();
+		init_time = chrono::system_clock::now();
 	}
 
-	void run_batch() {
+	void run_batch()
+	{
 
 		if (!train_iter.Next())
 		{
@@ -113,18 +125,19 @@ public:
 			std::cerr << "=== TEST ACCURACY === " << val_acc.Get() << std::endl;
 
 			auto toc = chrono::system_clock::now();
-		    float duration = chrono::duration_cast<chrono::milliseconds>(toc - init_time).count() / 1000.0;
+			float duration = chrono::duration_cast<chrono::milliseconds>(toc - init_time).count() / 1000.0;
 			log_file << epoch_ << "\t" << duration << "\t" << train_acc.Get() << "\t\t" << val_acc.Get() << std::endl;
 			log_file.flush();
 
 			if (epoch_ == max_epoch_)
 			{
 				FAST_DEBUG("(LOGIC): MAX EPOCH REACHED");
-				mxnet::cpp::NDArray::Save("./checkpoints/resnet18_cifar10_worker_" + std::to_string(FAST::rank()) + "_batch_" + std::to_string(batch_size_)  + ".bin", args);
+				mxnet::cpp::NDArray::Save("./checkpoints/resnet18_cifar10_worker_" + std::to_string(FAST::rank()) + "_batch_" + std::to_string(batch_size_) + ".bin", args);
 				max_epoch_reached = true; // Terminate
 				auto toc = chrono::system_clock::now();
 				float duration = chrono::duration_cast<chrono::milliseconds>(toc - init_time).count() / 1000.0;
-				log_file << "FINAL" << "\t" << duration << "\t" << train_acc.Get() << "\t\t" << val_acc.Get() << std::endl;
+				log_file << "FINAL"
+						 << "\t" << duration << "\t" << train_acc.Get() << "\t\t" << val_acc.Get() << std::endl;
 				log_file.flush();
 				return;
 			}
@@ -149,26 +162,28 @@ public:
 		// Update parameters
 		for (size_t i = 0; i < arg_names.size(); ++i)
 		{
-			if (arg_names[i] == "data" || arg_names[i] == "label") continue;
+			if (arg_names[i] == "data" || arg_names[i] == "label")
+				continue;
 			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 		}
-		FAST_ERROR("Epoch = " << epoch_ << "Samples = " << iter_*batch_size_ );
+		FAST_INFO("Epoch = " << epoch_ << "Samples = " << iter_ * batch_size_);
 		iter_++;
 	}
 
 	void update(std::vector<mxnet::cpp::NDArray> &in)
 	{
 		FAST_DEBUG("(LOGIC UPDATE): updating")
-				if (in.size() > 0)
-				{
-					for (size_t i = 0; i < arg_names.size(); ++i)
-					{
-						if (arg_names[i] == "data" || arg_names[i] == "label") continue;
-						opt->Update(i, exec->arg_arrays[i], in[1]);
-						NDArray::WaitAll();
-					}
-					FAST_DEBUG("(LOGIC UPDATE): updated")
-				}
+		if (in.size() > 0)
+		{
+			for (size_t i = 0; i < arg_names.size(); ++i)
+			{
+				if (arg_names[i] == "data" || arg_names[i] == "label")
+					continue;
+				opt->Update(i, exec->arg_arrays[i], in[1]);
+				NDArray::WaitAll();
+			}
+			FAST_DEBUG("(LOGIC UPDATE): updated")
+		}
 	}
 
 	void finalize()
@@ -178,8 +193,8 @@ public:
 
 	Symbol net;
 	std::map<std::string, NDArray> args;
-	Optimizer* opt;
-	Executor * exec;
+	Optimizer *opt;
+	Executor *exec;
 	std::vector<std::string> arg_names;
 	unsigned int iter_ = 0;
 	unsigned int epoch_ = 0;
@@ -188,11 +203,10 @@ public:
 	MXDataIter val_iter = MXDataIter("ImageRecordIter");
 	Accuracy train_acc, val_acc;
 	int batch_size_ = 32;
-	const int max_epoch_ = 100;
+	const int max_epoch_ = 1;
 	const std::string data_tag = "data";
 	const std::string label_tag = "label";
 	float total_time;
 	ofstream log_file;
 	std::chrono::_V2::system_clock::time_point init_time;
 };
-
