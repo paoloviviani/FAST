@@ -19,6 +19,4 @@
 #include "fast/workers/mxnet_worker.hpp"
 #endif
 
-#include "fast/topology/2d_torus.hpp"
-
 #endif /* FAST_FAST_HPP_ */
