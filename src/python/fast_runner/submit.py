@@ -52,6 +52,8 @@ def main(fast_bin_path):
 
     if args.machinefile != None:
         args.machinefile = os.path.abspath(args.machinefile)
+    if args.config_file != None:
+        args.config_file = os.path.abspath(args.config_file)
     if args.syncdir != None: 
         os.chdir(args.syncdir)
 

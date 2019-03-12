@@ -26,11 +26,6 @@ class ModelLogic
 		else
 			learning_rate = 0.01;
 
-		std::string filename;
-		if (const char *log_env = std::getenv("LOG_FILE"))
-			filename = std::string(log_env);
-		else
-			std::exit;
 		if (const char *symbol_env = std::getenv("SYMBOL_JSON"))
 			net = Symbol::Load(std::string(symbol_env));
 		else
@@ -41,6 +36,7 @@ class ModelLogic
 		else
 			init_filename = "../../initialized_weights/resnet18_cifar10_init_" + std::to_string(batch_size_) + ".bin";
 
+		std::string filename = "temp_result_worker_" + std::to_string(FAST::rank());
 		log_file = ofstream(filename);
 
 		FAST_INFO("Batch size = " << batch_size_)
@@ -54,8 +50,8 @@ class ModelLogic
 		MXRandomSeed(42);
 
 		train_iter = MXDataIter("ImageRecordIter")
-						 .SetParam("path_imglist", "../../cifar10/train.lst")
-						 .SetParam("path_imgrec", "../../cifar10/train.rec")
+						 .SetParam("path_imglist", "../../cifar10/cifar10_train.lst")
+						 .SetParam("path_imgrec", "../../cifar10/cifar10_train.rec")
 						 .SetParam("rand_crop", 1)
 						 .SetParam("rand_mirror", 1)
 						 .SetParam("data_shape", Shape(3, 32, 32))
@@ -67,8 +63,8 @@ class ModelLogic
 						 .CreateDataIter();
 
 		val_iter = MXDataIter("ImageRecordIter")
-					   .SetParam("path_imglist", "../../cifar10/test.lst")
-					   .SetParam("path_imgrec", "../../cifar10/test.rec")
+					   .SetParam("path_imglist", "../../cifar10/cifar10_val.lst")
+					   .SetParam("path_imgrec", "../../cifar10/cifar10_val.rec")
 					   .SetParam("rand_crop", 0)
 					   .SetParam("rand_mirror", 0)
 					   .SetParam("data_shape", Shape(3, 32, 32))
@@ -92,8 +88,6 @@ class ModelLogic
 
 		exec = net.SimpleBind(ctx, args);
 		arg_names = net.ListArguments();
-
-		log_file << "Epoch\tTime\tTraining accuracy\tTest accuracy" << std::endl;
 
 		FAST_DEBUG("Logic initialized")
 		init_time = chrono::system_clock::now();
@@ -126,19 +120,17 @@ class ModelLogic
 
 			auto toc = chrono::system_clock::now();
 			float duration = chrono::duration_cast<chrono::milliseconds>(toc - init_time).count() / 1000.0;
-			log_file << epoch_ << "\t" << duration << "\t" << train_acc.Get() << "\t\t" << val_acc.Get() << std::endl;
+			log_file << epoch_ << "\n";
+			log_file << train_acc.Get() << "\n";
+			log_file << val_acc.Get() << "\n";
 			log_file.flush();
 
 			if (epoch_ == max_epoch_)
 			{
 				FAST_DEBUG("(LOGIC): MAX EPOCH REACHED");
-				mxnet::cpp::NDArray::Save("./checkpoints/resnet18_cifar10_worker_" + std::to_string(FAST::rank()) + "_batch_" + std::to_string(batch_size_) + ".bin", args);
 				max_epoch_reached = true; // Terminate
 				auto toc = chrono::system_clock::now();
 				float duration = chrono::duration_cast<chrono::milliseconds>(toc - init_time).count() / 1000.0;
-				log_file << "FINAL"
-						 << "\t" << duration << "\t" << train_acc.Get() << "\t\t" << val_acc.Get() << std::endl;
-				log_file.flush();
 				return;
 			}
 
@@ -186,8 +178,10 @@ class ModelLogic
 		}
 	}
 
-	void finalize()
+	void finalize(bool save=false)
 	{
+		if (save)
+			mxnet::cpp::NDArray::Save("./w_"+ std::to_string(epoch_) +".bin", args);
 		MXNotifyShutdown();
 	}
 

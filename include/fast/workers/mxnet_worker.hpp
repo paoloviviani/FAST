@@ -291,7 +291,10 @@ class MXNetWorkerLogic
             }
         }
         FAST_INFO("(BEST WORKER): " << best << "  accuracy = " << max);
-        logic_.finalize();
+        bool save = false;
+        if (best == FAST::rank())
+            save = true;
+        logic_.finalize(save);
     }
 
   private:
