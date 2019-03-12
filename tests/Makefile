@@ -13,6 +13,7 @@ EXECS                += gff_training_concurrent_2
 EXECS                += gff_training_concurrent_grid
 EXECS                += mxnet_aux_test
 EXECS                += mxnet_worker_test
+EXECS                += mxnet_worker_grid
 
 TEST_DRIVER_OBJ       = catch2/test_driver.o
 TARGET_OBJ            = $(TEST_DRIVER_OBJ)
@@ -47,6 +48,8 @@ TARGET_OBJ            += $(TARGET_OBJ_MXNET_AUX)
 TARGET_OBJ_MXNET_TEST = mxnet_test/mxnet_worker_test.o
 TARGET_OBJ            += $(TARGET_OBJ_MXNET_TEST)
 
+TARGET_OBJ_MXNET_GRID = mxnet_test/mxnet_worker_grid.o
+TARGET_OBJ            += $(TARGET_OBJ_MXNET_GRID)
 
 .PHONY: all clean cleanall
 .SUFFIXES: .c .cpp .o
@@ -82,6 +85,8 @@ gff_training_concurrent_grid: $(TARGET_OBJ_TRAIN_GRID) $(TEST_DRIVER_OBJ)
 mxnet_aux_test: $(TARGET_OBJ_MXNET_AUX) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
 mxnet_worker_test: $(TARGET_OBJ_MXNET_TEST) $(TEST_DRIVER_OBJ)
+	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
+mxnet_worker_grid: $(TARGET_OBJ_MXNET_TEST) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
 
 clean:
