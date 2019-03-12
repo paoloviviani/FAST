@@ -195,6 +195,7 @@ class MXNetWorkerLogic
                     if (i != FAST::rank())
                         token2public<FAST::gam_vector<T>>(EOI_TOKEN).push(i);
             // c.emit(token2public<FAST::gam_vector<T>>(EOI_TOKEN));
+            eoi_out = true;
             if (++eoi_cnt_ == FAST::cardinality() - 1)
                 return gff::eos;
             return gff::go_on;
