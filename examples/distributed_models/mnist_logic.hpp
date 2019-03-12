@@ -162,7 +162,7 @@ class ModelLogic
 		}
 	}
 
-	void finalize()
+	void finalize(bool save=false)
 	{
 		FAST_INFO("FINALIZATION")
 

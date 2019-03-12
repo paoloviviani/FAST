@@ -194,8 +194,11 @@ class MXNetWorkerLogic
             FAST_INFO("Received EOI token");
             assert(eoi_cnt_ < (neighbors));
             if (!eoi_out)
-                c.emit(token2public<FAST::gam_vector<T>>(EOI_TOKEN));
-            if (++eoi_cnt_ == neighbors)
+               for (int i = 0; i < FAST::cardinality(); i++)
+                    if (i != FAST::rank())
+                        token2public<FAST::gam_vector<T>>(EOI_TOKEN).push(i);
+            // c.emit(token2public<FAST::gam_vector<T>>(EOI_TOKEN));
+            if (++eoi_cnt_ == FAST::cardinality() - 1)
                 return gff::eos;
             return gff::go_on;
         }
@@ -217,7 +220,10 @@ class MXNetWorkerLogic
             {
                 FAST_DEBUG("(MXNET WORKER): Got EOI");
                 if (!eoi_out)
-                    c.emit(token2public<FAST::gam_vector<T>>(EOI_TOKEN));
+                    for (int i = 0; i < FAST::cardinality(); i++)
+                        if (i != FAST::rank())
+                            token2public<FAST::gam_vector<T>>(EOI_TOKEN).push(i);
+                    // c.emit(token2public<FAST::gam_vector<T>>(EOI_TOKEN));
                 eoi_out = true;
                 return gff::go_on;
             }

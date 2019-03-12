@@ -133,7 +133,7 @@ public:
 				        }
     }
 
-    void finalize() {
+	void finalize(bool save=false)
         val_iter = MXDataIter("ImageRecordIter")
           .SetParam("path_imglist", "../../cifar10/cifar10_val.lst")
           .SetParam("path_imgrec", "../../cifar10/cifar10_val.rec")

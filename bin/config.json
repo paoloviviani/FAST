@@ -1,6 +1,6 @@
 {
     "LD_LIBRARY_PATH": "/opt/incubator-mxnet/lib:/opt/libfabric",
-    "PATH": "/home/pvi/WORKSPACE/FAST/bin",
-    "# PATH": "/scratch/home/pviviani/pviviani/FAST/bin",
+    "# PATH": "/home/pvi/WORKSPACE/FAST/bin",
+    "PATH": "/scratch/home/pviviani/pviviani/FAST/bin",
     "# LD_LIBRARY_PATH": "/home/pviviani/pviviani/opt/magnus/mxnet/lib:/home/pviviani/pviviani/opt/magnus/libfabric"
 }

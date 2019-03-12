@@ -83,7 +83,7 @@ public:
     FAST_INFO("(LOGIC UPDATE): updated");
   }
 
-  void finalize()
+  void finalize(bool save=false)
   {
   }
 
