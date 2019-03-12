@@ -36,8 +36,8 @@ class ModelLogic
 		else
 			init_filename = "../../initialized_weights/resnet18_cifar10_init_" + std::to_string(batch_size_) + ".bin";
 
-		std::string filename = "temp_result_worker_" + std::to_string(FAST::rank());
-		log_file = ofstream(filename);
+		std::string filename = "worker_" + std::to_string(FAST::rank());
+		log_file = ofstream(filename, std::ofstream::out | std::ofstream::app);
 
 		FAST_INFO("Batch size = " << batch_size_)
 		FAST_INFO("Number of nodes = " << FAST::cardinality())
@@ -91,6 +91,8 @@ class ModelLogic
 
 		FAST_DEBUG("Logic initialized")
 		init_time = chrono::system_clock::now();
+		// log_file << "Epoch\tTime\tTraining accuracy\tTest accuracy" << std::endl;
+		// log_file.flush();
 	}
 
 	void run_batch()
@@ -120,10 +122,8 @@ class ModelLogic
 
 			auto toc = chrono::system_clock::now();
 			float duration = chrono::duration_cast<chrono::milliseconds>(toc - init_time).count() / 1000.0;
-			log_file << epoch_ << "\n";
-			log_file << train_acc.Get() << "\n";
-			log_file << val_acc.Get() << "\n";
-			log_file.flush();
+			log_file << epoch_ << "\t" << duration << "\t" << train_acc.Get() << "\t\t" << val_acc.Get() << std::endl;
+            log_file.flush();
 
 			if (epoch_ == max_epoch_)
 			{

@@ -17,13 +17,13 @@ env_settings['LEARNING_RATE'] = learning_rate
 env_settings['SYMBOL_JSON'] = symbol_file
 env_settings['INIT_WEIGHTS'] = init_file
 
-exec = 'resnetGrid'
-exec = os.path.join(os.path.abspath(os.pardir), exec)
-command = [exec, '4', '4']
+executable = 'resnetGrid'
+executable = os.path.join(os.path.abspath(os.pardir), executable)
+command = [executable, '4', '4']
 
 
 for epoch in range(max_epochs):
     ret = subprocess.call(command, env=env_settings, stdout=sys.stdout, stderr=sys.stderr)
     if ret !=0:
         sys.exit("Error")
-    env_settings['INIT_WEIGHTS'] = "w_"+std(epoch+1)+".bin"
+    env_settings['INIT_WEIGHTS'] = "w_"+str(epoch+1)+".bin"

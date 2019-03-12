@@ -158,7 +158,7 @@ public:
         }
         NDArray::WaitAll();
         MXNotifyShutdown();
-        FAST_INFO("=== VALIDATION ACCURACY === " << train_acc.Get());
+        FAST_INFO("=== VALIDATION ACCURACY === " << val_acc.Get());
     }
 
     Symbol net;

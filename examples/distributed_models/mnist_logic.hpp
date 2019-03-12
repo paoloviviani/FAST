@@ -178,7 +178,7 @@ class ModelLogic
 			NDArray::WaitAll();
 			acc.Update(data_batch.label, exec->outputs[0]);
 		}
-		FAST_INFO("=== VALIDATION ACCURACY === " << train_acc.Get());
+		FAST_INFO("=== VALIDATION ACCURACY === " << val_acc.Get());
 	}
 
 	Symbol net;
