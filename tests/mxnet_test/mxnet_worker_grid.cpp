@@ -109,7 +109,7 @@ typedef gff::Filter<gff::NondeterminateMerge, gff::OutBundleBroadcast<gff::Nonde
  *******************************************************************************
  */
 
-TEST_CASE("MxNet worker basic test", "gam,gff,multi,mxnet")
+TEST_CASE("MxNet worker grid test", "gam,gff,multi,mxnet")
 {
   FAST_LOG_INIT
   FAST_INFO("TEST name: " << Catch::getResultCapture().getCurrentTestName());

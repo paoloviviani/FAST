@@ -31,7 +31,8 @@ if [[ $LAUNCHER == local ]]; then
 	# fast-submit -n 2 -l local ./bin/gff_training_concurrent_2
 	# fast-submit -n 9 -l local ./bin/gff_training_concurrent_grid
 	# fast-submit -n 1 -l local ./bin/mxnet_aux_test
-	fast-submit -n 2 -l local ./bin/mxnet_worker_test
+	# fast-submit -n 2 -l local ./bin/mxnet_worker_test
+	fast-submit -n 9 -l local ./bin/mxnet_worker_grid
 elif [[ $LAUNCHER == mpi ]]; then
 	fast-submit -n 1 -H hosts -l mpi ./bin/unit_test
 	fast-submit -n 2 -H hosts -l mpi ./bin/gam_unit_test
@@ -43,4 +44,5 @@ elif [[ $LAUNCHER == mpi ]]; then
 	fast-submit -n 9 -H hosts -l mpi ./bin/gff_training_concurrent_grid
 	fast-submit -n 1 -H hosts -l mpi ./bin/mxnet_aux_test
 	fast-submit -n 2 -H hosts -l mpi ./bin/mxnet_worker_test
+	fast-submit -n 9 -H hosts -l mpi ./bin/mxnet_worker_grid
 fi

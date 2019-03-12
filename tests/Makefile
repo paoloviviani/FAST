@@ -86,7 +86,7 @@ mxnet_aux_test: $(TARGET_OBJ_MXNET_AUX) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
 mxnet_worker_test: $(TARGET_OBJ_MXNET_TEST) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
-mxnet_worker_grid: $(TARGET_OBJ_MXNET_TEST) $(TEST_DRIVER_OBJ)
+mxnet_worker_grid: $(TARGET_OBJ_MXNET_GRID) $(TEST_DRIVER_OBJ)
 	$(CXX) $^ -o bin/$@ $(LDFLAGS) $(LIBS)
 
 clean:

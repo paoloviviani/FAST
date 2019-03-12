@@ -279,19 +279,25 @@ class MXNetWorkerLogic
         FAST_INFO("(BEST WORKER): sent accuracy = " << test_acc);
         int best = FAST::rank();
         float max = test_acc;
-        for (int i = 0; i < FAST::cardinality(); i++)
+        int best_cnt = 0;
+        float acc = 0;
+        while (best_cnt < FAST::cardinality())
         {
-            if (i != FAST::rank())
+            if (best_cnt != FAST::rank())
             {
-                auto p = gam::pull_public<float>(i);
-                float acc = *(p.local());
+                auto p = gam::pull_public<float>(best_cnt);
+                if (p.get().is_address())
+                    acc = *(p.local());
+                else
+                    continue;
                 FAST_DEBUG("(BEST WORKER): recived accuracy = " << acc);
                 if (max < acc)
                 {
-                    best = i;
+                    best = best_cnt;
                     max = acc;
                 }
             }
+            best_cnt++;
         }
         FAST_INFO("(BEST WORKER): " << best << "  accuracy = " << max);
         bool save = false;
