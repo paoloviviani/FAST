@@ -80,7 +80,6 @@ class InputStage : public ff::ff_node
         {
             FAST_DEBUG("(INPUT STAGE): push gradients");
             this->ff_send_out((void *)buffer_);
-            // buffer_ = gam::NEW<NDAvector>();
             buffer_ = new NDAvector();
             FAST::buildNDVec(*buffer_, logic_->exec->grad_arrays, logic_->arg_names, mxnet::cpp::Context::cpu());
         }
@@ -90,7 +89,6 @@ class InputStage : public ff::ff_node
     int svc_init()
     {
         FAST_DEBUG("(INPUT STAGE): init stage");
-        // buffer_ = gam::NEW<NDAvector>();
         buffer_ = new NDAvector();
         FAST::buildNDVec(*buffer_, logic_->exec->grad_arrays, logic_->arg_names, mxnet::cpp::Context::cpu());
         FAST_DEBUG("(INPUT STAGE): Built NDVec");
@@ -103,7 +101,6 @@ class InputStage : public ff::ff_node
         {
             buffer_->clear();
             delete buffer_;
-            // gam::DELETE(buffer_);
         }
     }
 
@@ -192,7 +189,7 @@ class MXNetWorkerLogic
         case EOI_TOKEN:
         {
             FAST_INFO("Received EOI token");
-            assert(eoi_cnt_ < (neighbors));
+            assert(eoi_cnt_ < (FAST::cardinality()));
             if (!eoi_out)
                for (int i = 0; i < FAST::cardinality(); i++)
                     if (i != FAST::rank())
@@ -204,11 +201,11 @@ class MXNetWorkerLogic
         }
         default:
         { //data
-            auto in_ptr = in.unique_local();
-
-            // gam::DELETE(in_ptr);
-            // pipe_->offload((void *)in_ptr);
-            pipe_->offload(NEXT_ITERATION);
+            if (!eoi_out)
+            {
+            auto in_ptr = in.unique_local().release();
+            pipe_->offload((void *)in_ptr);
+            }
         }
         }
 
@@ -278,8 +275,8 @@ class MXNetWorkerLogic
         {
             if (i != FAST::rank())
                 accuracy.push(i);
-            FAST_INFO("(BEST WORKER): sent accuracy = " << test_acc);
         }
+        FAST_INFO("(BEST WORKER): sent accuracy = " << test_acc);
         int best = FAST::rank();
         float max = test_acc;
         for (int i = 0; i < FAST::cardinality(); i++)
@@ -288,7 +285,7 @@ class MXNetWorkerLogic
             {
                 auto p = gam::pull_public<float>(i);
                 float acc = *(p.local());
-                FAST_INFO("(BEST WORKER): recived accuracy = " << acc);
+                FAST_DEBUG("(BEST WORKER): recived accuracy = " << acc);
                 if (max < acc)
                 {
                     best = i;
