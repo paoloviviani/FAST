@@ -191,18 +191,21 @@ class MXNetWorkerLogic
             FAST_INFO("Received EOI token");
             assert(eoi_cnt_ < (FAST::cardinality()));
             if (!eoi_out)
+            {
+                // c.emit(token2public<FAST::gam_vector<T>>(EOI_TOKEN));
                for (int i = 0; i < FAST::cardinality(); i++)
                     if (i != FAST::rank())
                         token2public<FAST::gam_vector<T>>(EOI_TOKEN).push(i);
-            // c.emit(token2public<FAST::gam_vector<T>>(EOI_TOKEN));
-            eoi_out = true;
+                pipe_->offload(ff::FF_EOS);
+                eoi_out = true;
+            }
             if (++eoi_cnt_ == FAST::cardinality() - 1)
                 return gff::eos;
             return gff::go_on;
         }
         default:
         { //data
-            if (!eoi_out)
+            if (!eoi_out && in.get().is_address())
             {
             auto in_ptr = in.unique_local().release();
             pipe_->offload((void *)in_ptr);
@@ -218,11 +221,14 @@ class MXNetWorkerLogic
             {
                 FAST_DEBUG("(MXNET WORKER): Got EOI");
                 if (!eoi_out)
+                {
+                    pipe_->offload(ff::FF_EOS);
+                    // c.emit(token2public<FAST::gam_vector<T>>(EOI_TOKEN));
                     for (int i = 0; i < FAST::cardinality(); i++)
                         if (i != FAST::rank())
                             token2public<FAST::gam_vector<T>>(EOI_TOKEN).push(i);
-                    // c.emit(token2public<FAST::gam_vector<T>>(EOI_TOKEN));
-                eoi_out = true;
+                    eoi_out = true;
+                }
                 return gff::go_on;
             }
             else
@@ -265,7 +271,6 @@ class MXNetWorkerLogic
     void svc_end(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c)
     {
         FAST_DEBUG("(FINALIZATION)");
-        pipe_->offload(ff::FF_EOS);
         if (pipe_->wait() < 0)
         {
             FAST_DEBUG("(FINALIZATION): error waiting pipe");
