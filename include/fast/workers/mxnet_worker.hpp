@@ -127,6 +127,8 @@ class TrainerStage : public ff::ff_node
 
             // get_in_buffer()->pop(&task);
             this->Pop(&task);
+            if (task == ff::FF_EOS)
+                return ff::FF_EOS;
             if (task != NEXT_ITERATION)
             {
                 // got a pointer from the input stage

@@ -65,7 +65,7 @@ public:
       exec->grad_arrays[i] += 0.1;
     }
     NDArray::WaitAll();
-    std::this_thread::sleep_for(std::chrono::milliseconds(10*FAST::rank()));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100+ (FAST::rank()*10) ));
     iter_++;
     if (iter_ == 10)
       max_epoch_reached = true; // Terminate
