@@ -21,6 +21,9 @@ class ModelLogic
 			batch_size_ = 32;
 		assert(batch_size_ == 32 || batch_size_ == 64 || batch_size_ == 128 || batch_size_ == 256);
 
+		if (const char *epoch_env = std::getenv("EPOCH"))
+			epoch_ = std::stoi(std::string(epoch_env));
+
 		if (const char *learning_env = std::getenv("LEARNING_RATE"))
 			learning_rate = std::stof(std::string(learning_env));
 		else
@@ -123,21 +126,14 @@ class ModelLogic
 			auto toc = chrono::system_clock::now();
 			float duration = chrono::duration_cast<chrono::milliseconds>(toc - init_time).count() / 1000.0;
 			log_file << epoch_ << "\t" << duration << "\t" << train_acc.Get() << "\t\t" << val_acc.Get() << std::endl;
-            log_file.flush();
+			log_file.flush();
 
-			if (epoch_ == max_epoch_)
-			{
-				FAST_DEBUG("(LOGIC): MAX EPOCH REACHED");
-				max_epoch_reached = true; // Terminate
-				auto toc = chrono::system_clock::now();
-				float duration = chrono::duration_cast<chrono::milliseconds>(toc - init_time).count() / 1000.0;
-				return;
-			}
+			FAST_DEBUG("(LOGIC): MAX EPOCH REACHED");
+			max_epoch_reached = true; // Terminate
+			auto toc = chrono::system_clock::now();
+			float duration = chrono::duration_cast<chrono::milliseconds>(toc - init_time).count() / 1000.0;
 
-			train_iter.Reset();
-			train_iter.Next();
-			train_acc.Reset();
-			FAST_INFO("Restarted data iterator")
+			return;
 		}
 
 		auto data_batch = train_iter.GetDataBatch();
@@ -158,7 +154,7 @@ class ModelLogic
 				continue;
 			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 		}
-		FAST_INFO("Epoch = " << epoch_ << "Samples = " << iter_ * batch_size_);
+		FAST_INFO("Epoch = " << epoch_ << ", Samples = " << iter_ * batch_size_);
 		iter_++;
 	}
 
@@ -181,7 +177,13 @@ class ModelLogic
 	void finalize(bool save=false)
 	{
 		if (save)
-			mxnet::cpp::NDArray::Save("./w_"+ std::to_string(epoch_) +".bin", args);
+		{
+			std::string bestname = "best_accuracy.log";
+			ofstream best_file = ofstream(bestname, std::ofstream::out | std::ofstream::app);
+			best_file << std::to_string(val_acc.Get()) << std::endl;
+			best_file.flush();
+			mxnet::cpp::NDArray::Save("./w_"+ std::to_string(FAST::rank()) +".bin", args);
+		}
 		MXNotifyShutdown();
 	}
 
@@ -197,7 +199,6 @@ class ModelLogic
 	MXDataIter val_iter = MXDataIter("ImageRecordIter");
 	Accuracy train_acc, val_acc;
 	int batch_size_ = 32;
-	const int max_epoch_ = 1;
 	const std::string data_tag = "data";
 	const std::string label_tag = "label";
 	float total_time;
