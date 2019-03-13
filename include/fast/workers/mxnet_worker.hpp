@@ -191,6 +191,7 @@ class MXNetWorkerLogic
         case EOI_TOKEN:
         {
             FAST_INFO("Received EOI token");
+            eoi = true;
             if (FAST::rank() == 0)
             {
                 if (++eoi_cnt_ == FAST::cardinality() - 1)

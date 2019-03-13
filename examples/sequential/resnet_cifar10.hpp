@@ -20,7 +20,7 @@ public:
 		const float learning_rate = 0.01;
 		const float weight_decay = 1e-4;
 
-		net = Symbol::Load("../symbols/resnet50_v2.json");
+		net = Symbol::Load("../symbols/resnet18_v2.json");
 		Symbol label = Symbol::Variable("label");
 		net = SoftmaxOutput(net, label);
 
@@ -98,8 +98,9 @@ public:
 			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 		}
 		if (iter_ == 0 && epoch_ == 0) {
-			mxnet::cpp::NDArray::Save("../initialized_weights/resnet18_cifar10_init_batch_"+std::to_string(batch_size_)+".bin", args);
-			std::cerr << "Initialized weights saved as \"../initialized_weights/resnet50_cifar10_epoch0.bin\". Continue training or stop the application\n";
+			std::string symbol_file = "../initialized_weights/resnet18_cifar10_init_batch_"+std::to_string(batch_size_)+".bin";
+			mxnet::cpp::NDArray::Save(symbol_file, args);
+			std::cerr << "Initialized weights saved as " + symbol_file + ". Continue training or stop the application\n";
 		}
 		std::cout << "[ " << currentDateTime() << "] Samples = " << iter_*batch_size_ << " Accuracy = " << train_acc.Get() << std::endl;
 		iter_++;

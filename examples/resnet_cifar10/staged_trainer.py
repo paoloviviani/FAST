@@ -12,7 +12,7 @@ env_settings = os.environ.copy()
 
 batch_size = 32
 learning_rate = 0.0005
-symbol_file = '../resnet18_v2.json'
+symbol_file = '../../resnet18_v2.json'
 init_file = '../../initialized_weights/resnet18_cifar10_init_' + str(batch_size) + '.bin'
 max_epochs = 50
 

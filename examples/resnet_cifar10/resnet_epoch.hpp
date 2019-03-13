@@ -32,7 +32,8 @@ class ModelLogic
 		if (const char *symbol_env = std::getenv("SYMBOL_JSON"))
 			net = Symbol::Load(std::string(symbol_env));
 		else
-			net = Symbol::Load("../symbols/resnet18_v2.json");
+			net = Symbol::Load("../../symbols/resnet18_v2.json");
+		
 		std::string init_filename;
 		if (const char *init_env = std::getenv("INIT_WEIGHTS"))
 			init_filename = std::string(init_env);
@@ -182,6 +183,7 @@ class ModelLogic
 			mxnet::cpp::NDArray::Save("./w_"+ std::to_string(FAST::rank()) +".bin", args);
 		}
 		MXNotifyShutdown();
+		delete exec;
 	}
 
 	Symbol net;
