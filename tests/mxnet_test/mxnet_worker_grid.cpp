@@ -67,7 +67,7 @@ public:
     NDArray::WaitAll();
     std::this_thread::sleep_for(std::chrono::milliseconds(100+ (FAST::rank()*10) ));
     iter_++;
-    if (iter_ == 10)
+    if (iter_ == 6)
       max_epoch_reached = true; // Terminate
   }
 

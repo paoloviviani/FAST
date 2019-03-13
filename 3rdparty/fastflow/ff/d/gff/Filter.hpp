@@ -136,7 +136,7 @@ private:
 				GFF_PROFILER_DURATION_ADD(d_svc, t0, t1);
 
 				/* ckeck if meaningful output token */
-				if (is_eos(out)) { //user function asked for termination
+				if (is_eos(out) || is_eot(out)) { //user function asked for termination
 					GFF_LOGLN_OS("FLT svc returned eos");
 					svc_termination = true;
 					break;
@@ -164,14 +164,16 @@ private:
 
 		logic.svc_end(out_comm);
 
-		/* propagate eos token */
-		out_comm.internals.broadcast(global_eos<out_t>());
+		if (!is_eot(out)) {
+			/* propagate eos token */
+			out_comm.internals.broadcast(global_eos<out_t>());
 
-		/* poll for outstanding eos */
-		while(received_eos < in_comm.internals.in_cardinality()) {
-			in = in_comm.internals.template get<in_t>();
-			assert(is_eos(in));
-			received_eos++;
+			/* poll for outstanding eos */
+			while(received_eos < in_comm.internals.in_cardinality()) {
+				in = in_comm.internals.template get<in_t>();
+				assert(is_eos(in));
+				received_eos++;
+			}
 		}
 
 		/* write profiling */

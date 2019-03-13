@@ -39,7 +39,8 @@ namespace gff {
  */
 typedef uint64_t token_t;
 static constexpr token_t eos = gam::GlobalPointer::last_reserved;
-static constexpr uint64_t go_on = eos - 1;
+static constexpr token_t eot = eos - 1; // End of task: not automatically propagated by filters
+static constexpr uint64_t go_on = eos - 2;
 
 /*
  ***************************************************************************
@@ -60,6 +61,10 @@ static inline bool is_eos(const gam::private_ptr<T> &token) {
 
 static inline bool is_eos(const token_t &token) {
 	return token == eos;
+}
+
+static inline bool is_eot(const token_t &token) {
+	return token == eot;
 }
 
 /*

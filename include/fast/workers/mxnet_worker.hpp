@@ -190,27 +190,37 @@ class MXNetWorkerLogic
         }
         case EOI_TOKEN:
         {
-            FAST_INFO("Received EOI token");
-            assert(eoi_cnt_ < (FAST::cardinality()));
+            // FAST_INFO("Received EOI token");
+            assert(eoi_cnt_ < FAST::cardinality());
+            pipe_->offload(ff::FF_EOS);
+            if (++eoi_cnt_ == FAST::cardinality() - 1)
+            {
+                if (FAST::rank() == 0)
+                {
+                    for (int i = 1; i < FAST::cardinality(); i++)
+                        token2public<FAST::gam_vector<T>>(EOI_TOKEN).push(i);
+                }
+                FAST_INFO("Sent EOT");
+                return gff::eot;
+            }
+            FAST_INFO("(MXNET WORKER) Received EOI token, count = " << eoi_cnt_);
             if (!eoi_out)
             {
+                FAST_INFO("(MXNET WORKER) Sent EOI token");
                 // c.emit(token2public<FAST::gam_vector<T>>(EOI_TOKEN));
                for (int i = 0; i < FAST::cardinality(); i++)
                     if (i != FAST::rank())
                         token2public<FAST::gam_vector<T>>(EOI_TOKEN).push(i);
-                pipe_->offload(ff::FF_EOS);
                 eoi_out = true;
             }
-            if (++eoi_cnt_ == FAST::cardinality() - 1)
-                return gff::eos;
             return gff::go_on;
         }
         default:
         { //data
             if (!eoi_out && in.get().is_address())
             {
-            auto in_ptr = in.unique_local().release();
-            pipe_->offload((void *)in_ptr);
+                auto in_ptr = in.unique_local().release();
+                pipe_->offload((void *)in_ptr);
             }
         }
         }
@@ -224,10 +234,11 @@ class MXNetWorkerLogic
                 FAST_DEBUG("(MXNET WORKER): Got EOI");
                 if (!eoi_out)
                 {
+                    FAST_INFO("(MXNET WORKER) Sent EOI token");
                     pipe_->offload(ff::FF_EOS);
                     // c.emit(token2public<FAST::gam_vector<T>>(EOI_TOKEN));
                     for (int i = 0; i < FAST::cardinality(); i++)
-                        if (i != FAST::rank())
+                        if (i != FAST::rank() && FAST::rank() != 0)
                             token2public<FAST::gam_vector<T>>(EOI_TOKEN).push(i);
                     eoi_out = true;
                 }
