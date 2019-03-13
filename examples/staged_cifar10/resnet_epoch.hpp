@@ -105,7 +105,6 @@ class ModelLogic
 		{
 			FAST_DEBUG("(LOGIC): next epoch");
 			iter_ = 0;
-			epoch_++;
 
 			val_acc.Reset();
 			val_iter.Reset();
