@@ -39,7 +39,7 @@ class ModelLogic
 		else
 			init_filename = "../../initialized_weights/resnet18_cifar10_init_" + std::to_string(batch_size_) + ".bin";
 
-		std::string filename = "worker_" + std::to_string(FAST::rank());
+		std::string filename = "worker_" + std::to_string(FAST::rank()) + ".log";
 		log_file = ofstream(filename, std::ofstream::out | std::ofstream::app);
 
 		FAST_INFO("Batch size = " << batch_size_)
@@ -150,7 +150,7 @@ class ModelLogic
 				continue;
 			opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
 		}
-		FAST_INFO("Epoch = " << epoch_ << ", Samples = " << iter_ * batch_size_);
+		FAST_INFO("Epoch = " << epoch_ << ", Samples = " << iter_ * batch_size_ << ", Training accuracy = " << train_acc.Get());
 		iter_++;
 	}
 
