@@ -204,7 +204,7 @@ class MXNetWorkerLogic
                 return gff::eot;
             }
             FAST_INFO("(MXNET WORKER) Received EOI token, count = " << eoi_cnt_);
-            if (!eoi_out)
+            if (!eoi_out && FAST::rank() != 0)
             {
                 FAST_INFO("(MXNET WORKER) Sent EOI token");
                 // c.emit(token2public<FAST::gam_vector<T>>(EOI_TOKEN));
