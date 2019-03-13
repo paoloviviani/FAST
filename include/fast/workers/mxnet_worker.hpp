@@ -275,42 +275,44 @@ class MXNetWorkerLogic
         FAST_DEBUG("(FINALIZATION)");
         float test_acc = logic_.val_acc.Get();
         auto accuracy = gam::make_public<float>(test_acc);
-        for (int i = 0; i < FAST::cardinality(); i++)
-        {
-            if (i != FAST::rank())
-                accuracy.push(i);
-        }
+        if (FAST::rank() != 0)
+            accuracy.push(0);
+            
         FAST_INFO("(BEST WORKER): sent accuracy = " << test_acc);
         int best = FAST::rank();
         float max = test_acc;
-        int best_cnt = 0;
         float acc = 0;
-        while (best_cnt < FAST::cardinality())
+        if (FAST::rank() == 0)
         {
-            if (best_cnt != FAST::rank())
+            for (int i = 1; i < FAST::cardinality(); i++)
             {
-                auto p = gam::pull_public<float>(best_cnt);
-                if (p.get().is_address())
-                    acc = *(p.local());
-                else
-                    continue;
-                FAST_DEBUG("(BEST WORKER): recived accuracy = " << acc);
+                auto p = gam::pull_public<float>(i);
+                acc = *(p.local());
                 if (max < acc)
                 {
-                    best = best_cnt;
+                    best = i;
                     max = acc;
                 }
             }
-            best_cnt++;
+            auto best_ptr = gam::make_public<int>(best);
+            for (int i = 1; i < FAST::cardinality(); i++)
+                best_ptr.push(i);
         }
-        FAST_INFO("(BEST WORKER): " << best << "  accuracy = " << max);
+        else
+        {
+            auto best_ptr = gam::pull_public<int>(0);
+            best = *(best_ptr.local());
+        }
         bool save = false;
         if (best == FAST::rank())
+        {
             save = true;
+            FAST_INFO("(BEST WORKER): " << best << "  accuracy = " << max);
+        }
         logic_.finalize(save);
         if (pipe_->wait() < 0)
         {
-            FAST_DEBUG("(FINALIZATION): error waiting pipe");
+            FAST_ERROR("(FINALIZATION): error waiting pipeline");
         }
     }
 

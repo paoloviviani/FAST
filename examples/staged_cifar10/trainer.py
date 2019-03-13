@@ -35,6 +35,10 @@ log.flush()
 start = time.time()
 
 for epoch in range(max_epochs):
+    print '\n******************************\n'
+    print 'Running epoch', epoch 
+    print '\n******************************\n'
+    env_settings['EPOCH'] = str(epoch)
     epoch_start = time.time()
     ret = subprocess.call(command, env=env_settings, stdout=sys.stdout, stderr=sys.stderr)
     if ret !=0:

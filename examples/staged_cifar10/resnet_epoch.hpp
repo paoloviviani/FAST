@@ -118,6 +118,7 @@ class ModelLogic
 				NDArray::WaitAll();
 				val_acc.Update(data_batch.label, exec->outputs[0]);
 			}
+			max_epoch_reached = true; // Terminate
 			std::cerr << "=== Epoch === " << epoch_ << std::endl;
 			std::cerr << "=== TRAINING ACCURACY === " << train_acc.Get() << std::endl;
 			std::cerr << "=== TEST ACCURACY === " << val_acc.Get() << std::endl;
@@ -128,10 +129,6 @@ class ModelLogic
 			log_file.flush();
 
 			FAST_DEBUG("(LOGIC): MAX EPOCH REACHED");
-			max_epoch_reached = true; // Terminate
-			auto toc = chrono::system_clock::now();
-			float duration = chrono::duration_cast<chrono::milliseconds>(toc - init_time).count() / 1000.0;
-
 			return;
 		}
 
