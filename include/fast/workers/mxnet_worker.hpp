@@ -160,7 +160,7 @@ class OutputStage : public ff::ff_node
         if (task == END_OF_INPUT)
             return END_OF_INPUT;
         gam_vector<T> *out = gam::NEW<gam_vector<T>>();
-        NDVecToVec(logic_->exec->grad_arrays, logic_->arg_names, *out, logic_->data_tag, logic_->label_tag, 0.5);
+        NDVecToVec(logic_->exec->grad_arrays, logic_->arg_names, *out, logic_->data_tag, logic_->label_tag, 0.25);
         FAST_DEBUG("(OUTPUT STAGE): serialized size " << out->size());
         return (void *)out;
     }

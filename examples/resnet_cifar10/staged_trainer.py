@@ -10,14 +10,14 @@ def epoch_file(epoch):
     return 'initw_'+str(epoch)+'.bin'
 env_settings = os.environ.copy()
 
-batch_size = '32'
-learning_rate = '0.005'
+batch_size = 32
+learning_rate = 0.0005
 symbol_file = '../resnet18_v2.json'
-init_file = '../../initialized_weights/resnet18_cifar10_init_' + batch_size + '.bin'
+init_file = '../../initialized_weights/resnet18_cifar10_init_' + str(batch_size) + '.bin'
 max_epochs = 50
 
-env_settings['BATCH_SIZE'] = batch_size
-env_settings['LEARNING_RATE'] = learning_rate
+env_settings['BATCH_SIZE'] = str(batch_size)
+env_settings['LEARNING_RATE'] = str(learning_rate)
 env_settings['SYMBOL_JSON'] = symbol_file
 env_settings['INIT_WEIGHTS'] = init_file
 
@@ -35,6 +35,11 @@ log.flush()
 start = time.time()
 
 for epoch in range(max_epochs):
+    if epoch > 0:
+        if epoch % 4 == 0:
+            learning_rate = learning_rate/2
+            env_settings['LEARNING_RATE'] = str(learning_rate)
+
     env_settings['EPOCH'] = str(epoch)
     epoch_start = time.time()
     ret = subprocess.call(command, env=env_settings, stdout=sys.stdout, stderr=sys.stderr)

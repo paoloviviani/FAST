@@ -19,7 +19,7 @@ class ModelLogic
 			batch_size_ = std::stoi(std::string(batch_env));
 		else
 			batch_size_ = 32;
-		assert(batch_size_ == 32 || batch_size_ == 64 || batch_size_ == 128 || batch_size_ == 256);
+		assert(batch_size_ == 16 || batch_size_ == 32 || batch_size_ == 128 || batch_size_ == 256);
 
 		if (const char *epoch_env = std::getenv("EPOCH"))
 			epoch_ = std::stoi(std::string(epoch_env));
@@ -88,6 +88,7 @@ class ModelLogic
 
 		opt = OptimizerRegistry::Find("adam");
 		opt->SetParam("lr", learning_rate);
+		opt->SetParam("wd", 1e-4);
 
 		exec = net.SimpleBind(ctx, args);
 		arg_names = net.ListArguments();
