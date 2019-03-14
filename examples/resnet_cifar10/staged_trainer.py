@@ -21,11 +21,9 @@ env_settings['LEARNING_RATE'] = str(learning_rate)
 env_settings['SYMBOL_JSON'] = symbol_file
 env_settings['INIT_WEIGHTS'] = init_file
 
-# executable = 'resnetGrid'
-executable = 'resnetRing'
+executable = 'resnetGrid'
 executable = os.path.join(os.path.abspath(os.pardir), executable)
-# command = [executable, '4', '4']
-command = [executable, '16']
+command = [executable, '4', '4']
 
 rank = env_settings['GAM_RANK']
 timing_file = 'time_worker_'+str(rank)+'.log'

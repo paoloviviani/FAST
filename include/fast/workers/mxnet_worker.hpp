@@ -126,15 +126,16 @@ class TrainerStage : public ff::ff_node
             FAST_DEBUG("(TRAINER STAGE): executed local batch ");
 
             // get_in_buffer()->pop(&task);
-            this->Pop(&task, -1);
+            bool pop = this->Pop(&task, -1);
             if (task == ff::FF_EOS)
                 return ff::FF_EOS;
-            if (task != NEXT_ITERATION)
+            if (pop && task != NEXT_ITERATION)
             {
                 // got a pointer from the input stage
                 NDAvector *in_ptr = (NDAvector *)task;
+                assert(in_ptr->size() > 0);
                 logic_->update(*in_ptr);
-                FAST_INFO("(TRAINER STAGE): executed batch from gradients");
+                FAST_DEBUG("(TRAINER STAGE): executed batch from gradients");
                 in_ptr->clear();
                 delete in_ptr;
                 // gam::DELETE(in_ptr);
@@ -267,20 +268,8 @@ class MXNetWorkerLogic
         pipe_->run();
 
         FAST_DEBUG("(MXNET WORKER): Emitting trigger");
-        if (FAST::rank() != 0)
-            token2public<FAST::gam_vector<T>>(TRIGGER_TOKEN).push(0);
-        else
-        {
-            int count = 0;
-            while(count < FAST::cardinality() -1)
-            {
-                auto p = gam::pull_public<float>();
-                count++;
-            }
-            for (int i = 0; i < FAST::cardinality(); i++)
-                token2public<FAST::gam_vector<T>>(TRIGGER_TOKEN).push(i);
-        }
-        
+        c.emit(token2public<FAST::gam_vector<T>>(TRIGGER_TOKEN));
+       
     }
 
     void svc_end(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c)

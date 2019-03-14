@@ -27,13 +27,13 @@ class ModelLogic
 		if (const char *learning_env = std::getenv("LEARNING_RATE"))
 			learning_rate = std::stof(std::string(learning_env));
 		else
-			learning_rate = 0.01;
+			learning_rate = 0.001;
 
 		if (const char *symbol_env = std::getenv("SYMBOL_JSON"))
 			net = Symbol::Load(std::string(symbol_env));
 		else
 			net = Symbol::Load("../../symbols/resnet18_v2.json");
-		
+
 		std::string init_filename;
 		if (const char *init_env = std::getenv("INIT_WEIGHTS"))
 			init_filename = std::string(init_env);
@@ -120,7 +120,8 @@ class ModelLogic
 				NDArray::WaitAll();
 				val_acc.Update(data_batch.label, exec->outputs[0]);
 			}
-			max_epoch_reached = true; // Terminate
+			if (epoch_ == 10)
+				max_epoch_reached = true; // Terminate
 			std::cerr << "=== Epoch === " << epoch_ << std::endl;
 			std::cerr << "=== TRAINING ACCURACY === " << train_acc.Get() << std::endl;
 			std::cerr << "=== TEST ACCURACY === " << val_acc.Get() << std::endl;
@@ -131,6 +132,9 @@ class ModelLogic
 			log_file.flush();
 
 			FAST_DEBUG("(LOGIC): MAX EPOCH REACHED");
+			train_iter.Reset();
+			train_acc.Reset();
+			epoch_++;
 			return;
 		}
 
@@ -172,7 +176,7 @@ class ModelLogic
 		}
 	}
 
-	void finalize(bool save=false)
+	void finalize(bool save = false)
 	{
 		if (save)
 		{
@@ -180,7 +184,7 @@ class ModelLogic
 			ofstream best_file = ofstream(bestname, std::ofstream::out | std::ofstream::app);
 			best_file << std::to_string(val_acc.Get()) << std::endl;
 			best_file.flush();
-			mxnet::cpp::NDArray::Save("./w_"+ std::to_string(FAST::rank()) +".bin", args);
+			mxnet::cpp::NDArray::Save("./w_" + std::to_string(FAST::rank()) + ".bin", args);
 		}
 	}
 

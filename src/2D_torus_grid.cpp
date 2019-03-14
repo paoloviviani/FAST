@@ -69,9 +69,9 @@ int main(int argc, char **argv)
 			up = i + 1;
 			down = i - 1;
 			if (up == grid_h)  up = 0;
-			if (down == 0) down = grid_h - 1;
+			if (down == -1) down = grid_h - 1;
 			if (right == grid_w)  right = 0;
-			if (left == 0) left = grid_w - 1;
+			if (left == -1) left = grid_w - 1;
 			outgoing_channels.at(i).at(j).add_comm(incoming_channels.at(up).at(j));
 			outgoing_channels.at(i).at(j).add_comm(incoming_channels.at(down).at(j));
 			outgoing_channels.at(i).at(j).add_comm(incoming_channels.at(i).at(right));
@@ -89,6 +89,6 @@ int main(int argc, char **argv)
 
 	/* execute the network */
 	gff::run();
-
+	
 	return 0;
 }
