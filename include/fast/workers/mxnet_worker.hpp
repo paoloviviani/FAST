@@ -267,7 +267,20 @@ class MXNetWorkerLogic
         pipe_->run();
 
         FAST_DEBUG("(MXNET WORKER): Emitting trigger");
-        c.emit(token2public<FAST::gam_vector<T>>(TRIGGER_TOKEN));
+        if (FAST::rank() != 0)
+            token2public<FAST::gam_vector<T>>(TRIGGER_TOKEN).push(0);
+        else
+        {
+            int count = 0;
+            while(count < FAST::cardinality() -1)
+            {
+                auto p = gam::pull_public<float>();
+                count++;
+            }
+            for (int i = 0; i < FAST::cardinality(); i++)
+                token2public<FAST::gam_vector<T>>(TRIGGER_TOKEN).push(i);
+        }
+        
     }
 
     void svc_end(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c)

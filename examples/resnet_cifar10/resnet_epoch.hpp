@@ -38,7 +38,7 @@ class ModelLogic
 		if (const char *init_env = std::getenv("INIT_WEIGHTS"))
 			init_filename = std::string(init_env);
 		else
-			init_filename = "../../initialized_weights/resnet18_cifar10_init_" + std::to_string(batch_size_) + ".bin";
+			init_filename = "../../initialized_weights/resnet18_cifar10_init_batch_" + std::to_string(batch_size_) + ".bin";
 
 		std::string filename = "worker_" + std::to_string(FAST::rank()) + ".log";
 		log_file = ofstream(filename, std::ofstream::out | std::ofstream::app);
@@ -182,8 +182,6 @@ class ModelLogic
 			best_file.flush();
 			mxnet::cpp::NDArray::Save("./w_"+ std::to_string(FAST::rank()) +".bin", args);
 		}
-		MXNotifyShutdown();
-		delete exec;
 	}
 
 	Symbol net;

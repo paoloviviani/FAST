@@ -12,8 +12,8 @@ env_settings = os.environ.copy()
 
 batch_size = 32
 learning_rate = 0.0005
-symbol_file = '../../resnet18_v2.json'
-init_file = '../../initialized_weights/resnet18_cifar10_init_' + str(batch_size) + '.bin'
+symbol_file = os.path.abspath('../../symbols/resnet18_v2.json')
+init_file = '../../initialized_weights/resnet18_cifar10_init_batch_' + str(batch_size) + '.bin'
 max_epochs = 50
 
 env_settings['BATCH_SIZE'] = str(batch_size)
@@ -52,7 +52,7 @@ for epoch in range(max_epochs):
             os.remove(epoch_file(epoch-1))
 
     while not os.path.isfile(epoch_file(epoch)):
-        time.sleep(0.2)
+        time.sleep(0.1)
 
     env_settings['INIT_WEIGHTS'] = epoch_file(epoch)
     end = time.time()

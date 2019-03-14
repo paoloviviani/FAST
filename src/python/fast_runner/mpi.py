@@ -68,6 +68,7 @@ def submit(args, fast_bin_path):
     cmd_list.append('mpirun')
     cmd_list.append('-n ' + str(args.num_workers))
     cmd_list.append('--pernode')
+    # cmd_list.append('--mca mpi_paffinity_alone 1')
     cmd_list.append('--tag-output')
     cmd_list.append('--machinefile ' + str(args.machinefile))
     cmd_list.extend(utils.get_mpi_env(pass_env))
