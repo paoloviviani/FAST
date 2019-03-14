@@ -29,12 +29,6 @@ static auto TERMINATION_TAG = ff::FF_TAG_MIN;
 static auto NEXT_ITERATION = (void *)((uint64_t)ff::FF_TAG_MIN + 1);
 static auto END_OF_INPUT = (void *)((uint64_t)ff::FF_TAG_MIN + 3);
 
-template <typename T>
-gam::public_ptr<T> token2public(uint64_t token)
-{
-    return gam::public_ptr<T>(gam::GlobalPointer(token));
-}
-
 typedef std::vector<mxnet::cpp::NDArray> NDAvector;
 
 /**

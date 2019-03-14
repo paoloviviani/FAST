@@ -56,6 +56,12 @@ uint32_t cardinality()
 }
 
 template <typename T>
+gam::public_ptr<T> token2public(uint64_t token)
+{
+    return gam::public_ptr<T>(gam::GlobalPointer(token));
+}
+
+template <typename T>
 bool global_sync()
 {
     if (rank() != 0)
