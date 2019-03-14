@@ -120,8 +120,7 @@ class ModelLogic
 				NDArray::WaitAll();
 				val_acc.Update(data_batch.label, exec->outputs[0]);
 			}
-			if (epoch_ == 10)
-				max_epoch_reached = true; // Terminate
+			max_epoch_reached = true; // Terminate
 			std::cerr << "=== Epoch === " << epoch_ << std::endl;
 			std::cerr << "=== TRAINING ACCURACY === " << train_acc.Get() << std::endl;
 			std::cerr << "=== TEST ACCURACY === " << val_acc.Get() << std::endl;

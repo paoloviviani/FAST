@@ -29,9 +29,6 @@ static auto TERMINATION_TAG = ff::FF_TAG_MIN;
 static auto NEXT_ITERATION = (void *)((uint64_t)ff::FF_TAG_MIN + 1);
 static auto END_OF_INPUT = (void *)((uint64_t)ff::FF_TAG_MIN + 3);
 
-constexpr auto EOI_TOKEN = gff::go_on - 1;
-constexpr auto TRIGGER_TOKEN = gff::go_on - 2;
-
 template <typename T>
 gam::public_ptr<T> token2public(uint64_t token)
 {
@@ -69,10 +66,10 @@ class InputStage : public ff::ff_node
             return ff::FF_GO_ON;
         }
 
-        auto recv_ptr = (FAST::gam_vector<T> *)task;
+        auto recv_ptr = (gam_vector<T> *)task;
 
         FAST_DEBUG("(INPUT STAGE): got real pointer of size " << (*recv_ptr).size())
-        FAST::accumToNDVec(*recv_ptr, *buffer_, logic_->arg_names, logic_->data_tag, logic_->label_tag, 1., mxnet::cpp::Context::cpu());
+        accumToNDVec(*recv_ptr, *buffer_, logic_->arg_names, logic_->data_tag, logic_->label_tag, 1., mxnet::cpp::Context::cpu());
         recv_ptr->clear();
         gam::DELETE((std::vector<T> *)recv_ptr);
 
@@ -81,7 +78,7 @@ class InputStage : public ff::ff_node
             FAST_DEBUG("(INPUT STAGE): push gradients");
             this->ff_send_out((void *)buffer_);
             buffer_ = new NDAvector();
-            FAST::buildNDVec(*buffer_, logic_->exec->grad_arrays, logic_->arg_names, mxnet::cpp::Context::cpu());
+            buildNDVec(*buffer_, logic_->exec->grad_arrays, logic_->arg_names, mxnet::cpp::Context::cpu());
         }
         return NEXT_ITERATION;
     }
@@ -90,7 +87,7 @@ class InputStage : public ff::ff_node
     {
         FAST_DEBUG("(INPUT STAGE): init stage");
         buffer_ = new NDAvector();
-        FAST::buildNDVec(*buffer_, logic_->exec->grad_arrays, logic_->arg_names, mxnet::cpp::Context::cpu());
+        buildNDVec(*buffer_, logic_->exec->grad_arrays, logic_->arg_names, mxnet::cpp::Context::cpu());
         FAST_DEBUG("(INPUT STAGE): Built NDVec");
         return 0;
     }
@@ -193,12 +190,12 @@ class MXNetWorkerLogic
         {
             FAST_INFO("Received EOI token");
             eoi = true;
-            if (FAST::rank() == 0)
+            if (rank() == 0)
             {
-                if (++eoi_cnt_ == FAST::cardinality() - 1)
+                if (++eoi_cnt_ == cardinality() - 1)
                 {
-                    for (int i = 1; i < FAST::cardinality(); i++)
-                        token2public<FAST::gam_vector<T>>(EOI_TOKEN).push(i);
+                    for (int i = 1; i < cardinality(); i++)
+                        token2public<gam_vector<T>>(EOI_TOKEN).push(i);
                     return gff::eot;
                 }
             }
@@ -228,8 +225,8 @@ class MXNetWorkerLogic
                 if (!eoi)
                 {
                     FAST_INFO("(MXNET WORKER) Sent EOI token");
-                    if (FAST::rank() != 0)
-                        token2public<FAST::gam_vector<T>>(EOI_TOKEN).push(0);
+                    if (rank() != 0)
+                        token2public<gam_vector<T>>(EOI_TOKEN).push(0);
                     eoi = true;
                 }
                 return gff::go_on;
@@ -237,8 +234,8 @@ class MXNetWorkerLogic
             else
             { //out data
                 FAST_DEBUG("(MXNET WORKER): Got data");
-                FAST::gam_vector<T> *out_vec = (FAST::gam_vector<T> *)outptr;
-                gam::public_ptr<FAST::gam_vector<T>> out_ptr(out_vec, gam::DELETE<FAST::gam_vector<T>>);
+                gam_vector<T> *out_vec = (gam_vector<T> *)outptr;
+                gam::public_ptr<gam_vector<T>> out_ptr(out_vec, gam::DELETE<gam_vector<T>>);
                 c.emit(std::move(out_ptr));
                 return gff::go_on;
             }
@@ -268,8 +265,7 @@ class MXNetWorkerLogic
         pipe_->run();
 
         FAST_DEBUG("(MXNET WORKER): Emitting trigger");
-        c.emit(token2public<FAST::gam_vector<T>>(TRIGGER_TOKEN));
-       
+        c.emit(token2public<gam_vector<T>>(TRIGGER_TOKEN));
     }
 
     void svc_end(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c)
@@ -278,16 +274,16 @@ class MXNetWorkerLogic
         FAST_DEBUG("(FINALIZATION)");
         float test_acc = logic_.val_acc.Get();
         auto accuracy = gam::make_public<float>(test_acc);
-        if (FAST::rank() != 0)
+        if (rank() != 0)
             accuracy.push(0);
-            
+
         FAST_INFO("(BEST WORKER): sent accuracy = " << test_acc);
-        int best = FAST::rank();
+        int best = rank();
         float max = test_acc;
         float acc = 0;
-        if (FAST::rank() == 0)
+        if (rank() == 0)
         {
-            for (int i = 1; i < FAST::cardinality(); i++)
+            for (int i = 1; i < cardinality(); i++)
             {
                 auto p = gam::pull_public<float>(i);
                 acc = *(p.local());
@@ -298,7 +294,7 @@ class MXNetWorkerLogic
                 }
             }
             auto best_ptr = gam::make_public<int>(best);
-            for (int i = 1; i < FAST::cardinality(); i++)
+            for (int i = 1; i < cardinality(); i++)
                 best_ptr.push(i);
         }
         else
@@ -307,7 +303,7 @@ class MXNetWorkerLogic
             best = *(best_ptr.local());
         }
         bool save = false;
-        if (best == FAST::rank())
+        if (best == rank())
         {
             save = true;
             FAST_INFO("(BEST WORKER): " << best << "  accuracy = " << max);
