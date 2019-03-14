@@ -72,8 +72,6 @@ int main(int argc, char **argv)
 			if (down == 0) down = grid_h - 1;
 			if (right == grid_w)  right = 0;
 			if (left == 0) left = grid_w - 1;
-			j == grid_w - 1 ? right = 0 : right = j + 1;
-			j == 0 ? left = grid_w - 1 : left = j - 1;
 			outgoing_channels.at(i).at(j).add_comm(incoming_channels.at(up).at(j));
 			outgoing_channels.at(i).at(j).add_comm(incoming_channels.at(down).at(j));
 			outgoing_channels.at(i).at(j).add_comm(incoming_channels.at(i).at(right));
