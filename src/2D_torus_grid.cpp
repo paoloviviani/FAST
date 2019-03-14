@@ -64,8 +64,14 @@ int main(int argc, char **argv)
 			// Add neighboring channels (i+1,j),(i-1,j),(i,j+1),(i,j-1) in torus topology
 
 			unsigned int up, right, down, left;
-			i == grid_h - 1 ? down = 0 : down = i + 1;
-			i == 0 ? up = grid_h - 1 : up = i - 1;
+			right = j + 1;
+			left = j - 1;
+			up = i + 1;
+			down = i - 1;
+			if (up == grid_h)  up = 0;
+			if (down == 0) down = grid_h - 1;
+			if (right == grid_w)  right = 0;
+			if (left == 0) left = grid_w - 1;
 			j == grid_w - 1 ? right = 0 : right = j + 1;
 			j == 0 ? left = grid_w - 1 : left = j - 1;
 			outgoing_channels.at(i).at(j).add_comm(incoming_channels.at(up).at(j));
