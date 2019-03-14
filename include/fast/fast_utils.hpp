@@ -65,12 +65,14 @@ template <typename T>
 bool global_sync()
 {
     if (rank() != 0)
+    {
         token2public<T>(SYNC_TOKEN).push(0);
-        do
+        auto p = gam::pull_public<T>();
+        while (p.get().address() != SYNC_TOKEN)
         {
-            auto p = gam::pull_public<T>();
-        } while (p.get().address() != SYNC_TOKEN);
-        
+            p = gam::pull_public<T>();
+        }
+    }
     else
     {
         int count = 0;
