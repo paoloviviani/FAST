@@ -12,7 +12,7 @@ class ModelLogic
 	void init()
 	{
 
-		float learning_rate = 0.001;
+		float learning_rate = 0.01;
 
 		// Parsing environment for config
 		if (const char *batch_env = std::getenv("BATCH_SIZE"))
@@ -62,8 +62,9 @@ class ModelLogic
 						 .SetParam("shuffle", 1)
 						 .SetParam("seed", 1)
 						 .SetParam("preprocess_threads", 4)
-						 .SetParam("num_parts", FAST::cardinality()) // SMALLER FOR DEBUG
+						 .SetParam("num_parts", FAST::cardinality())
 						 .SetParam("part_index", FAST::rank())
+						 .SetParam("pad", 4)
 						 .CreateDataIter();
 
 		val_iter = MXDataIter("ImageRecordIter")
@@ -75,7 +76,7 @@ class ModelLogic
 					   .SetParam("batch_size", batch_size_)
 					   .SetParam("round_batch", 0)
 					   .SetParam("preprocess_threads", 4)
-					   .SetParam("pad", 2)
+					   .SetParam("pad", 4)
 					   .CreateDataIter();
 
 		FAST_DEBUG("(LOGIC): Loaded data ");

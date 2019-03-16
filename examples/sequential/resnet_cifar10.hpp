@@ -38,8 +38,8 @@ class ModelLogic
 						 .SetParam("data_shape", Shape(3, 32, 32))
 						 .SetParam("batch_size", batch_size_)
 						 .SetParam("shuffle", 1)
-						 .SetParam("seed", 1)
 						 .SetParam("preprocess_threads", 4)
+						 .SetParam("pad", 4)
 						 .CreateDataIter();
 
 		val_iter = MXDataIter("ImageRecordIter")
@@ -51,7 +51,7 @@ class ModelLogic
 					   .SetParam("batch_size", batch_size_)
 					   .SetParam("round_batch", 0)
 					   .SetParam("preprocess_threads", 4)
-					   // .SetParam("pad", 2)
+					   .SetParam("pad", 4)
 					   .CreateDataIter();
 
 		args["data"] = NDArray(Shape(batch_size_, 3, image_size, image_size), ctx);

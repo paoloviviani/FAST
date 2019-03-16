@@ -199,9 +199,9 @@ class MXNetWorkerLogic
         default:
         { //data
             assert(in.get().is_address());
-            FAST_INFO("RECEIVED: " << ++recv_count);
             if (!eoi)
             {
+                FAST_INFO("RECEIVED: " << ++recv_count);
                 auto in_ptr = in.unique_local().release();
                 pipe_->offload((void *)in_ptr);
             }
@@ -264,6 +264,10 @@ class MXNetWorkerLogic
     void svc_end(gff::OutBundleBroadcast<gff::NondeterminateMerge> &c)
     {
         pipe_->offload(ff::FF_EOS);
+        if (pipe_->wait() < 0)
+        {
+            FAST_ERROR("(FINALIZATION): error waiting pipeline");
+        }
         FAST_DEBUG("(FINALIZATION)");
         float test_acc = logic_.val_acc.Get();
         auto accuracy = gam::make_public<float>(test_acc);
@@ -302,10 +306,6 @@ class MXNetWorkerLogic
             FAST_INFO("(BEST WORKER): " << best << "  accuracy = " << max);
         }
         logic_.finalize(save);
-        if (pipe_->wait() < 0)
-        {
-            FAST_ERROR("(FINALIZATION): error waiting pipeline");
-        }
     }
 
   private:
