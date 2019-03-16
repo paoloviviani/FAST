@@ -138,7 +138,7 @@ class Symbol {
   /*!
   * \return the SymbolHandle
   */
-  SymbolHandle GetHandle() const { return blob_ptr_->handle_; }
+  SymbolHandle GetHandle() const { return (blob_ptr_) ? blob_ptr_->handle_: NULL; }
   /*!
   * \brief construct an operator Symbol, with given input Symbol and config
   * \param name the name of the Symbol
@@ -178,6 +178,8 @@ class Symbol {
   std::vector<std::string> ListOutputs() const;
   /*! \return get the descriptions of auxiliary data for this symbol */
   std::vector<std::string> ListAuxiliaryStates() const;
+  /*! \return get the name of the symbol */
+  std::string GetName() const;
   /*!
   * \brief infer and construct all the arrays to bind to executor by providing
   * some known arrays.

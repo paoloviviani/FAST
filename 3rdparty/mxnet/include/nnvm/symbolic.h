@@ -1,6 +1,6 @@
 /*!
  *  Copyright (c) 2016 by Contributors
- * \file symbolic.h
+ * \file nnvm/symbolic.h
  * \brief Symbolic graph construction API
  *
  *  This API is optional, but useful to allow user
@@ -15,8 +15,8 @@
 #include <tuple>
 #include <utility>
 
-#include "./base.h"
-#include "./node.h"
+#include "base.h"
+#include "node.h"
 
 namespace nnvm {
 /*!
@@ -28,7 +28,7 @@ namespace nnvm {
  *  symbol is the final operation of a graph and thus including all the information
  *  required (the graph) to evaluate its output value.
  */
-class Symbol {
+class NNVM_DLL Symbol {
  public:
   /*! \brief option passed to ListAttr */
   enum ListAttrOption {

@@ -12,13 +12,13 @@ class ModelLogic
 	void init()
 	{
 
-		float learning_rate = 0.01;
+		float learning_rate = 0.001;
 
 		// Parsing environment for config
 		if (const char *batch_env = std::getenv("BATCH_SIZE"))
 			batch_size_ = std::stoi(std::string(batch_env));
 		else
-			batch_size_ = 32;
+			batch_size_ = 128;
 		assert(batch_size_ == 16 || batch_size_ == 32 || batch_size_ == 128 || batch_size_ == 256);
 
 		if (const char *epoch_env = std::getenv("EPOCH"))
@@ -51,7 +51,6 @@ class ModelLogic
 		Symbol label = Symbol::Variable("label");
 		net = SoftmaxOutput(net, label);
 
-		MXRandomSeed(42);
 
 		train_iter = MXDataIter("ImageRecordIter")
 						 .SetParam("path_imglist", "../../cifar10/cifar10_train.lst")
@@ -61,7 +60,8 @@ class ModelLogic
 						 .SetParam("data_shape", Shape(3, 32, 32))
 						 .SetParam("batch_size", batch_size_)
 						 .SetParam("shuffle", 1)
-						 .SetParam("preprocess_threads", 24)
+						 .SetParam("seed", 1)
+						 .SetParam("preprocess_threads", 4)
 						 .SetParam("num_parts", FAST::cardinality()) // SMALLER FOR DEBUG
 						 .SetParam("part_index", FAST::rank())
 						 .CreateDataIter();
@@ -74,7 +74,7 @@ class ModelLogic
 					   .SetParam("data_shape", Shape(3, 32, 32))
 					   .SetParam("batch_size", batch_size_)
 					   .SetParam("round_batch", 0)
-					   .SetParam("preprocess_threads", 24)
+					   .SetParam("preprocess_threads", 4)
 					   .SetParam("pad", 2)
 					   .CreateDataIter();
 
@@ -90,6 +90,8 @@ class ModelLogic
 		opt = OptimizerRegistry::Find("adam");
 		opt->SetParam("lr", learning_rate);
 		opt->SetParam("wd", 1e-4);
+		opt->SetParam("rescale_grad", 1.0 / batch_size_);
+     	opt->SetParam("clip_gradient", 10);
 
 		exec = net.SimpleBind(ctx, args);
 		arg_names = net.ListArguments();

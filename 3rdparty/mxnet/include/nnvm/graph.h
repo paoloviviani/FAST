@@ -1,6 +1,6 @@
 /*!
  *  Copyright (c) 2016 by Contributors
- * \file graph.h
+ * \file nnvm/graph.h
  * \brief Configuation of nnvm as well as basic data structure.
  */
 #ifndef NNVM_GRAPH_H_
@@ -12,9 +12,9 @@
 #include <algorithm>
 #include <unordered_map>
 #include <unordered_set>
-#include "./base.h"
-#include "./node.h"
-#include "./symbolic.h"
+#include "base.h"
+#include "node.h"
+#include "symbolic.h"
 
 namespace nnvm {
 

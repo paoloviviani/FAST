@@ -1,6 +1,6 @@
 /*!
  *  Copyright (c) 2017 by Contributors
- * \file packed_func_ext.h
+ * \file nnvm/compiler/packed_func_ext.h
  * \brief Extension to enable packed functionn for nnvm types
  */
 #ifndef NNVM_COMPILER_PACKED_FUNC_EXT_H_
@@ -11,6 +11,7 @@
 #include <nnvm/graph.h>
 #include <nnvm/symbolic.h>
 #include <string>
+#include <vector>
 #include <unordered_map>
 
 namespace nnvm {
@@ -52,6 +53,7 @@ template<>
 struct extension_class_info<nnvm::compiler::AttrDict> {
   static const int code = 18;
 };
+
 }  // namespace runtime
 }  // namespace tvm
 #endif  // NNVM_COMPILER_PACKED_FUNC_EXT_H_

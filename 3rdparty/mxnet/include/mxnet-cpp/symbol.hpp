@@ -172,6 +172,14 @@ inline std::vector<std::string> Symbol::ListAuxiliaryStates() const {
   return ret;
 }
 
+inline std::string Symbol::GetName() const {
+  int success;
+  const char* out_name;
+  CHECK_EQ(MXSymbolGetName(GetHandle(), &out_name, &success), 0);
+  CHECK_EQ(success, 1);
+  return std::string(out_name);
+}
+
 inline void Symbol::InferShape(
     const std::map<std::string, std::vector<mx_uint> > &arg_shapes,
     std::vector<std::vector<mx_uint> > *in_shape,
@@ -273,8 +281,8 @@ inline void Symbol::InferExecutorArrays(
     auto iter_req = grad_req_type.find(arg_name);
     if (iter_req != grad_req_type.end()) {
       grad_reqs->push_back(iter_req->second);
-    } else if (arg_name.rfind("data") == arg_name.length() - 4
-            || arg_name.rfind("label") == arg_name.length() - 5) {
+    } else if (arg_name.rfind("data") != std::string::npos
+            || arg_name.rfind("label") != std::string::npos) {
       grad_reqs->push_back(OpReqType::kNullOp);
     } else {
       grad_reqs->push_back(OpReqType::kWriteTo);

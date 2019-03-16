@@ -10,11 +10,11 @@ def epoch_file(epoch):
     return 'initw_'+str(epoch)+'.bin'
 env_settings = os.environ.copy()
 
-batch_size = 32
-learning_rate = 0.0005
+batch_size = 128
+learning_rate = 0.0001
 symbol_file = os.path.abspath('../../symbols/resnet18_v2.json')
 init_file = '../../initialized_weights/resnet18_cifar10_init_batch_' + str(batch_size) + '.bin'
-max_epochs = 50
+max_epochs = 100
 
 env_settings['BATCH_SIZE'] = str(batch_size)
 env_settings['LEARNING_RATE'] = str(learning_rate)

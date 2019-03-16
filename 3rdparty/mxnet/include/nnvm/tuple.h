@@ -1,6 +1,6 @@
 /*!
  *  Copyright (c) 2016 by Contributors
- * \file tuple.h
+ * \file nnvm/tuple.h
  * \brief Data structure Tuple and TShape to store dynamic sized shapes.
  */
 #ifndef NNVM_TUPLE_H_
@@ -12,7 +12,7 @@
 #include <utility>
 #include <iostream>
 #include <string>
-#include "./base.h"
+#include "base.h"
 
 namespace nnvm {
 
@@ -53,11 +53,18 @@ class Tuple {
     this->assign(init.begin(), init.end());
   }
   /*!
+   * \brief constructor from vector
+   * \param init the vector
+   */
+  inline Tuple(std::vector<ValueType> init) {  // NOLINT(runtime/explicit)
+    this->assign(init.begin(), init.end());
+  }
+  /*!
    * \brief move constructor from Tuple
    * \param src the source shape
    */
 
-  inline Tuple(Tuple<ValueType>&& src) { // NOLINT(*)
+  inline Tuple(Tuple<ValueType>&& src) {   // NOLINT(runtime/explicit)
     this->swap(src);
   }
   /*!
@@ -611,6 +618,8 @@ struct hash<nnvm::TShape> {
 }  // namespace std
 
 namespace dmlc {
+/*! \brief description for optional TShape */
+DMLC_DECLARE_TYPE_NAME(optional<nnvm::TShape>, "Shape or None");
 // avoid low version of MSVC
 #if !defined(_MSC_VER)
 template<typename T>
