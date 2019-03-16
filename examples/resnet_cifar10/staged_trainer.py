@@ -35,10 +35,6 @@ log.flush()
 start = time.time()
 
 for epoch in range(max_epochs):
-    if epoch > 0:
-        if epoch % 4 == 0:
-            learning_rate = learning_rate/2
-            env_settings['LEARNING_RATE'] = str(learning_rate)
 
     env_settings['EPOCH'] = str(epoch)
     epoch_start = time.time()

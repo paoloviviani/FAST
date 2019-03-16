@@ -131,8 +131,6 @@ class ModelLogic
 			log_file.flush();
 
 			FAST_DEBUG("(LOGIC): MAX EPOCH REACHED");
-			train_iter.Reset();
-			train_acc.Reset();
 			epoch_++;
 			return;
 		}
