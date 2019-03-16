@@ -13,9 +13,6 @@
 #include <map>
 #include <chrono>
 
-#include "gff.hpp"
-#include "gam.hpp"
-
 #include <ff/pipeline.hpp>
 #include <ff/node.hpp>
 
@@ -127,6 +124,7 @@ class TrainerStage : public ff::ff_node
                 assert(in_ptr->size() > 0);
                 logic_->update(*in_ptr);
                 FAST_DEBUG("(TRAINER STAGE): executed batch from gradients");
+                FAST_INFO("UPDATED: " << ++upd_count);
                 in_ptr->clear();
                 delete in_ptr;
                 // gam::DELETE(in_ptr);
@@ -139,6 +137,9 @@ class TrainerStage : public ff::ff_node
 
   private:
     ModelLogic *logic_;
+#ifdef LOGLEVEL_DEBUG
+    int upd_count = 0;
+#endif
 };
 
 template <typename ModelLogic, typename T>
@@ -201,6 +202,7 @@ class MXNetWorkerLogic
         default:
         { //data
             assert(in.get().is_address());
+            FAST_DEBUG("RECEIVED: " << ++recv_count);
             if (!eoi)
             {
                 auto in_ptr = in.unique_local().release();
@@ -316,6 +318,9 @@ class MXNetWorkerLogic
     int eoi_cnt_ = 0;
     bool eoi = false;
     int neighbors;
+#ifdef LOGLEVEL_DEBUG
+    int recv_count = 0;
+#endif
 };
 
 } // namespace FAST
