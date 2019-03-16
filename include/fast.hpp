@@ -9,6 +9,7 @@
 #define FAST_FAST_HPP_
 
 #include "gam.hpp"
+#include "gff.hpp"
 
 #include "fast/gam_vector.hpp"
 #include "fast/fast_utils.hpp"

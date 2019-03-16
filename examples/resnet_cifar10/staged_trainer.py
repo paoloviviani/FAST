@@ -36,6 +36,8 @@ start = time.time()
 
 for epoch in range(max_epochs):
 
+    print "Worker", str(rank), "Epoch", str(epoch)
+
     env_settings['EPOCH'] = str(epoch)
     epoch_start = time.time()
     ret = subprocess.call(command, env=env_settings, stdout=sys.stdout, stderr=sys.stderr)
