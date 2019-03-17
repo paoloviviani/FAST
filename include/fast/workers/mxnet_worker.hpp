@@ -269,7 +269,7 @@ class MXNetWorkerLogic
             FAST_ERROR("(FINALIZATION): error waiting pipeline");
         }
         FAST_DEBUG("(FINALIZATION)");
-        float test_acc = logic_.val_acc.Get();
+        float test_acc = logic_.val_acc;
         auto accuracy = gam::make_public<float>(test_acc);
         if (rank() != 0)
             accuracy.push(0);

@@ -105,36 +105,39 @@ class ModelLogic
 
 	void run_batch()
 	{
+		if (max_epoch_reached)
+			return;
 
 		if (!train_iter.Next())
 		{
 			FAST_DEBUG("(LOGIC): next epoch");
 			iter_ = 0;
 
-			val_acc.Reset();
+			Accuracy test;
 			val_iter.Reset();
+			float acc;
 			while (val_iter.Next())
 			{
 				auto data_batch = val_iter.GetDataBatch();
 				data_batch.data.CopyTo(&args["data"]);
 				data_batch.label.CopyTo(&args["label"]);
 				// Forward pass is enough as no gradient is needed when evaluating
-				exec->Forward(false);
+				exec->Forward(true);
 				NDArray::WaitAll();
-				val_acc.Update(data_batch.label, exec->outputs[0]);
+				test.Update(data_batch.label, exec->outputs[0]);
+				val_acc = test.Get();
 			}
 			max_epoch_reached = true; // Terminate
 			std::cerr << "=== Epoch === " << epoch_ << std::endl;
 			std::cerr << "=== TRAINING ACCURACY === " << train_acc.Get() << std::endl;
-			std::cerr << "=== TEST ACCURACY === " << val_acc.Get() << std::endl;
+			std::cerr << "=== TEST ACCURACY === " << acc << std::endl;
 
 			auto toc = chrono::system_clock::now();
 			float duration = chrono::duration_cast<chrono::milliseconds>(toc - init_time).count() / 1000.0;
-			log_file << epoch_ << "\t" << duration << "\t" << train_acc.Get() << "\t\t" << val_acc.Get() << std::endl;
+			log_file << epoch_ << "\t" << duration << "\t" << train_acc.Get() << "\t\t" << val_acc << std::endl;
 			log_file.flush();
 
 			FAST_DEBUG("(LOGIC): MAX EPOCH REACHED");
-			epoch_++;
 			return;
 		}
 
@@ -198,7 +201,8 @@ class ModelLogic
 	bool max_epoch_reached = false;
 	MXDataIter train_iter = MXDataIter("ImageRecordIter");
 	MXDataIter val_iter = MXDataIter("ImageRecordIter");
-	Accuracy train_acc, val_acc;
+	Accuracy train_acc;
+	float val_acc;
 	int batch_size_ = 32;
 	const std::string data_tag = "data";
 	const std::string label_tag = "label";
