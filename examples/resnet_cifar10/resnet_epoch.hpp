@@ -185,7 +185,7 @@ class ModelLogic
 		{
 			std::string bestname = "best_accuracy.log";
 			ofstream best_file = ofstream(bestname, std::ofstream::out | std::ofstream::app);
-			best_file << std::to_string(val_acc.Get()) << std::endl;
+			best_file << std::to_string(val_acc) << std::endl;
 			best_file.flush();
 			mxnet::cpp::NDArray::Save("./w_" + std::to_string(FAST::rank()) + ".bin", args);
 		}
