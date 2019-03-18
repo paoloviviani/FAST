@@ -60,7 +60,7 @@ class ModelLogic
 						 .SetParam("data_shape", Shape(3, 32, 32))
 						 .SetParam("batch_size", batch_size_)
 						 .SetParam("shuffle", 1)
-						 .SetParam("seed", 1)
+						 .SetParam("seed", epoch_)
 						 .SetParam("preprocess_threads", 4)
 						 .SetParam("num_parts", FAST::cardinality())
 						 .SetParam("part_index", FAST::rank())
@@ -133,7 +133,7 @@ class ModelLogic
 			std::cerr << "=== TEST ACCURACY === " << val_acc << std::endl;
 
 			auto toc = chrono::system_clock::now();
-			float duration = chrono::duration_cast<chrono::milliseconds>(toc - init_time).count() / 1000.0;
+			duration = chrono::duration_cast<chrono::milliseconds>(toc - init_time).count() / 1000.0;
 			log_file << epoch_ << "\t" << duration << "\t" << train_acc.Get() << "\t\t" << val_acc << std::endl;
 			log_file.flush();
 
@@ -185,7 +185,7 @@ class ModelLogic
 		{
 			std::string bestname = "best_accuracy.log";
 			ofstream best_file = ofstream(bestname, std::ofstream::out | std::ofstream::app);
-			best_file << std::to_string(val_acc) << std::endl;
+			best_file << epoch_ << "\t" << duration << "\t" << train_acc.Get() << "\t\t" << val_acc << std::endl;
 			best_file.flush();
 			mxnet::cpp::NDArray::Save("./w_" + std::to_string(FAST::rank()) + ".bin", args);
 		}
@@ -206,7 +206,7 @@ class ModelLogic
 	int batch_size_ = 32;
 	const std::string data_tag = "data";
 	const std::string label_tag = "label";
-	float total_time;
+	float duration;
 	ofstream log_file;
 	std::chrono::_V2::system_clock::time_point init_time;
 };
