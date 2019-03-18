@@ -271,9 +271,16 @@ class MXNetWorkerLogic
         FAST_DEBUG("(FINALIZATION)");
         float test_acc = logic_.val_acc;
         auto accuracy = gam::make_public<float>(test_acc);
-        if (rank() != 0)
+        if (rank() == 0)
+            for (int i = 1; i < cardinality(); i++)
+                token2public<gam_vector<T>>(TRIGGER_TOKEN).push(i);
+        else
+        {
+            auto p = gam::pull_public<float>(0);
+            assert(p.get().address() == TRIGGER_TOKEN);
             accuracy.push(0);
-
+        }
+        
         FAST_INFO("(BEST WORKER): sent accuracy = " << test_acc);
         int best = rank();
         float max = test_acc;
@@ -305,7 +312,21 @@ class MXNetWorkerLogic
             save = true;
             FAST_INFO("(BEST WORKER): " << best << "  accuracy = " << max);
         }
+       
         logic_.finalize(save);
+
+        if (rank() == best)
+            for (int i = 0; i < cardinality(); i++)
+            {
+                if (i == best) continue;
+                token2public<gam_vector<T>>(TRIGGER_TOKEN).push(i);
+            }
+        else
+        {
+            auto p = gam::pull_public<float>(best);
+            assert(p.get().address() == TRIGGER_TOKEN);
+        }
+
     }
 
   private:

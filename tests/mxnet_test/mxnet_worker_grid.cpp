@@ -29,12 +29,6 @@ struct Dummy
   std::vector<NDArray> grad_arrays;
 };
 
-struct DummyAcc
-{
-  float acc;
-  float Get() {return acc;};
-};
-
 class ModelLogic
 {
 public:
@@ -53,7 +47,7 @@ public:
       exec->grad_arrays.push_back(NDArray(Shape(BATCH_SIZE, 10), ctx));
       exec->grad_arrays[i] = 0.;
     }
-    val_acc.acc = FAST::rank();
+    val_acc = FAST::rank();
     FAST_INFO("Logic initialized");
   }
 
@@ -93,7 +87,7 @@ public:
   bool max_epoch_reached = false;
   const std::string data_tag = "X";
   const std::string label_tag = "label";
-  DummyAcc val_acc;
+  float val_acc;
 };
 
 typedef gff::Filter<gff::NondeterminateMerge, gff::OutBundleBroadcast<gff::NondeterminateMerge>,        //
