@@ -15,11 +15,11 @@
 namespace FAST {
 
 template <typename T>
-void appendToVec(gam_vector<T> & vec, mxnet::cpp::NDArray & t, const float factor=1.){
+void appendToVec(gam_vector<T> & vec, mxnet::cpp::NDArray & t){
 	size_t append_size = t.Size();
 	size_t original_size = vec.size();
 	vec.resize(vec.size() + append_size);
-	(t*factor).SyncCopyToCPU(vec.data() + original_size,append_size);
+	t.SyncCopyToCPU(vec.data() + original_size,append_size);
 }
 
 template <typename T>
@@ -30,7 +30,7 @@ void vecToNDArray(gam_vector<T> & vec, mxnet::cpp::NDArray & t, size_t offset, s
 
 template <typename T>
 void NDVecToVec(std::vector<mxnet::cpp::NDArray> & grad_arrays, const std::vector<std::string> arg_names, gam_vector<T> & vec, //
-		std::string inp="X", std::string out="label", const float factor=1.) {
+		std::string inp="X", std::string out="label") {
     vec.clear();
 	size_t grad_size = 0;
 	for (size_t i = 0; i < grad_arrays.size(); i++) {
@@ -40,7 +40,7 @@ void NDVecToVec(std::vector<mxnet::cpp::NDArray> & grad_arrays, const std::vecto
 	vec.reserve(grad_size);
 	for (size_t i = 0; i < grad_arrays.size(); i++) {
 		if (arg_names[i] == inp || arg_names[i] == out)	continue;
-		appendToVec(vec, grad_arrays[i], factor);
+		appendToVec(vec, grad_arrays[i]);
 	}
 
 }
@@ -61,7 +61,7 @@ void vecToNDVec(gam_vector<T> & vec, std::vector<mxnet::cpp::NDArray> & grad_arr
 
 template <typename T>
 void accumToNDVec(gam_vector<T> & vec, std::vector<mxnet::cpp::NDArray> & grad_arrays, const std::vector<std::string> arg_names,//
-		 const std::string inp="X", const std::string out="label", const float decay=1., //
+		 const std::string inp="X", const std::string out="label", //
 		 const mxnet::cpp::Context & ctx=mxnet::cpp::Context::cpu()) {
 	size_t offset = 0;
 	for (size_t i = 0; i < grad_arrays.size(); i++) {

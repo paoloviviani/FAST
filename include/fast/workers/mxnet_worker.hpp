@@ -60,7 +60,7 @@ class InputStage : public ff::ff_node
         auto recv_ptr = (gam_vector<T> *)task;
 
         FAST_DEBUG("(INPUT STAGE): got real pointer of size " << (*recv_ptr).size())
-        accumToNDVec(*recv_ptr, *buffer_, logic_->arg_names, logic_->data_tag, logic_->label_tag, 1., mxnet::cpp::Context::cpu());
+        accumToNDVec(*recv_ptr, *buffer_, logic_->arg_names, logic_->data_tag, logic_->label_tag, mxnet::cpp::Context::cpu());
         recv_ptr->clear();
         gam::DELETE((std::vector<T> *)recv_ptr);
 
@@ -150,7 +150,7 @@ class OutputStage : public ff::ff_node
         if (task == END_OF_INPUT)
             return END_OF_INPUT;
         gam_vector<T> *out = gam::NEW<gam_vector<T>>();
-        NDVecToVec(logic_->exec->grad_arrays, logic_->arg_names, *out, logic_->data_tag, logic_->label_tag, 0.25);
+        NDVecToVec(logic_->exec->grad_arrays, logic_->arg_names, *out, logic_->data_tag, logic_->label_tag);
         FAST_DEBUG("(OUTPUT STAGE): serialized size " << out->size());
         return (void *)out;
     }
