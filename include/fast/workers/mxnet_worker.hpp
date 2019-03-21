@@ -124,7 +124,7 @@ class TrainerStage : public ff::ff_node
                 assert(in_ptr->size() > 0);
                 logic_->update(*in_ptr);
                 FAST_DEBUG("(TRAINER STAGE): executed batch from gradients");
-                FAST_INFO("UPDATED: " << ++upd_count);
+                FAST_DEBUG("UPDATED: " << ++upd_count);
                 in_ptr->clear();
                 delete in_ptr;
             }
@@ -201,7 +201,7 @@ class MXNetWorkerLogic
             assert(in.get().is_address());
             if (!eoi)
             {
-                FAST_INFO("RECEIVED: " << ++recv_count);
+                FAST_DEBUG("RECEIVED: " << ++recv_count);
                 auto in_ptr = in.unique_local().release();
                 pipe_->offload((void *)in_ptr);
             }
