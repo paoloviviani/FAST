@@ -9,6 +9,12 @@ from . import utils
 
 def submit(args, fast_bin_path):
 
+    def signal_handler(signal, frame):
+        print('Termination triggered by signal {0}'.format(signal))
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGHUP, signal_handler)
+
     max_nodes_per_host = 128
     base_pap = args.base_port
     base_mem = base_pap + max_nodes_per_host
@@ -50,6 +56,7 @@ def submit(args, fast_bin_path):
     cmd_list.append('--export=ALL')
     cmd_list.append('-N' + str(args.num_workers))
     cmd_list.append('--ntasks-per-node=1')
+    cmd_list.append('--quit-on-interrupt')
     cmd_list.append('-l')
     cmd_list.extend(args.command)
     cmd_string = ' '.join(cmd_list)
@@ -59,5 +66,3 @@ def submit(args, fast_bin_path):
 
     if(ret != 0):
         print 'SLURM ERROR: srun returned error ' + str(ret)
-
-    killall()
