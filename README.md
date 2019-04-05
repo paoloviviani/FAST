@@ -1,4 +1,4 @@
-# Flexible (A)synchronous Scalable Training
+https://github.com/paoloviviani/FAST/wiki# Flexible (A)synchronous Scalable Training
 
 ### Performance-oriented flexible distributed framework for deep neural networks data parallel training.
 
@@ -7,4 +7,4 @@ It can interoperate virtually with any deep learning framework out there, but in
 
 This projects is based on GAM (https://github.com/alpha-unito/gam) and FastFlow (https://github.com/fastflow/fastflow) and it is developed by the Alpha parallel computing programming group of university of Turin (http://alpha.di.unito.it/).
 
-Documentation is mainly based on the [examples](./examples), but the wiki is being populated.
+Documentation is mainly based on the [examples](./examples), but the [wiki](https://github.com/paoloviviani/FAST/wiki) is being populated.
