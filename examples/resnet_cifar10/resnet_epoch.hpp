@@ -125,6 +125,7 @@ class ModelLogic
 				exec->Forward(true);
 				NDArray::WaitAll();
 				test.Update(data_batch.label, exec->outputs[0]);
+				NDArray::WaitAll();
 				val_acc = test.Get();
 			}
 			max_epoch_reached = true; // Terminate

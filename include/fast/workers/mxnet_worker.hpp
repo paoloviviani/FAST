@@ -61,6 +61,7 @@ class InputStage : public ff::ff_node
 
         FAST_DEBUG("(INPUT STAGE): got real pointer of size " << (*recv_ptr).size())
         accumToNDVec(*recv_ptr, *buffer_, logic_->arg_names, logic_->data_tag, logic_->label_tag, mxnet::cpp::Context::cpu());
+        FAST_DEBUG("ACCUMULATED: " << ++accum_);
         recv_ptr->clear();
         gam::DELETE((std::vector<T> *)recv_ptr);
 
@@ -70,6 +71,8 @@ class InputStage : public ff::ff_node
             this->ff_send_out((void *)buffer_);
             buffer_ = new NDAvector();
             buildNDVec(*buffer_, logic_->exec->grad_arrays, logic_->arg_names, mxnet::cpp::Context::cpu());
+            accum_ = 0;
+            FAST_DEBUG("PUSHED");
         }
         return NEXT_ITERATION;
     }
@@ -96,6 +99,7 @@ class InputStage : public ff::ff_node
     ModelLogic *logic_;
     NDAvector *buffer_;
     bool first_push_ = true;
+    int accum_ = 0;
 };
 
 template <typename ModelLogic, typename T>
@@ -211,7 +215,9 @@ class MXNetWorkerLogic
         void *outptr = nullptr;
         while (!eoi)
         {
-            pipe_->load_result(&outptr);
+            if(!pipe_->load_result(&outptr, -1))
+                return gff::go_on;
+
             if (outptr == END_OF_INPUT)
             {
                 FAST_DEBUG("(MXNET WORKER): Got EOI");
