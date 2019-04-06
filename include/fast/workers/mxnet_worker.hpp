@@ -41,7 +41,7 @@ template <typename ModelLogic, typename T>
 class InputStage : public ff::ff_node
 {
   public:
-    InputStage(ModelLogic *logic) : logic_(logic), buffer_(nullptr), first_push_(true) {}
+    InputStage(ModelLogic *logic) : logic_(logic), buffer_(nullptr) {}
 
     void *svc(void *task)
     {
@@ -49,11 +49,7 @@ class InputStage : public ff::ff_node
         if (task == NEXT_ITERATION)
         {
             FAST_DEBUG("(INPUT STAGE): got trigger");
-            if (true)
-            {
-                this->ff_send_out(NEXT_ITERATION);
-                first_push_ = false;
-            }
+            this->ff_send_out(NEXT_ITERATION);
             return ff::FF_GO_ON;
         }
 
@@ -61,19 +57,14 @@ class InputStage : public ff::ff_node
 
         FAST_DEBUG("(INPUT STAGE): got real pointer of size " << (*recv_ptr).size())
         accumToNDVec(*recv_ptr, *buffer_, logic_->arg_names, logic_->data_tag, logic_->label_tag, mxnet::cpp::Context::cpu());
-        FAST_DEBUG("ACCUMULATED: " << ++accum_);
         recv_ptr->clear();
         gam::DELETE((std::vector<T> *)recv_ptr);
 
-        if (this->get_out_buffer()->empty())
-        {
-            FAST_DEBUG("(INPUT STAGE): push gradients");
-            this->ff_send_out((void *)buffer_);
-            buffer_ = new NDAvector();
-            buildNDVec(*buffer_, logic_->exec->grad_arrays, logic_->arg_names, mxnet::cpp::Context::cpu());
-            accum_ = 0;
-            FAST_DEBUG("PUSHED");
-        }
+        FAST_DEBUG("(INPUT STAGE): push gradients");
+        this->ff_send_out((void *)buffer_);
+        buffer_ = new NDAvector();
+        buildNDVec(*buffer_, logic_->exec->grad_arrays, logic_->arg_names, mxnet::cpp::Context::cpu());
+        FAST_DEBUG("PUSHED");
         return NEXT_ITERATION;
     }
 
@@ -98,8 +89,6 @@ class InputStage : public ff::ff_node
   private:
     ModelLogic *logic_;
     NDAvector *buffer_;
-    bool first_push_ = true;
-    int accum_ = 0;
 };
 
 template <typename ModelLogic, typename T>
@@ -118,17 +107,18 @@ class TrainerStage : public ff::ff_node
             FAST_DEBUG("(TRAINER STAGE): executed local batch ");
 
             // get_in_buffer()->pop(&task);
-            bool pop = this->Pop(&task, -1);
-            if (task == ff::FF_EOS)
-                return ff::FF_EOS;
-            if (pop && task != NEXT_ITERATION)
+            // bool pop = this->Pop(&task);
+
+            while (this->Pop(&task) && task != NEXT_ITERATION)
             {
+                if (task == ff::FF_EOS)
+                    return ff::FF_EOS;
                 // got a pointer from the input stage
                 NDAvector *in_ptr = (NDAvector *)task;
                 assert(in_ptr->size() > 0);
                 logic_->update(*in_ptr);
                 FAST_DEBUG("(TRAINER STAGE): executed batch from gradients");
-                FAST_DEBUG("UPDATED: " << ++upd_count);
+                FAST_INFO("UPDATED: " << ++upd_count);
                 in_ptr->clear();
                 delete in_ptr;
             }
@@ -179,7 +169,9 @@ class MXNetWorkerLogic
         {
         case TRIGGER_TOKEN:
         {
-            pipe_->offload(NEXT_ITERATION);
+            if (!first_)
+                pipe_->offload(NEXT_ITERATION);
+            first_ = false;
             break;
         }
         case EOI_TOKEN:
@@ -216,7 +208,10 @@ class MXNetWorkerLogic
         while (!eoi)
         {
             if(!pipe_->load_result(&outptr, -1))
+            {
+                c.emit(token2public<gam_vector<T>>(TRIGGER_TOKEN));
                 return gff::go_on;
+            }
 
             if (outptr == END_OF_INPUT)
             {
@@ -343,6 +338,8 @@ class MXNetWorkerLogic
     bool eoi = false;
     int neighbors;
     int recv_count = 0;
+    bool first_ = false;
+    int buffer_ = 0;
 };
 
 } // namespace FAST
