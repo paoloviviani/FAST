@@ -208,7 +208,7 @@ class MXNetWorkerLogic
         while (!eoi)
         {
             // Change -1 to a positive integer to provide asynchronicity
-            if(!pipe_->load_result(&outptr, 3))
+            if(!pipe_->load_result(&outptr, -1))
             {
                 c.emit(token2public<gam_vector<T>>(TRIGGER_TOKEN));
                 return gff::go_on;

@@ -128,7 +128,8 @@ class ModelLogic
 				NDArray::WaitAll();
 				val_acc = test.Get();
 			}
-			max_epoch_reached = true; // Terminate
+			if (epoch_ == max_epochs)
+				max_epoch_reached = true; // Terminate
 			std::cerr << "=== Epoch === " << epoch_ << std::endl;
 			std::cerr << "=== TRAINING ACCURACY === " << train_acc.Get() << std::endl;
 			std::cerr << "=== TEST ACCURACY === " << val_acc << std::endl;
@@ -210,4 +211,5 @@ class ModelLogic
 	float duration;
 	ofstream log_file;
 	std::chrono::_V2::system_clock::time_point init_time;
+	int max_epochs = 100;
 };
