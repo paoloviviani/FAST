@@ -97,7 +97,7 @@ class TrainerStage : public ff::ff_node
   public:
     TrainerStage(ModelLogic *logic) : logic_(logic) {}
 
-    void *svc(void *task)
+void *svc(void *task)
     {
 
         while (!logic_->max_epoch_reached)
@@ -340,7 +340,6 @@ class MXNetWorkerLogic
     int neighbors;
     int recv_count = 0;
     bool first_ = false;
-    int buffer_ = 0;
 };
 
 } // namespace FAST

@@ -15,6 +15,11 @@ class ModelLogic
 		float learning_rate = 0.01;
 
 		// Parsing environment for config
+		if (const char *sync_env = std::getenv("SYNC_EPOCHS"))
+			sync_epochs_ = std::stoi(std::string(sync_env));
+		else
+			sync_epochs_ = 1;
+
 		if (const char *batch_env = std::getenv("BATCH_SIZE"))
 			batch_size_ = std::stoi(std::string(batch_env));
 		else
@@ -90,7 +95,7 @@ class ModelLogic
 		opt = OptimizerRegistry::Find("adam");
 		opt->SetParam("lr", learning_rate);
 		opt->SetParam("wd", 1e-4);
-		opt->SetParam("rescale_grad", 1.0 );
+		opt->SetParam("rescale_grad", 1.0/(batch_size_*FAST::cardinality()) );
      	opt->SetParam("clip_gradient", 10);
 
 		exec = net.SimpleBind(ctx, args);
@@ -128,7 +133,16 @@ class ModelLogic
 				NDArray::WaitAll();
 				val_acc = test.Get();
 			}
-			max_epoch_reached = true; // Terminate
+			sync_epochs_--;
+			if (sync_epochs_ == 0) {
+				max_epoch_reached = true; // Terminate
+				FAST_DEBUG("(LOGIC): MAX EPOCH REACHED");
+			}
+			else
+			{
+				train_iter.Reset();
+				epoch_++;
+			}
 			std::cerr << "=== Epoch === " << epoch_ << std::endl;
 			std::cerr << "=== TRAINING ACCURACY === " << train_acc.Get() << std::endl;
 			std::cerr << "=== TEST ACCURACY === " << val_acc << std::endl;
@@ -138,7 +152,6 @@ class ModelLogic
 			log_file << epoch_ << "\t" << duration << "\t" << train_acc.Get() << "\t\t" << val_acc << std::endl;
 			log_file.flush();
 
-			FAST_DEBUG("(LOGIC): MAX EPOCH REACHED");
 			return;
 		}
 
@@ -199,6 +212,7 @@ class ModelLogic
 	std::vector<std::string> arg_names;
 	unsigned int iter_ = 0;
 	unsigned int epoch_ = 0;
+	unsigned int sync_epochs_ = 1;
 	bool max_epoch_reached = false;
 	MXDataIter train_iter = MXDataIter("ImageRecordIter");
 	MXDataIter val_iter = MXDataIter("ImageRecordIter");

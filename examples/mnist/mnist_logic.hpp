@@ -92,7 +92,7 @@ class ModelLogic
 			iter_ = 0;
 			epoch_++;
 			std::cout << "=== TRAINING ACCURACY === " << train_acc.Get() << std::endl;
-			val_acc.Reset();
+			test.Reset();
 			val_iter.Reset();
 			while (val_iter.Next())
 			{
@@ -102,7 +102,8 @@ class ModelLogic
 				// Forward pass is enough as no gradient is needed when evaluating
 				exec->Forward(false);
 				NDArray::WaitAll();
-				val_acc.Update(data_batch.label, exec->outputs[0]);
+				test.Update(data_batch.label, exec->outputs[0]);
+				val_acc = test.Get();
 			}
 			std::cout << "=== TEST ACCURACY === " << train_acc.Get() << std::endl;
 			if (epoch_ == 1)
@@ -178,7 +179,7 @@ class ModelLogic
 			NDArray::WaitAll();
 			acc.Update(data_batch.label, exec->outputs[0]);
 		}
-		FAST_INFO("=== VALIDATION ACCURACY === " << val_acc.Get());
+		FAST_INFO("=== VALIDATION ACCURACY === " << test.Get());
 	}
 
 	Symbol net;
@@ -191,7 +192,8 @@ class ModelLogic
 	bool max_epoch_reached = false;
 	MXDataIter train_iter = MXDataIter("MNISTIter");
 	MXDataIter val_iter = MXDataIter("MNISTIter");
-	Accuracy train_acc, val_acc;
+	Accuracy train_acc, test;
+	float val_acc;
 	int batch_size_ = 32;
 	const std::string data_tag = "X";
 	const std::string label_tag = "label";
