@@ -99,8 +99,9 @@ class ModelLogic
 
 		FAST_DEBUG("Logic initialized")
 		init_time = chrono::system_clock::now();
-		// log_file << "Epoch\tTime\tTraining accuracy\tTest accuracy" << std::endl;
-		// log_file.flush();
+		log_file << batch_size_ << "\t" << learning_rate << std::endl;
+		log_file << "Epoch\tTime\tTraining accuracy\tTest accuracy" << std::endl;
+		log_file.flush();
 	}
 
 	void run_batch()

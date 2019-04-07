@@ -118,7 +118,7 @@ class TrainerStage : public ff::ff_node
                 assert(in_ptr->size() > 0);
                 logic_->update(*in_ptr);
                 FAST_DEBUG("(TRAINER STAGE): executed batch from gradients");
-                FAST_INFO("UPDATED: " << ++upd_count);
+                FAST_DEBUG("UPDATED: " << ++upd_count);
                 in_ptr->clear();
                 delete in_ptr;
             }
@@ -207,7 +207,8 @@ class MXNetWorkerLogic
         void *outptr = nullptr;
         while (!eoi)
         {
-            if(!pipe_->load_result(&outptr, -1))
+            // Change -1 to a positive integer to provide asynchronicity
+            if(!pipe_->load_result(&outptr, 3))
             {
                 c.emit(token2public<gam_vector<T>>(TRIGGER_TOKEN));
                 return gff::go_on;

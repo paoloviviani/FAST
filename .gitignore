@@ -24,3 +24,5 @@ examples/distributed_models/resnet2nodes
 examples/distributed_models/mnist2Dgrid
 examples/distributed_models/mnistRing
 examples/distributed_models/resnet2Dgrid
+examples/mnist/mnistRing
+examples/mnist/mnist2Dgrid
