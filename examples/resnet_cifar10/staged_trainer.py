@@ -10,18 +10,20 @@ def epoch_file(epoch):
     return 'initw_'+str(epoch)+'.bin'
 env_settings = os.environ.copy()
 
-batch_size = 1024
+batch_size = 128
 learning_rate = 0.01
 symbol_file = os.path.abspath('../../symbols/resnet18_v2.json')
 init_file = '../../initialized_weights/resnet18_cifar10_init_batch_' + str(batch_size) + '.bin'
 max_epochs = 100
-sync_epochs = 4
+sync_epochs = 1
+optimizer = 'adagrad'
 
 env_settings['BATCH_SIZE'] = str(batch_size)
 env_settings['LEARNING_RATE'] = str(learning_rate)
 env_settings['SYMBOL_JSON'] = symbol_file
 env_settings['INIT_WEIGHTS'] = init_file
 env_settings['SYNC_EPOCHS'] = str(sync_epochs)
+env_settings['OPTMIZER'] = optimizer
 
 executable = 'resnetGrid'
 executable = os.path.join(os.path.abspath(os.pardir), executable)

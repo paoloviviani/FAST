@@ -109,7 +109,7 @@ void *svc(void *task)
             // get_in_buffer()->pop(&task);
             // bool pop = this->Pop(&task);
 
-            while (this->Pop(&task, 10) && task != NEXT_ITERATION)
+            while (this->Pop(&task, 1) && task != NEXT_ITERATION)
             {
                 if (task == ff::FF_EOS)
                     return ff::FF_EOS;
@@ -118,9 +118,11 @@ void *svc(void *task)
                 assert(in_ptr->size() > 0);
                 logic_->update(*in_ptr);
                 FAST_DEBUG("(TRAINER STAGE): executed batch from gradients");
-                FAST_INFO("UPDATED: " << ++upd_count);
+                FAST_DEBUG("UPDATED: " << ++upd_count);
                 in_ptr->clear();
                 delete in_ptr;
+                if(logic_->max_epoch_reached) 
+                    break;
             }
         }
 

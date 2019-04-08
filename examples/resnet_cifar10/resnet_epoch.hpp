@@ -32,6 +32,12 @@ class ModelLogic
 			learning_rate = std::stof(std::string(learning_env));
 		else
 			learning_rate = 0.001;
+		
+		std::string optimiser_name;
+		if (const char *optim_env = std::getenv("OPTIMIZER"))
+			optimiser_name = std::string(optim_env);
+		else
+			optimiser_name = "adagrad";
 
 		if (const char *symbol_env = std::getenv("SYMBOL_JSON"))
 			net = Symbol::Load(std::string(symbol_env));
@@ -93,18 +99,18 @@ class ModelLogic
 
 		args = mxnet::cpp::NDArray::LoadToMap(init_filename);
 
-		opt = OptimizerRegistry::Find("adam");
+		opt = OptimizerRegistry::Find(optimiser_name);
 		opt->SetParam("lr", learning_rate);
 		opt->SetParam("wd", 1e-4);
-		opt->SetParam("rescale_grad", 1.0/(batch_size_*FAST::cardinality()) );
-     	opt->SetParam("clip_gradient", 10);
+		opt->SetParam("rescale_grad", 1.0/(batch_size_) );
+     	// opt->SetParam("clip_gradient", 10);
 
 		exec = net.SimpleBind(ctx, args);
 		arg_names = net.ListArguments();
 
 		FAST_DEBUG("Logic initialized")
 		init_time = chrono::system_clock::now();
-		log_file << batch_size_ << "\t" << learning_rate << std::endl;
+		log_file << batch_size_ << "\t" << learning_rate << "\t" << optimiser_name << std::endl;
 		log_file << "Epoch\tTime\tTraining accuracy\tTest accuracy" << std::endl;
 		log_file.flush();
 	}
@@ -183,11 +189,12 @@ class ModelLogic
 		FAST_DEBUG("(LOGIC UPDATE): updating")
 		if (in.size() > 0)
 		{
+			NDArray::WaitAll();
 			for (size_t i = 0; i < arg_names.size(); ++i)
 			{
 				if (arg_names[i] == "data" || arg_names[i] == "label")
 					continue;
-				opt->Update(i, exec->arg_arrays[i], in[1]);
+				opt->Update(i, exec->arg_arrays[i], in.at(i));
 				NDArray::WaitAll();
 			}
 			FAST_DEBUG("(LOGIC UPDATE): updated")
