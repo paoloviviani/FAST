@@ -71,6 +71,7 @@ class ModelLogic
 						 .SetParam("pad", 4)
 						 .CreateDataIter();
 
+
 		val_iter = MXDataIter("ImageRecordIter")
 					   .SetParam("path_imglist", "../../cifar10/cifar10_val.lst")
 					   .SetParam("path_imgrec", "../../cifar10/cifar10_val.rec")

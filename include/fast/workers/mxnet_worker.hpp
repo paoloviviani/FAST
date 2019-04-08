@@ -109,7 +109,7 @@ void *svc(void *task)
             // get_in_buffer()->pop(&task);
             // bool pop = this->Pop(&task);
 
-            while (this->Pop(&task) && task != NEXT_ITERATION)
+            while (this->Pop(&task, 10) && task != NEXT_ITERATION)
             {
                 if (task == ff::FF_EOS)
                     return ff::FF_EOS;
@@ -118,7 +118,7 @@ void *svc(void *task)
                 assert(in_ptr->size() > 0);
                 logic_->update(*in_ptr);
                 FAST_DEBUG("(TRAINER STAGE): executed batch from gradients");
-                FAST_DEBUG("UPDATED: " << ++upd_count);
+                FAST_INFO("UPDATED: " << ++upd_count);
                 in_ptr->clear();
                 delete in_ptr;
             }
@@ -197,9 +197,19 @@ class MXNetWorkerLogic
             assert(in.get().is_address());
             if (!eoi)
             {
-                FAST_DEBUG("RECEIVED: " << ++recv_count);
-                auto in_ptr = in.unique_local().release();
-                pipe_->offload((void *)in_ptr);
+                buffer.push_back(in);
+                if (buffer.size() < neighbors)
+                    return gff::go_on;
+                else
+                {
+                    FAST_DEBUG("RECEIVED: " << ++recv_count);
+                    for (auto item : buffer)
+                    {
+                        auto in_ptr = item.unique_local().release();
+                        pipe_->offload((void *)in_ptr);
+                    }
+                    buffer.clear();
+                }
             }
         }
         }
@@ -340,6 +350,7 @@ class MXNetWorkerLogic
     int neighbors;
     int recv_count = 0;
     bool first_ = false;
+    std::vector<gam::public_ptr<gam_vector<T>>> buffer;
 };
 
 } // namespace FAST
